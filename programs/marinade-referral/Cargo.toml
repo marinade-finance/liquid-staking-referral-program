@@ -1,12 +1,12 @@
 [package]
-name = "marinade-referrals"
+name = "marinade-referral"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "marinade_referrals"
+name = "marinade_referral"
 
 [features]
 no-entrypoint = []
@@ -16,3 +16,4 @@ default = []
 
 [dependencies]
 anchor-lang = "0.18.2"
+anchor-spl = "0.18.2"

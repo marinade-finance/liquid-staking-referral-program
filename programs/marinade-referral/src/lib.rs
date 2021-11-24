@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub mod constant;
 /// error
 pub mod error;
+/// fees
+pub mod fees;
 /// instructions
 pub mod instructions;
 ///processor
@@ -18,7 +20,7 @@ use crate::{constant::*, error::*, instructions::*, processor::*, states::*};
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod marinade_referrals {
+pub mod marinade_referral {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {

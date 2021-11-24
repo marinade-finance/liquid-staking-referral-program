@@ -2,6 +2,6 @@ use anchor_lang::prelude::*;
 
 use crate::{constant::*, error::*, instructions::*, states::*};
 
-pub fn process_initialize(ctx: Context<Initialize>) -> ProgramResult {
+pub fn process_initialize(_: Context<Initialize>) -> ProgramResult {
     Ok(())
 }
