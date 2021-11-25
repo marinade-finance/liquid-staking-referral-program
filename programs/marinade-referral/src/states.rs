@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use anchor_lang::{prelude::*, solana_program::stake::state::StakeState};
 
 use crate::fees::*;
@@ -45,5 +47,5 @@ pub struct ReferralState {
 //-----------------------------------------------------
 #[account]
 pub struct StakeWrapper {
-    pub inner: StakeState,
+    // pub inner: StakeState,
 }

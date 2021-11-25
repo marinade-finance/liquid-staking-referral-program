@@ -15,7 +15,7 @@ pub mod states;
 /// utils
 pub mod utils;
 
-use crate::{constant::*, error::*, instructions::*, processor::*, states::*};
+use crate::{instructions::*, processor::*};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
