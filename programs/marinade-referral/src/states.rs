@@ -45,11 +45,16 @@ pub struct ReferralState {
 }
 
 impl ReferralState {
+    pub fn reset_liq_unstake_accumulators(&mut self) {
+        self.deposit_sol_amount = 0;
+        self.liq_unstake_amount = 0;
+        self.liq_unstake_operations = 0;
+    }
 }
 
 //-----------------------------------------------------
 #[account]
 pub struct StakeWrapper {
     // TODO: https://github.com/project-serum/anchor/issues/1065
-    // pub inner: StakeState,
+// pub inner: StakeState,
 }

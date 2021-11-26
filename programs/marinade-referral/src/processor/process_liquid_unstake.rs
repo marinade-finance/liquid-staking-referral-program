@@ -16,11 +16,11 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     if elapsed_time as u32 > ctx.accounts.state.transfer_duration {
         // TODO: transfer shared mSOL to partner
 
-        // Clears all accumulators and sets “Last transfer to partner timestamp“
+        // sets “Last transfer to partner timestamp“
         ctx.accounts.state.last_transfer_time = current_time;
-        ctx.accounts.state.deposit_sol_amount += 0;
-        ctx.accounts.state.liq_unstake_amount += 0;
-        ctx.accounts.state.liq_unstake_operations += 0;
+
+        // clears all accumulators
+        ctx.accounts.state.reset_liq_unstake_accumulators();
     }
 
     Ok(())
