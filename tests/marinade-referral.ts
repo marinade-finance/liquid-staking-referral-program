@@ -96,6 +96,27 @@ describe("marinade-referral", () => {
         );
         // check if partner address matches what we expect
         assert.ok(referralState.partnerAccount.equals(partner.publicKey));
+
+        // it should not initialize another referral PDA with the same refer code
+        await assert.rejects(async () => {
+            await program.rpc.initialize(
+                REF_CODE,
+                _referral_bump,
+                _beneficiary_bump,
+                {
+                    accounts: {
+                        state: referralPda,
+                        msolMint: mSolMint.publicKey,
+                        beneficiary: beneficiaryPda,
+                        partnerAccount: partner.publicKey,
+                        rent: SYSVAR_RENT_PUBKEY,
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                        systemProgram: SystemProgram.programId,
+                    },
+                    signers: [partner],
+                }
+            );
+        });
     });
 
     it("should update emergency pause", async () => {
