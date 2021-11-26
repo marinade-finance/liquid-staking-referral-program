@@ -21,6 +21,8 @@ describe("marinade-referral", () => {
 
     // referral state PDA
     let referralPda: InstanceType<typeof PublicKey>;
+    // mSOL beneficiary vault PDA
+    let beneficiaryPda: InstanceType<typeof PublicKey>;
 
     // mSOL token mint
     let mSolMint: Token;
@@ -33,10 +35,7 @@ describe("marinade-referral", () => {
     it("should initialize referral state", async () => {
         // Airdrop SOLs to the partner.
         await provider.connection.confirmTransaction(
-            await provider.connection.requestAirdrop(
-                partner.publicKey,
-                10000000000
-            ),
+            await provider.connection.requestAirdrop(partner.publicKey, 1e10),
             "confirmed"
         );
 
@@ -60,6 +59,7 @@ describe("marinade-referral", () => {
                 ],
                 program.programId
             );
+        beneficiaryPda = _beneficiary_pda;
 
         // create mSOL token mint
         mSolMint = await Token.createMint(
@@ -80,7 +80,7 @@ describe("marinade-referral", () => {
                 accounts: {
                     state: referralPda,
                     msolMint: mSolMint.publicKey,
-                    beneficiary: _beneficiary_pda,
+                    beneficiary: beneficiaryPda,
                     partnerAccount: partner.publicKey,
                     rent: SYSVAR_RENT_PUBKEY,
                     tokenProgram: TOKEN_PROGRAM_ID,
@@ -136,6 +136,12 @@ describe("marinade-referral", () => {
         // generate an anonymous account
         const anonymous = Keypair.generate();
 
+        // Airdrop SOLs to the anonymous account.
+        await provider.connection.confirmTransaction(
+            await provider.connection.requestAirdrop(anonymous.publicKey, 1e10),
+            "confirmed"
+        );
+
         // it should reject for anonymous users to update emergency pause
         await assert.rejects(
             async () => {
@@ -148,6 +154,7 @@ describe("marinade-referral", () => {
                 });
             },
             {
+                // TODO: revamp error messages
                 message: "65440: FFA0 Unexpected account",
             }
         );
