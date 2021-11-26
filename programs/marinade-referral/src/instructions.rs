@@ -57,9 +57,10 @@ pub struct Initialize<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct Pause<'info> {
+    // referral state
     #[account(
         mut,
-        constraint = state.partner_account == *partner_account.key @ CommonError::UnexpectedAccount,
+        has_one = partner_account @ CommonError::UnexpectedAccount,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 

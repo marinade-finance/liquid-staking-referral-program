@@ -25,9 +25,9 @@ describe("marinade-referral", () => {
     let beneficiaryPda: InstanceType<typeof PublicKey>;
 
     // mSOL token mint
-    let mSolMint: Token;
+    let msolMint: Token;
     // mSOL mint authority, maybe marinade main program id
-    const mSolMintAuthority = Keypair.generate();
+    const msolMintAuthority = Keypair.generate();
 
     // partner account
     const partner = Keypair.generate();
@@ -62,10 +62,10 @@ describe("marinade-referral", () => {
         beneficiaryPda = _beneficiary_pda;
 
         // create mSOL token mint
-        mSolMint = await Token.createMint(
+        msolMint = await Token.createMint(
             provider.connection,
             partner,
-            mSolMintAuthority.publicKey,
+            msolMintAuthority.publicKey,
             null,
             0,
             TOKEN_PROGRAM_ID
@@ -79,7 +79,7 @@ describe("marinade-referral", () => {
             {
                 accounts: {
                     state: referralPda,
-                    msolMint: mSolMint.publicKey,
+                    msolMint: msolMint.publicKey,
                     beneficiary: beneficiaryPda,
                     partnerAccount: partner.publicKey,
                     rent: SYSVAR_RENT_PUBKEY,
@@ -106,7 +106,7 @@ describe("marinade-referral", () => {
                 {
                     accounts: {
                         state: referralPda,
-                        msolMint: mSolMint.publicKey,
+                        msolMint: msolMint.publicKey,
                         beneficiary: beneficiaryPda,
                         partnerAccount: partner.publicKey,
                         rent: SYSVAR_RENT_PUBKEY,
