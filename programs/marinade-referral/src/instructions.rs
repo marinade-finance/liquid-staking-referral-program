@@ -56,6 +56,24 @@ pub struct Initialize<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
+pub struct UpdatePartner<'info> {
+    // referral state
+    #[account(
+        mut,
+        has_one = partner_account @ CommonError::UnexpectedAccount,
+    )]
+    pub state: ProgramAccount<'info, ReferralState>,
+
+    // partner account, signer
+    #[account(mut, signer)]
+    pub partner_account: AccountInfo<'info>,
+
+    // new admin
+    pub new_partner_account: AccountInfo<'info>,
+}
+
+//-----------------------------------------------------
+#[derive(Accounts)]
 pub struct Pause<'info> {
     // referral state
     #[account(

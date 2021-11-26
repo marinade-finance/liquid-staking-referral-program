@@ -44,6 +44,9 @@ pub struct ReferralState {
     pub pause: bool,
 }
 
+impl ReferralState {
+}
+
 //-----------------------------------------------------
 #[account]
 pub struct StakeWrapper {
