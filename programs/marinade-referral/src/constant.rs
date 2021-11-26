@@ -8,4 +8,4 @@ pub const DEFAULT_BASE_FEE_POINTS: u32 = 10;
 pub const DEFAULT_MAX_FEE_POINTS: u32 = 100;
 
 ///Net stake target for max %
-pub const DEFAULT_MAX_NET_STAKE_AMOUNT: u64 = 1_000_000;
+pub const DEFAULT_MAX_NET_STAKE: u64 = 1_000_000;

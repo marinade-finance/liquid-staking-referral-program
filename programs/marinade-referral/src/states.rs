@@ -38,7 +38,7 @@ pub struct ReferralState {
     // Max % cut for the partner (Fee struct, basis points, default 100%)
     pub max_fee: Fee,
     // Net Stake target for the max % (for example 100K SOL)
-    pub max_net_stake_amount: u64,
+    pub max_net_stake: u64,
 
     // emergency-pause flag (bool)
     pub pause: bool,
@@ -50,11 +50,30 @@ impl ReferralState {
         self.liq_unstake_amount = 0;
         self.liq_unstake_operations = 0;
     }
+
+    pub fn share_amount(&self) -> u32 {
+        let mut net_stake = 0;
+
+        if self.deposit_sol_amount > self.liq_unstake_amount {
+            net_stake = self.deposit_sol_amount - self.liq_unstake_amount;
+        }
+
+        if net_stake == 0 {
+            self.base_fee.basis_points
+        } else if net_stake > self.max_net_stake {
+            self.max_fee.basis_points
+        } else {
+            let delta = self.max_fee.basis_points - self.base_fee.basis_points;
+            // self.base_fee + proportional(delta, net_stake, self.max_net_stake)
+            // TODO: caculate share_amount based on net_stake
+            delta
+        }
+    }
 }
 
 //-----------------------------------------------------
 #[account]
 pub struct StakeWrapper {
     // TODO: https://github.com/project-serum/anchor/issues/1065
-// pub inner: StakeState,
+    // pub inner: StakeState,
 }

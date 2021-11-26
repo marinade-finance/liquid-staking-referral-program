@@ -31,7 +31,7 @@ pub fn process_initialize(
     ctx.accounts.state.max_fee = Fee {
         basis_points: DEFAULT_MAX_FEE_POINTS,
     };
-    ctx.accounts.state.max_net_stake_amount = DEFAULT_MAX_NET_STAKE_AMOUNT;
+    ctx.accounts.state.max_net_stake = DEFAULT_MAX_NET_STAKE;
 
     ctx.accounts.state.pause = false;
 
