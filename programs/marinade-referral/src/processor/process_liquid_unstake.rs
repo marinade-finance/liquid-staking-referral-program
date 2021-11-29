@@ -13,7 +13,7 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     ctx.accounts.state.liq_unstake_operations =
         ctx.accounts.state.liq_unstake_operations.wrapping_add(1);
 
-    // TODO: cpi to marinade main program
+    // TODO: cpi to Marinade main program
 
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
     let elapsed_time = current_time.wrapping_sub(ctx.accounts.state.last_transfer_time);

@@ -18,12 +18,12 @@ anchor build
 anchor test
 ```
 
-## Auto fix lint errors
+## Autofix TypeScript lint errors
 ```bash
 yarn lint
 ```
 
-## Scann vulnerabilities
+## Scan vulnerabilities
 ```bash
 # install Soteria
 cd ~
