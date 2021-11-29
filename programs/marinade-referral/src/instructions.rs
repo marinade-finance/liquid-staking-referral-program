@@ -118,30 +118,21 @@ pub struct Update<'info> {
 pub struct Deposit<'info> {
     #[account(
         mut,
-        constraint = !state.pause
+        constraint = !state.pause,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
-    #[account(mut)]
-    pub msol_mint: Account<'info, Mint>,
-
-    #[account(mut)]
-    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub liq_pool_msol_leg: Account<'info, TokenAccount>,
-    pub liq_pool_msol_leg_authority: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub reserve_pda: AccountInfo<'info>,
-
-    #[account(mut, signer)]
+    #[account(signer)]
     pub transfer_from: AccountInfo<'info>,
 
-    #[account(mut)]
-    pub mint_to: Account<'info, TokenAccount>,
-
+    pub msol_mint: AccountInfo<'info>,
+    pub mint_to: AccountInfo<'info>,
     pub msol_mint_authority: AccountInfo<'info>,
+    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
+    pub liq_pool_msol_leg: AccountInfo<'info>,
+    pub liq_pool_msol_leg_authority: AccountInfo<'info>,
+    pub reserve_pda: AccountInfo<'info>,
+    pub marinade_state: AccountInfo<'info>,
 
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
@@ -152,30 +143,24 @@ pub struct Deposit<'info> {
 pub struct DepositStakeAccount<'info> {
     #[account(
         mut,
-        constraint = !state.pause
+        constraint = !state.pause,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
-    #[account(mut)]
-    pub validator_list: AccountInfo<'info>,
-    #[account(mut)]
-    pub stake_list: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub stake_account: Account<'info, StakeWrapper>,
     #[account(signer)]
     pub stake_authority: AccountInfo<'info>,
-    #[account(mut)]
-    pub duplication_flag: AccountInfo<'info>,
-    #[account(mut, signer)]
+
+    #[account(signer)]
     pub rent_payer: AccountInfo<'info>,
 
-    #[account(mut)]
-    pub msol_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub mint_to: Account<'info, TokenAccount>,
-
+    pub validator_list: AccountInfo<'info>,
+    pub stake_list: AccountInfo<'info>,
+    pub stake_account: AccountInfo<'info>,
+    pub duplication_flag: AccountInfo<'info>,
+    pub msol_mint: AccountInfo<'info>,
+    pub mint_to: AccountInfo<'info>,
     pub msol_mint_authority: AccountInfo<'info>,
+    pub marinade_state: AccountInfo<'info>,
 
     pub clock: Sysvar<'info, Clock>,
     pub rent: Sysvar<'info, Rent>,
@@ -190,28 +175,19 @@ pub struct DepositStakeAccount<'info> {
 pub struct LiquidUnstake<'info> {
     #[account(
         mut,
-        constraint = !state.pause
+        constraint = !state.pause,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
-    #[account(mut)]
-    pub msol_mint: Account<'info, Mint>,
-
-    #[account(mut)]
-    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub liq_pool_msol_leg: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub treasury_msol_account: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub get_msol_from: Account<'info, TokenAccount>,
     #[account(signer)]
     pub get_msol_from_authority: AccountInfo<'info>, //burn_msol_from owner or delegate_authority
-
-    #[account(mut)]
+    pub msol_mint: AccountInfo<'info>,
+    pub get_msol_from: AccountInfo<'info>,
+    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
+    pub liq_pool_msol_leg: AccountInfo<'info>,
+    pub treasury_msol_account: AccountInfo<'info>,
     pub transfer_sol_to: AccountInfo<'info>,
+    pub marinade_state: AccountInfo<'info>,
 
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,

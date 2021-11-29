@@ -43,6 +43,14 @@ pub mod marinade_referral {
         process_deposit(ctx, lamports)
     }
 
+    ///deposit stake account
+    pub fn deposit_stake_account(
+        ctx: Context<DepositStakeAccount>,
+        validator_index: u32,
+    ) -> ProgramResult {
+        process_deposit_stake_account(ctx, validator_index)
+    }
+
     ///liquid-unstake mSOL
     pub fn liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
         process_liquid_unstake(ctx, msol_amount)

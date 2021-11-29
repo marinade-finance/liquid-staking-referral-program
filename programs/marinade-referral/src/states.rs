@@ -75,8 +75,3 @@ impl ReferralState {
 }
 
 //-----------------------------------------------------
-#[account]
-pub struct StakeWrapper {
-    // TODO: https://github.com/project-serum/anchor/issues/1065
-// pub inner: StakeState,
-}
