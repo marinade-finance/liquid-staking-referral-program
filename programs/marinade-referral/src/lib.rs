@@ -33,7 +33,7 @@ pub mod marinade_referral {
         process_update(ctx, transfer_duration, pause)
     }
 
-    ///update partner, authority
+    ///update partner, authority and beneficiary account based on the new partner
     pub fn update_authority(ctx: Context<UpdateAuthority>) -> ProgramResult {
         process_update_authority(ctx)
     }
@@ -54,5 +54,10 @@ pub mod marinade_referral {
     ///liquid-unstake mSOL
     pub fn liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
         process_liquid_unstake(ctx, msol_amount)
+    }
+
+    ///request transfer, permissionless
+    pub fn request_transfer(ctx: Context<RequestTransfer>) -> ProgramResult {
+        process_request_transfer(ctx)
     }
 }

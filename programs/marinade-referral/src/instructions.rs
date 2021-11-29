@@ -190,3 +190,18 @@ pub struct LiquidUnstake<'info> {
 }
 
 //-----------------------------------------------------
+#[derive(Accounts)]
+pub struct RequestTransfer<'info> {
+    #[account(
+        mut,
+        constraint = !state.pause @ ReferralError::Paused,
+    )]
+    pub state: ProgramAccount<'info, ReferralState>,
+
+    #[account(mut, signer)]
+    pub request_account: AccountInfo<'info>,
+
+    pub treasury_msol_account: AccountInfo<'info>,
+}
+
+//-----------------------------------------------------
