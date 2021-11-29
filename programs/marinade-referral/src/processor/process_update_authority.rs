@@ -1,9 +1,7 @@
-#![allow(unused_imports)]
-
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token;
 
-use crate::{constant::*, error::*, fees::Fee, instructions::*, states::*};
+use crate::instructions::*;
 
 pub fn process_update_authority(ctx: Context<UpdateAuthority>) -> ProgramResult {
     ctx.accounts.state.partner_account = *ctx.accounts.new_partner_account.key;

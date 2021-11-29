@@ -22,16 +22,19 @@ impl Fee {
     }
 
     /// generic check, capped Fee
-    pub fn check_max(&self, max_basis_points: u32) -> std::result::Result<(), CommonError> {
+    pub fn check_max(
+        &self,
+        max_basis_points: u32,
+    ) -> std::result::Result<(), marinade::CommonError> {
         if self.basis_points > max_basis_points {
-            Err(CommonError::FeeTooHigh)
+            Err(marinade::CommonError::FeeTooHigh)
         } else {
             Ok(())
         }
     }
 
     /// base check, Fee <= 100%
-    pub fn check(&self) -> std::result::Result<(), CommonError> {
+    pub fn check(&self) -> std::result::Result<(), marinade::CommonError> {
         self.check_max(10_000)
     }
 
@@ -42,12 +45,12 @@ impl Fee {
 }
 
 impl TryFrom<f64> for Fee {
-    type Error = CommonError;
+    type Error = marinade::CommonError;
 
     fn try_from(n: f64) -> std::result::Result<Self, Self::Error> {
         let basis_points_i = (n * 100.0).floor() as i64; // 4.5% => 450 basis_points
         let basis_points =
-            u32::try_from(basis_points_i).map_err(|_| CommonError::CalculationFailure)?;
+            u32::try_from(basis_points_i).map_err(|_| marinade::CommonError::CalculationFailure)?;
         let fee = Fee::from_basis_points(basis_points);
         fee.check()?;
         Ok(fee)
@@ -55,10 +58,11 @@ impl TryFrom<f64> for Fee {
 }
 
 impl FromStr for Fee {
-    type Err = CommonError;
+    type Err = marinade::CommonError;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let basis_points = f64::from_str(s).map_err(|_| CommonError::CalculationFailure)?;
+        let basis_points =
+            f64::from_str(s).map_err(|_| marinade::CommonError::CalculationFailure)?;
         Self::try_from(basis_points)
     }
 }

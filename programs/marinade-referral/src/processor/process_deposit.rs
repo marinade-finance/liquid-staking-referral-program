@@ -1,8 +1,6 @@
-#![allow(unused_imports)]
-
 use anchor_lang::prelude::*;
 
-use crate::{constant::*, error::*, fees::Fee, instructions::*, states::*};
+use crate::instructions::*;
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
     ctx.accounts.state.deposit_sol_amount =

@@ -1,12 +1,8 @@
-#![allow(unused_imports)]
-
-use std::mem::size_of;
-
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::Create as CreateAssociatedTokenAccount;
-use anchor_spl::token::{self, Mint, TokenAccount};
+use anchor_spl::token::Mint;
 
-use crate::{constant::*, error::*, processor::*, states::*};
+use crate::{error::*, states::*};
 
 //-----------------------------------------------------
 #[derive(Accounts)]
@@ -70,7 +66,7 @@ pub struct UpdateAuthority<'info> {
     // referral state
     #[account(
         mut,
-        has_one = partner_account @ CommonError::UnexpectedAccount,
+        has_one = partner_account @ ReferralError::AccessDenied,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
@@ -108,7 +104,7 @@ pub struct Update<'info> {
     // referral state
     #[account(
         mut,
-        has_one = partner_account @ CommonError::UnexpectedAccount,
+        has_one = partner_account @ ReferralError::AccessDenied,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 }
@@ -118,7 +114,7 @@ pub struct Update<'info> {
 pub struct Deposit<'info> {
     #[account(
         mut,
-        constraint = !state.pause,
+        constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
@@ -143,7 +139,7 @@ pub struct Deposit<'info> {
 pub struct DepositStakeAccount<'info> {
     #[account(
         mut,
-        constraint = !state.pause,
+        constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
@@ -175,7 +171,7 @@ pub struct DepositStakeAccount<'info> {
 pub struct LiquidUnstake<'info> {
     #[account(
         mut,
-        constraint = !state.pause,
+        constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 

@@ -1,6 +1,4 @@
-#![allow(unused_imports)]
-
-use anchor_lang::{prelude::*, solana_program::stake::state::StakeState};
+use anchor_lang::prelude::*;
 
 use crate::fees::*;
 

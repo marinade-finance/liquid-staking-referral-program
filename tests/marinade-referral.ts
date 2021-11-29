@@ -146,8 +146,7 @@ describe("marinade-referral", () => {
         });
       },
       {
-        // TODO: revamp error messages
-        message: "65440: FFA0 Unexpected account",
+        message: "300: Access denied",
       }
     );
 

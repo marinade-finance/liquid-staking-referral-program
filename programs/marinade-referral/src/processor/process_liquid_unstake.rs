@@ -1,8 +1,6 @@
-#![allow(unused_imports)]
-
 use anchor_lang::{prelude::*, solana_program::clock};
 
-use crate::{constant::*, error::*, fees::Fee, instructions::*, states::*};
+use crate::instructions::*;
 
 pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
     ctx.accounts.state.liq_unstake_amount = ctx

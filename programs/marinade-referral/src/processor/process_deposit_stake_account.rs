@@ -1,8 +1,6 @@
-#![allow(unused_imports)]
-
 use anchor_lang::prelude::*;
 
-use crate::{constant::*, error::*, fees::Fee, instructions::*, states::*};
+use crate::instructions::*;
 
 pub fn process_deposit_stake_account(
     ctx: Context<DepositStakeAccount>,
