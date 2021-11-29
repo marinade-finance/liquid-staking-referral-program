@@ -102,15 +102,14 @@ describe("marinade-referral", () => {
   it("should update authority", async () => {
     const NEW_PARTNER = Keypair.generate();
     // beneficiary - mSOL ATA for partner
-    const [_new_beneficiary_pda] =
-      await PublicKey.findProgramAddress(
-        [
-          NEW_PARTNER.publicKey.toBuffer(),
-          TOKEN_PROGRAM_ID.toBuffer(),
-          msolMint.publicKey.toBuffer(),
-        ],
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      );
+    const [_new_beneficiary_pda] = await PublicKey.findProgramAddress(
+      [
+        NEW_PARTNER.publicKey.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        msolMint.publicKey.toBuffer(),
+      ],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
 
     // update authority
     await program.rpc.updateAuthority({
@@ -169,37 +168,25 @@ describe("marinade-referral", () => {
     });
   });
 
-  // it("should update emergency pause", async () => {
-  //     // pause referral
-  //     await program.rpc.pause(true, {
-  //         accounts: {
-  //             state: referralPda,
-  //             adminAccount: PARTNER.publicKey,
-  //         },
-  //         signers: [partner],
-  //     });
+  it("should update referral state", async () => {
+    const NEW_TRANSFER_DURATION = 2_592_000 * 2;
 
-  //     // get PDA state
-  //     const pausedReferralState = await program.account.referralState.fetch(
-  //         referralPda
-  //     );
-  //     // check if paused
-  //     assert.ok(pausedReferralState.pause === true);
+    // update referral state
+    await program.rpc.update(NEW_TRANSFER_DURATION, true, {
+      accounts: {
+        partnerAccount: PARTNER.publicKey,
+        state: REFERRAL.publicKey,
+      },
+      signers: [PARTNER],
+    });
 
-  //     // resume referral
-  //     await program.rpc.pause(false, {
-  //         accounts: {
-  //             state: referralPda,
-  //             adminAccount: PARTNER.publicKey,
-  //         },
-  //         signers: [partner],
-  //     });
-
-  //     // get PDA state
-  //     const referralState = await program.account.referralState.fetch(
-  //         referralPda
-  //     );
-  //     // check if resumed
-  //     assert.ok(referralState.pause === false);
-  // });
+    // get referral state
+    const referralState = await program.account.referralState.fetch(
+      REFERRAL.publicKey
+    );
+    // check if transfer period is updated
+    assert.ok(referralState.transferDuration === NEW_TRANSFER_DURATION);
+    // check if pause is updated
+    assert.ok(referralState.pause === true);
+  });
 });

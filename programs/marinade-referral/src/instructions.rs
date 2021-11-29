@@ -100,17 +100,17 @@ impl<'info> UpdateAuthority<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct Pause<'info> {
+pub struct Update<'info> {
+    // partner account, signer
+    #[account(mut, signer)]
+    pub partner_account: AccountInfo<'info>,
+
     // referral state
     #[account(
         mut,
         has_one = partner_account @ CommonError::UnexpectedAccount,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
-
-    // partner account, signer
-    #[account(mut, signer)]
-    pub partner_account: AccountInfo<'info>,
 }
 
 //-----------------------------------------------------
