@@ -116,7 +116,10 @@ pub struct Update<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct Deposit<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = !state.pause
+    )]
     pub state: ProgramAccount<'info, ReferralState>,
 
     #[account(mut)]
@@ -147,7 +150,10 @@ pub struct Deposit<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct DepositStakeAccount<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = !state.pause
+    )]
     pub state: ProgramAccount<'info, ReferralState>,
 
     #[account(mut)]
@@ -182,7 +188,10 @@ pub struct DepositStakeAccount<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct LiquidUnstake<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = !state.pause
+    )]
     pub state: ProgramAccount<'info, ReferralState>,
 
     #[account(mut)]
