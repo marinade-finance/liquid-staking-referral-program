@@ -21,8 +21,13 @@ pub struct ReferralState {
 
     // accumulated deposit-sol amount (SOL, u64)
     pub deposit_sol_amount: u64,
+    // accumulated count of deposit-sol operations (u64, for stats/monitoring)
+    pub deposit_sol_operations: u64,
+
     // accumulated deposit-stake-account amount (SOL, u64)
     pub depsoit_stake_account_amount: u64,
+    // accumulated count of deposit-stake-account operations (u64, for stats/monitoring)
+    pub depsoit_stake_account_operations: u64,
 
     // accumulated liquid-unstake amount (SOL, u64)
     pub liq_unstake_amount: u64,
@@ -48,8 +53,16 @@ pub struct ReferralState {
 impl ReferralState {
     pub fn reset_liq_unstake_accumulators(&mut self) {
         self.deposit_sol_amount = 0;
+        self.deposit_sol_operations = 0;
         self.liq_unstake_amount = 0;
         self.liq_unstake_operations = 0;
+    }
+
+    pub fn reset_del_unstake_accumulators(&mut self) {
+        self.depsoit_stake_account_amount = 0;
+        self.depsoit_stake_account_operations = 0;
+        self.del_unstake_amount = 0;
+        self.del_unstake_operations = 0;
     }
 
     pub fn share_amount(&self) -> u32 {

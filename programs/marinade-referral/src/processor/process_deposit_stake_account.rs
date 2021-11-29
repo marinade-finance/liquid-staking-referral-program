@@ -12,6 +12,11 @@ pub fn process_deposit_stake_account(
         .state
         .depsoit_stake_account_amount
         .wrapping_add(**ctx.accounts.stake_account.lamports.borrow());
+    ctx.accounts.state.depsoit_stake_account_operations = ctx
+        .accounts
+        .state
+        .depsoit_stake_account_operations
+        .wrapping_add(1);
 
     // TODO: cpi to Marinade main program
 
