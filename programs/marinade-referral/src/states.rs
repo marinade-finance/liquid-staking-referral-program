@@ -7,8 +7,11 @@ use crate::fees::*;
 //-----------------------------------------------------
 #[account]
 pub struct ReferralState {
-    // Partner account (partner address)
+    // Partner account (authority address)
     pub partner_account: Pubkey,
+
+    // Partner name
+    pub partner_name: [u8; 10],
 
     // Beneficiary account (mSOL address)
     pub beneficiary_account: Pubkey,
@@ -75,5 +78,5 @@ impl ReferralState {
 #[account]
 pub struct StakeWrapper {
     // TODO: https://github.com/project-serum/anchor/issues/1065
-    // pub inner: StakeState,
+// pub inner: StakeState,
 }

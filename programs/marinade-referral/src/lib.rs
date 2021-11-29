@@ -24,18 +24,13 @@ pub mod marinade_referral {
     use super::*;
 
     ///register refer code to referral program
-    pub fn initialize(
-        ctx: Context<Initialize>,
-        ref_code: String,
-        referral_bump: u8,
-        beneficiary_bump: u8,
-    ) -> ProgramResult {
-        process_initialize(ctx, ref_code, referral_bump, beneficiary_bump)
+    pub fn initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> ProgramResult {
+        process_initialize(ctx, partner_name)
     }
 
-    ///update admin
-    pub fn update_partner(ctx: Context<UpdatePartner>) -> ProgramResult {
-        process_update_partner(ctx)
+    ///update partner, authority
+    pub fn update_authority(ctx: Context<UpdateAuthority>) -> ProgramResult {
+        process_update_authority(ctx)
     }
 
     ///update referral emergency pause

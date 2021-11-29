@@ -1,17 +1,15 @@
 #![allow(unused_imports)]
 
 use anchor_lang::{prelude::*, solana_program::clock};
+use anchor_spl::associated_token;
 
 use crate::{constant::*, error::*, fees::Fee, instructions::*, states::*};
 
-pub fn process_initialize(
-    ctx: Context<Initialize>,
-    _ref_code: String,
-    _referral_bump: u8,
-    _beneficiary_bump: u8,
-) -> ProgramResult {
+pub fn process_initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> ProgramResult {
+    ctx.accounts.state.partner_name = partner_name.clone();
+
     ctx.accounts.state.partner_account = *ctx.accounts.partner_account.key;
-    ctx.accounts.state.beneficiary_account = ctx.accounts.beneficiary.key();
+    ctx.accounts.state.beneficiary_account = *ctx.accounts.beneficiary_account.key;
 
     ctx.accounts.state.transfer_duration = DEFAULT_TRANSFER_DURATION;
     ctx.accounts.state.last_transfer_time = clock::Clock::get().unwrap().unix_timestamp;
@@ -34,6 +32,11 @@ pub fn process_initialize(
     ctx.accounts.state.max_net_stake = DEFAULT_MAX_NET_STAKE;
 
     ctx.accounts.state.pause = false;
+
+    // create associated token account for partner
+    if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
+        associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
+    }
 
     Ok(())
 }
