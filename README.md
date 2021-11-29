@@ -22,3 +22,19 @@ anchor test
 ```bash
 yarn lint
 ```
+
+## Scann vulnerabilities
+```bash
+# install Soteria
+cd ~
+sh -c "$(curl -k https://supercompiler.xyz/install)"
+export PATH=$HOME/soteria-linux-develop/bin/:$PATH
+cd -
+
+# check vulnerabilities
+cd programs/marinade-referrral
+# check vulnerabilities in selected library codes
+soteria .
+# check vulnerabilities in all library codes
+soteria -analyzeAll .
+```
