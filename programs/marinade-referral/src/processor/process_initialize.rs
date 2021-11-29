@@ -15,8 +15,8 @@ pub fn process_initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> P
     ctx.accounts.state.deposit_sol_amount = 0;
     ctx.accounts.state.deposit_sol_operations = 0;
 
-    ctx.accounts.state.depsoit_stake_account_amount = 0;
-    ctx.accounts.state.depsoit_stake_account_operations = 0;
+    ctx.accounts.state.deposit_stake_account_amount = 0;
+    ctx.accounts.state.deposit_stake_account_operations = 0;
 
     ctx.accounts.state.liq_unstake_amount = 0;
     ctx.accounts.state.liq_unstake_operations = 0;

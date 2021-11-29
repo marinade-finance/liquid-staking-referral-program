@@ -7,15 +7,15 @@ pub fn process_deposit_stake_account(
     validator_index: u32,
 ) -> ProgramResult {
     // TODO: confirm workflow
-    ctx.accounts.state.depsoit_stake_account_amount = ctx
+    ctx.accounts.state.deposit_stake_account_amount = ctx
         .accounts
         .state
-        .depsoit_stake_account_amount
+        .deposit_stake_account_amount
         .wrapping_add(**ctx.accounts.stake_account.lamports.borrow());
-    ctx.accounts.state.depsoit_stake_account_operations = ctx
+    ctx.accounts.state.deposit_stake_account_operations = ctx
         .accounts
         .state
-        .depsoit_stake_account_operations
+        .deposit_stake_account_operations
         .wrapping_add(1);
 
     // TODO: cpi to Marinade main program
