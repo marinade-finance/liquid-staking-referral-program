@@ -1,7 +1,6 @@
 use anchor_lang::{prelude::*, solana_program::clock};
-use anchor_spl::associated_token;
 
-use crate::{constant::*, fees::Fee, instructions::*};
+use crate::{associated_token, constant::*, fees::Fee, instructions::*};
 
 pub fn process_initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> ProgramResult {
     ctx.accounts.state.partner_name = partner_name.clone();

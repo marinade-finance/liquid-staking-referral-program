@@ -1,5 +1,5 @@
-use crate::error::marinade::*;
 use anchor_lang::prelude::*;
+use marinade_finance::error::CommonError;
 use std::{convert::TryFrom, fmt::Display, str::FromStr};
 
 //-----------------------------------------------------

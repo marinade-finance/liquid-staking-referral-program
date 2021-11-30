@@ -1,3 +1,5 @@
+anchor_version = "0.14.0"
+
 [programs.localnet]
 marinade_referral = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 

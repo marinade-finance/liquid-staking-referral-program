@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+///associated token
+pub mod associated_token;
 ///constant
 pub mod constant;
 ///error
@@ -17,7 +19,7 @@ pub mod utils;
 
 use crate::{instructions::*, processor::*};
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+// declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod marinade_referral {

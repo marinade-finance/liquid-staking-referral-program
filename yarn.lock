@@ -101,10 +101,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@project-serum/anchor@^0.18.2":
-  version "0.18.2"
-  resolved "https://registry.npmjs.org/@project-serum/anchor/-/anchor-0.18.2.tgz"
-  integrity sha512-uyjiN/3Ipp+4hrZRm/hG18HzGLZyvP790LXrCsGO3IWxSl28YRhiGEpKnZycfMW94R7nxdUoE3wY67V+ZHSQBQ==
+"@project-serum/anchor@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.14.0.tgz#25ca4d8ac9d8b85ca01a5950c0e5a9154eb43e16"
+  integrity sha512-FqBofCi3O0Y4DAhmCA0SaakXXoMvNHLq9cVTZLP2/3R0bLO2+goRw0wTgFiKsRMW2YkNVr9cbMzd/MiukbyXsQ==
   dependencies:
     "@project-serum/borsh" "^0.2.2"
     "@solana/web3.js" "^1.17.0"
