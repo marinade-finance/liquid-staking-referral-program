@@ -7,8 +7,8 @@ pub fn process_update(ctx: Context<Update>, transfer_duration: u32, pause: bool)
     if ctx
         .accounts
         .state
-        .partner_account
-        .ne(ctx.accounts.partner_account.key)
+        .admin_account
+        .ne(ctx.accounts.admin_account.key)
     {
         return Err(ReferralError::AccessDenied.into());
     }

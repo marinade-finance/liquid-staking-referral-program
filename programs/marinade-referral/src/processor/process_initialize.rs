@@ -17,9 +17,10 @@ pub fn process_initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> P
         associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
     }
 
+    ctx.accounts.state.admin_account = *ctx.accounts.admin_account.key;
+
     ctx.accounts.state.partner_name = partner_name.clone();
 
-    ctx.accounts.state.partner_account = *ctx.accounts.partner_account.key;
     ctx.accounts.state.beneficiary_account = *ctx.accounts.beneficiary_account.key;
 
     ctx.accounts.state.transfer_duration = DEFAULT_TRANSFER_DURATION;

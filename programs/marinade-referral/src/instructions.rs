@@ -9,13 +9,16 @@ pub struct Initialize<'info> {
     // mSOL mint
     pub msol_mint: CpiAccount<'info, Mint>,
 
-    // beneficiary ATA
+    // partner account
+    pub partner_account: AccountInfo<'info>,
+
+    // partner beneficiary mSOL ATA
     #[account(mut)]
     pub beneficiary_account: AccountInfo<'info>,
 
     // partner account, signer
     #[account(mut, signer)]
-    pub partner_account: AccountInfo<'info>,
+    pub admin_account: AccountInfo<'info>,
 
     // referral state
     #[account(zero)]
@@ -32,7 +35,7 @@ impl<'info> Initialize<'info> {
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
         let cpi_accounts = CreateAssociatedTokenAccount {
-            payer: self.partner_account.clone(),
+            payer: self.admin_account.clone(),
             associated_token: self.beneficiary_account.clone(),
             authority: self.partner_account.clone(),
             mint: self.msol_mint.to_account_info().clone(),
@@ -48,62 +51,32 @@ impl<'info> Initialize<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct ChangeAuthority<'info> {
-    // mSOL mint
-    pub msol_mint: CpiAccount<'info, Mint>,
+    // new admin account
+    pub new_admin_account: AccountInfo<'info>,
 
-    // beneficiary ATA
-    #[account(mut)]
-    pub new_beneficiary_account: AccountInfo<'info>,
-
-    // new authority
-    pub new_partner_account: AccountInfo<'info>,
-
-    // partner account, signer
+    // admin account
     #[account(mut, signer)]
-    pub partner_account: AccountInfo<'info>,
+    pub admin_account: AccountInfo<'info>,
 
     // referral state
     #[account(
         mut,
-        // has_one = partner_account @ ReferralError::AccessDenied,
+        // has_one = admin_account @ ReferralError::AccessDenied,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
-
-    pub system_program: AccountInfo<'info>,
-    pub associated_token_program: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-    pub rent: AccountInfo<'info>,
-}
-
-impl<'info> ChangeAuthority<'info> {
-    pub fn into_create_associated_token_account_ctx(
-        &self,
-    ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
-        let cpi_accounts = CreateAssociatedTokenAccount {
-            payer: self.partner_account.clone(),
-            associated_token: self.new_beneficiary_account.clone(),
-            authority: self.new_partner_account.clone(),
-            mint: self.msol_mint.to_account_info().clone(),
-            system_program: self.system_program.clone(),
-            token_program: self.token_program.clone(),
-            rent: self.rent.clone(),
-        };
-
-        CpiContext::new(self.associated_token_program.clone(), cpi_accounts)
-    }
 }
 
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct Update<'info> {
-    // partner account, signer
+    // admin account
     #[account(mut, signer)]
-    pub partner_account: AccountInfo<'info>,
+    pub admin_account: AccountInfo<'info>,
 
     // referral state
     #[account(
         mut,
-        // has_one = partner_account @ ReferralError::AccessDenied,
+        // has_one = admin_account @ ReferralError::AccessDenied,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 }

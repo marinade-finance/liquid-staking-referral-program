@@ -31,23 +31,25 @@ describe("marinade-referral", () => {
   // mSOL mint authority
   const MSOL_MINT_AUTHORITY_ID = new PublicKey("3JLPCS1qM2zRw3Dp6V4hZnYHd4toMNPkNesXdX9tg6KM");
   // partner name - length should be 10
-  const PARTNER_NAME = "keisukew53";
+  const PARTNER_NAME = "abcde12345";
+  // admin account
+  const ADMIN = Keypair.generate();
   // partner account
   const PARTNER = Keypair.generate();
   // referral state account address
   const REFERRAL = Keypair.generate();
 
   before(async () => {
-    // Airdrop SOLs to the PARTNER.
+    // Airdrop SOLs to the admin.
     await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(PARTNER.publicKey, 1e10),
+      await provider.connection.requestAirdrop(ADMIN.publicKey, 1e10),
       "confirmed"
     );
 
     // create mSOL token mint
     msolMint = await Token.createMint(
       provider.connection,
-      PARTNER,
+      ADMIN,
       MSOL_MINT_AUTHORITY_ID,
       null,
       0,
@@ -72,8 +74,9 @@ describe("marinade-referral", () => {
     await program.rpc.initialize([...Buffer.from(PARTNER_NAME)], {
       accounts: {
         msolMint: msolMint.publicKey,
-        beneficiaryAccount: beneficiaryPda,
         partnerAccount: PARTNER.publicKey,
+        beneficiaryAccount: beneficiaryPda,
+        adminAccount: ADMIN.publicKey,
         state: REFERRAL.publicKey,
         systemProgram: SystemProgram.programId,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -83,17 +86,17 @@ describe("marinade-referral", () => {
       instructions: [
         await program.account.referralState.createInstruction(REFERRAL),
       ],
-      signers: [REFERRAL, PARTNER],
+      signers: [REFERRAL, ADMIN],
     });
 
     // get referral account
     const referralState = await program.account.referralState.fetch(
       REFERRAL.publicKey
     );
+    // check if admin address matches what we expect
+    assert.ok(referralState.adminAccount.equals(ADMIN.publicKey));
     // check if partner mSOL ATA matches what we expect
     assert.ok(referralState.beneficiaryAccount.equals(beneficiaryPda));
-    // check if partner address matches what we expect
-    assert.ok(referralState.partnerAccount.equals(PARTNER.publicKey));
     // check if partner name matches what we expect
     assert.ok(
       String.fromCharCode(...referralState.partnerName) === PARTNER_NAME
@@ -101,67 +104,40 @@ describe("marinade-referral", () => {
   });
 
   it("should change authority", async () => {
-    const NEW_PARTNER = Keypair.generate();
-    // beneficiary - mSOL ATA for partner
-    const [_new_beneficiary_pda] = await PublicKey.findProgramAddress(
-      [
-        NEW_PARTNER.publicKey.toBuffer(),
-        TOKEN_PROGRAM_ID.toBuffer(),
-        msolMint.publicKey.toBuffer(),
-      ],
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    );
+    const NEW_ADMIN = Keypair.generate();
 
     // update authority
     await program.rpc.changeAuthority({
       accounts: {
-        msolMint: msolMint.publicKey,
-        newBeneficiaryAccount: _new_beneficiary_pda,
-        newPartnerAccount: NEW_PARTNER.publicKey,
-        partnerAccount: PARTNER.publicKey,
+        newAdminAccount: NEW_ADMIN.publicKey,
+        adminAccount: ADMIN.publicKey,
         state: REFERRAL.publicKey,
-        systemProgram: SystemProgram.programId,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
       },
-      signers: [PARTNER],
+      signers: [ADMIN],
     });
 
-    // old partner no longer has permission to update authority
+    // old admin no longer has permission to change authority
     await assert.rejects(
       async () => {
         await program.rpc.changeAuthority({
           accounts: {
-            msolMint: msolMint.publicKey,
-            newBeneficiaryAccount: _new_beneficiary_pda,
-            newPartnerAccount: NEW_PARTNER.publicKey,
-            partnerAccount: PARTNER.publicKey,
+            newAdminAccount: NEW_ADMIN.publicKey,
+            adminAccount: ADMIN.publicKey,
             state: REFERRAL.publicKey,
-            systemProgram: SystemProgram.programId,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
           },
           signers: [PARTNER],
         });
       }
     );
 
-    // update authority back to previous partner
+    // update authority back to previous admin
     await program.rpc.changeAuthority({
       accounts: {
-        msolMint: msolMint.publicKey,
-        newBeneficiaryAccount: beneficiaryPda,
-        newPartnerAccount: PARTNER.publicKey,
-        partnerAccount: NEW_PARTNER.publicKey,
+        newAdminAccount: ADMIN.publicKey,
+        adminAccount: NEW_ADMIN.publicKey,
         state: REFERRAL.publicKey,
-        systemProgram: SystemProgram.programId,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
       },
-      signers: [NEW_PARTNER],
+      signers: [NEW_ADMIN],
     });
   });
 
@@ -171,10 +147,10 @@ describe("marinade-referral", () => {
     // update referral state
     await program.rpc.update(NEW_TRANSFER_DURATION, true, {
       accounts: {
-        partnerAccount: PARTNER.publicKey,
+        adminAccount: ADMIN.publicKey,
         state: REFERRAL.publicKey,
       },
-      signers: [PARTNER],
+      signers: [ADMIN],
     });
 
     // get referral state

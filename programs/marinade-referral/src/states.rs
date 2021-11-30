@@ -5,8 +5,8 @@ use crate::fees::*;
 //-----------------------------------------------------
 #[account]
 pub struct ReferralState {
-    // Partner account (authority address)
-    pub partner_account: Pubkey,
+    // Authority (admin address)
+    pub admin_account: Pubkey,
 
     // Partner name
     pub partner_name: [u8; 10],
