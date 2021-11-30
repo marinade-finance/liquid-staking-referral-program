@@ -28,8 +28,8 @@ describe("marinade-referral", () => {
   // benefinciary associated token address
   let beneficiaryPda: InstanceType<typeof PublicKey>;
 
-  // mSOL mint authority, maybe Marinade main program id
-  const MSOL_MINT_AUTHORITY = Keypair.generate();
+  // mSOL mint authority
+  const MSOL_MINT_AUTHORITY_ID = new PublicKey("3JLPCS1qM2zRw3Dp6V4hZnYHd4toMNPkNesXdX9tg6KM");
   // partner name - length should be 10
   const PARTNER_NAME = "keisukew53";
   // partner account
@@ -48,7 +48,7 @@ describe("marinade-referral", () => {
     msolMint = await Token.createMint(
       provider.connection,
       PARTNER,
-      MSOL_MINT_AUTHORITY.publicKey,
+      MSOL_MINT_AUTHORITY_ID,
       null,
       0,
       TOKEN_PROGRAM_ID
@@ -100,7 +100,7 @@ describe("marinade-referral", () => {
     );
   });
 
-  it("should update authority", async () => {
+  it("should change authority", async () => {
     const NEW_PARTNER = Keypair.generate();
     // beneficiary - mSOL ATA for partner
     const [_new_beneficiary_pda] = await PublicKey.findProgramAddress(
@@ -113,7 +113,7 @@ describe("marinade-referral", () => {
     );
 
     // update authority
-    await program.rpc.updateAuthority({
+    await program.rpc.changeAuthority({
       accounts: {
         msolMint: msolMint.publicKey,
         newBeneficiaryAccount: _new_beneficiary_pda,
@@ -131,7 +131,7 @@ describe("marinade-referral", () => {
     // old partner no longer has permission to update authority
     await assert.rejects(
       async () => {
-        await program.rpc.updateAuthority({
+        await program.rpc.changeAuthority({
           accounts: {
             msolMint: msolMint.publicKey,
             newBeneficiaryAccount: _new_beneficiary_pda,
@@ -146,13 +146,10 @@ describe("marinade-referral", () => {
           signers: [PARTNER],
         });
       }
-      // {
-      //   message: "300: Access denied",
-      // }
     );
 
     // update authority back to previous partner
-    await program.rpc.updateAuthority({
+    await program.rpc.changeAuthority({
       accounts: {
         msolMint: msolMint.publicKey,
         newBeneficiaryAccount: beneficiaryPda,
@@ -187,6 +184,6 @@ describe("marinade-referral", () => {
     // check if transfer period is updated
     assert.ok(referralState.transferDuration === NEW_TRANSFER_DURATION);
     // check if pause is updated
-    assert.ok(referralState.pause === true);
+    assert.ok(referralState.pause);
   });
 });

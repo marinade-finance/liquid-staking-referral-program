@@ -36,8 +36,8 @@ pub mod marinade_referral {
     }
 
     ///update partner, authority and beneficiary account based on the new partner
-    pub fn update_authority(ctx: Context<UpdateAuthority>) -> ProgramResult {
-        process_update_authority(ctx)
+    pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
+        process_change_authority(ctx)
     }
 
     ///deposit SOL

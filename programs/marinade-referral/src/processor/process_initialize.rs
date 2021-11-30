@@ -1,8 +1,22 @@
+use std::str::FromStr;
+
 use anchor_lang::{prelude::*, solana_program::clock};
 
-use crate::{associated_token, constant::*, fees::Fee, instructions::*};
+use crate::{associated_token, constant::*, error::*, fees::Fee, instructions::*};
 
 pub fn process_initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> ProgramResult {
+    // verify msol_mint_authority
+    if ctx.accounts.msol_mint.mint_authority.unwrap()
+        != Pubkey::from_str(MSOL_MINT_AUTHORITY_ADDRESS).unwrap()
+    {
+        return Err(ReferralError::AccessDenied.into());
+    }
+
+    // create associated token account for partner
+    if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
+        associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
+    }
+
     ctx.accounts.state.partner_name = partner_name.clone();
 
     ctx.accounts.state.partner_account = *ctx.accounts.partner_account.key;
@@ -32,11 +46,6 @@ pub fn process_initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> P
     ctx.accounts.state.max_net_stake = DEFAULT_MAX_NET_STAKE;
 
     ctx.accounts.state.pause = false;
-
-    // create associated token account for partner
-    if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
-        associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
-    }
 
     Ok(())
 }

@@ -47,7 +47,7 @@ impl<'info> Initialize<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct UpdateAuthority<'info> {
+pub struct ChangeAuthority<'info> {
     // mSOL mint
     pub msol_mint: CpiAccount<'info, Mint>,
 
@@ -75,7 +75,7 @@ pub struct UpdateAuthority<'info> {
     pub rent: AccountInfo<'info>,
 }
 
-impl<'info> UpdateAuthority<'info> {
+impl<'info> ChangeAuthority<'info> {
     pub fn into_create_associated_token_account_ctx(
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
