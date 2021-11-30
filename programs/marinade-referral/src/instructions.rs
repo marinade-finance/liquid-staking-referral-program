@@ -113,7 +113,7 @@ pub struct Update<'info> {
 pub struct Deposit<'info> {
     #[account(
         mut,
-        constraint = !state.pause, // @ ReferralError::Paused,
+        // constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
@@ -131,6 +131,42 @@ pub struct Deposit<'info> {
 
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
+    pub marinade_finance_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct DepositWrapper<'info> {
+    pub state: AccountInfo<'info>,
+    pub msol_mint: AccountInfo<'info>,
+    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
+    pub liq_pool_msol_leg: AccountInfo<'info>,
+    pub liq_pool_msol_leg_authority: AccountInfo<'info>,
+    pub reserve_pda: AccountInfo<'info>,
+    pub transfer_from: AccountInfo<'info>,
+    pub mint_to: AccountInfo<'info>,
+    pub msol_mint_authority: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+}
+
+impl<'info> Deposit<'info> {
+    pub fn into_deposit_sol_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, DepositWrapper<'info>> {
+        let cpi_accounts = DepositWrapper {
+            state: self.marinade_state.clone(),
+            msol_mint: self.msol_mint.clone(),
+            liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
+            liq_pool_msol_leg: self.liq_pool_msol_leg.clone(),
+            liq_pool_msol_leg_authority: self.liq_pool_msol_leg_authority.clone(),
+            reserve_pda: self.reserve_pda.clone(),
+            transfer_from: self.transfer_from.clone(),
+            mint_to: self.mint_to.clone(),
+            msol_mint_authority: self.msol_mint_authority.clone(),
+            system_program: self.system_program.clone(),
+            token_program: self.token_program.clone(),
+        };
+
+        CpiContext::new(self.marinade_finance_program.clone(), cpi_accounts)
+    }
 }
 
 //-----------------------------------------------------
@@ -138,7 +174,7 @@ pub struct Deposit<'info> {
 pub struct DepositStakeAccount<'info> {
     #[account(
         mut,
-        constraint = !state.pause, // @ ReferralError::Paused,
+        // constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
@@ -170,7 +206,7 @@ pub struct DepositStakeAccount<'info> {
 pub struct LiquidUnstake<'info> {
     #[account(
         mut,
-        constraint = !state.pause, // @ ReferralError::Paused,
+        // constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
