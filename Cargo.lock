@@ -680,23 +680,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "marinade-finance-onchain-sdk"
-version = "0.1.0"
-source = "git+https://github.com/marinade-finance/liquid-staking-onchain-sdk#7af82a4aeacdc39d5646c0d2fc4638bbc6e928fd"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "marinade-finance",
-]
-
-[[package]]
 name = "marinade-referral"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
  "marinade-finance",
- "marinade-finance-onchain-sdk",
  "spl-associated-token-account",
  "spl-token",
 ]

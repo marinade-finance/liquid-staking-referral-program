@@ -17,8 +17,7 @@ default = []
 [dependencies]
 anchor-lang = "0.14.0"
 anchor-spl = "0.14.0"
-# for manual parsing. Hope anchor-spl reexports this in next releases
 spl-token = { version = "3.1", features = ["no-entrypoint"] }
-spl-associated-token-account = {version = "1.0.3", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.0.3", features = ["no-entrypoint"] }
 marinade-finance = { git = "https://github.com/marinade-finance/liquid-staking-program", features = ["no-entrypoint"] }
-marinade-finance-onchain-sdk = { git = "https://github.com/marinade-finance/liquid-staking-onchain-sdk", features = ["no-entrypoint"] }
+# marinade-finance-onchain-sdk = { git = "https://github.com/marinade-finance/liquid-staking-onchain-sdk", features = ["no-entrypoint"] }

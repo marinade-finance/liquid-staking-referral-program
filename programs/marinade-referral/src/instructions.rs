@@ -127,10 +127,12 @@ pub struct Deposit<'info> {
     pub liq_pool_msol_leg: AccountInfo<'info>,
     pub liq_pool_msol_leg_authority: AccountInfo<'info>,
     pub reserve_pda: AccountInfo<'info>,
-    pub marinade_state: AccountInfo<'info>,
+    pub marinade_finance_state: AccountInfo<'info>,
 
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
+
+    // Marinade main program ID
     pub marinade_finance_program: AccountInfo<'info>,
 }
 
@@ -152,7 +154,7 @@ pub struct DepositWrapper<'info> {
 impl<'info> Deposit<'info> {
     pub fn into_deposit_sol_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, DepositWrapper<'info>> {
         let cpi_accounts = DepositWrapper {
-            state: self.marinade_state.clone(),
+            state: self.marinade_finance_state.clone(),
             msol_mint: self.msol_mint.clone(),
             liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
             liq_pool_msol_leg: self.liq_pool_msol_leg.clone(),
@@ -191,7 +193,7 @@ pub struct DepositStakeAccount<'info> {
     pub msol_mint: AccountInfo<'info>,
     pub mint_to: AccountInfo<'info>,
     pub msol_mint_authority: AccountInfo<'info>,
-    pub marinade_state: AccountInfo<'info>,
+    pub marinade_finance_state: AccountInfo<'info>,
 
     pub clock: Sysvar<'info, Clock>,
     pub rent: Sysvar<'info, Rent>,
@@ -199,6 +201,9 @@ pub struct DepositStakeAccount<'info> {
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub stake_program: AccountInfo<'info>,
+
+    // Marinade main program ID
+    pub marinade_finance_program: AccountInfo<'info>,
 }
 
 //-----------------------------------------------------
@@ -218,10 +223,48 @@ pub struct LiquidUnstake<'info> {
     pub liq_pool_msol_leg: AccountInfo<'info>,
     pub treasury_msol_account: AccountInfo<'info>,
     pub transfer_sol_to: AccountInfo<'info>,
-    pub marinade_state: AccountInfo<'info>,
+    pub marinade_finance_state: AccountInfo<'info>,
 
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
+
+    // Marinade main program ID
+    pub marinade_finance_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct LiquidUnstakeWrapper<'info> {
+    pub get_msol_from_authority: AccountInfo<'info>, //burn_msol_from owner or delegate_authority
+    pub msol_mint: AccountInfo<'info>,
+    pub get_msol_from: AccountInfo<'info>,
+    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
+    pub liq_pool_msol_leg: AccountInfo<'info>,
+    pub treasury_msol_account: AccountInfo<'info>,
+    pub transfer_sol_to: AccountInfo<'info>,
+    pub state: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+}
+
+impl<'info> LiquidUnstake<'info> {
+    pub fn into_liquid_unstake_cpi_ctx(
+        &self,
+    ) -> CpiContext<'_, '_, '_, 'info, LiquidUnstakeWrapper<'info>> {
+        let cpi_accounts = LiquidUnstakeWrapper {
+            state: self.marinade_finance_state.clone(),
+            msol_mint: self.msol_mint.clone(),
+            liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
+            liq_pool_msol_leg: self.liq_pool_msol_leg.clone(),
+            get_msol_from: self.get_msol_from.clone(),
+            get_msol_from_authority: self.get_msol_from_authority.clone(),
+            transfer_sol_to: self.transfer_sol_to.clone(),
+            treasury_msol_account: self.treasury_msol_account.clone(),
+            system_program: self.system_program.clone(),
+            token_program: self.token_program.clone(),
+        };
+
+        CpiContext::new(self.marinade_finance_program.clone(), cpi_accounts)
+    }
 }
 
 //-----------------------------------------------------

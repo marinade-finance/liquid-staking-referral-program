@@ -1,15 +1,10 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
-pub use marinade_finance::instruction::Deposit as MarinadeDeposit;
+use marinade_finance::instruction::Deposit as MarinadeDeposit;
 
 use crate::instructions::*;
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
-    ctx.accounts.state.deposit_sol_amount =
-        ctx.accounts.state.deposit_sol_amount.wrapping_add(lamports);
-    ctx.accounts.state.deposit_sol_operations =
-        ctx.accounts.state.deposit_sol_operations.wrapping_add(1);
-
-    // Deposit SOL cpi
+    // deposit-sol cpi
     let cpi_ctx = ctx.accounts.into_deposit_sol_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);
     let data = MarinadeDeposit { lamports };
@@ -35,6 +30,12 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
         ],
         cpi_ctx.signer_seeds,
     )?;
+
+    // update accumulators
+    ctx.accounts.state.deposit_sol_amount =
+        ctx.accounts.state.deposit_sol_amount.wrapping_add(lamports);
+    ctx.accounts.state.deposit_sol_operations =
+        ctx.accounts.state.deposit_sol_operations.wrapping_add(1);
 
     Ok(())
 }
