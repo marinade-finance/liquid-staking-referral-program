@@ -229,7 +229,7 @@ pub struct LiquidUnstake<'info> {
 pub struct RequestTransfer<'info> {
     #[account(
         mut,
-        constraint = !state.pause, // @ ReferralError::Paused,
+        // constraint = !state.pause @ ReferralError::Paused,
     )]
     pub state: ProgramAccount<'info, ReferralState>,
 
