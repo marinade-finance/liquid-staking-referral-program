@@ -1,5 +1,6 @@
-use crate::{associated_token, error::*, instructions::*};
 use anchor_lang::prelude::*;
+
+use crate::{associated_token, error::*, instructions::*};
 
 pub fn process_update_authority(ctx: Context<UpdateAuthority>) -> ProgramResult {
     // TODO: security middleware

@@ -1,9 +1,14 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::Deposit as MarinadeDeposit;
 
-use crate::instructions::*;
+use crate::{error::*, instructions::*};
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
+    // check emergency pause
+    if ctx.accounts.state.pause == true {
+        return Err(ReferralError::Paused.into());
+    }
+
     // deposit-sol cpi
     let cpi_ctx = ctx.accounts.into_deposit_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);

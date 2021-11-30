@@ -3,6 +3,11 @@ use anchor_lang::{prelude::*, solana_program::clock};
 use crate::{error::*, instructions::*};
 
 pub fn process_claim_transfer(ctx: Context<ClaimTransfer>) -> ProgramResult {
+    // check emergency pause
+    if ctx.accounts.state.pause == true {
+        return Err(ReferralError::Paused.into());
+    }
+
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
     let elapsed_time = current_time.wrapping_sub(ctx.accounts.state.last_transfer_time);
 
