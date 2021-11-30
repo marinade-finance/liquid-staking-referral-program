@@ -7,4 +7,7 @@ pub enum ReferralError {
 
     #[msg("Paused")]
     Paused,
+
+    #[msg("Claim is not available")]
+    ClaimNotAvailable,
 }

@@ -1,8 +1,8 @@
 use anchor_lang::{prelude::*, solana_program::clock};
 
-use crate::instructions::*;
+use crate::{error::*, instructions::*};
 
-pub fn process_request_transfer(ctx: Context<RequestTransfer>) -> ProgramResult {
+pub fn process_claim_transfer(ctx: Context<ClaimTransfer>) -> ProgramResult {
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
     let elapsed_time = current_time.wrapping_sub(ctx.accounts.state.last_transfer_time);
 
@@ -14,6 +14,8 @@ pub fn process_request_transfer(ctx: Context<RequestTransfer>) -> ProgramResult 
 
         // clears all accumulators
         ctx.accounts.state.reset_liq_unstake_accumulators();
+    } else {
+        return Err(ReferralError::ClaimNotAvailable.into());
     }
 
     Ok(())

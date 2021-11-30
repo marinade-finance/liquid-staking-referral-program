@@ -269,7 +269,7 @@ impl<'info> LiquidUnstake<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct RequestTransfer<'info> {
+pub struct ClaimTransfer<'info> {
     #[account(
         mut,
         // constraint = !state.pause @ ReferralError::Paused,
@@ -277,8 +277,9 @@ pub struct RequestTransfer<'info> {
     pub state: ProgramAccount<'info, ReferralState>,
 
     #[account(mut, signer)]
-    pub request_account: AccountInfo<'info>,
+    pub claimer_account: AccountInfo<'info>,
 
+    pub msol_mint: AccountInfo<'info>,
     pub treasury_msol_account: AccountInfo<'info>,
 }
 

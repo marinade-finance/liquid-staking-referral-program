@@ -58,8 +58,8 @@ pub mod marinade_referral {
         process_liquid_unstake(ctx, msol_amount)
     }
 
-    ///request transfer, permissionless
-    pub fn request_transfer(ctx: Context<RequestTransfer>) -> ProgramResult {
-        process_request_transfer(ctx)
+    ///claim transfer, permissionless
+    pub fn claim_transfer(ctx: Context<ClaimTransfer>) -> ProgramResult {
+        process_claim_transfer(ctx)
     }
 }
