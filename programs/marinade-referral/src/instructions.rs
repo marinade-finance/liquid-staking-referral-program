@@ -152,7 +152,7 @@ pub struct DepositWrapper<'info> {
 }
 
 impl<'info> Deposit<'info> {
-    pub fn into_deposit_sol_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, DepositWrapper<'info>> {
+    pub fn into_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, DepositWrapper<'info>> {
         let cpi_accounts = DepositWrapper {
             state: self.marinade_finance_state.clone(),
             msol_mint: self.msol_mint.clone(),
@@ -204,6 +204,51 @@ pub struct DepositStakeAccount<'info> {
 
     // Marinade main program ID
     pub marinade_finance_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct DepositStakeAccountWrapper<'info> {
+    pub state: AccountInfo<'info>,
+    pub validator_list: AccountInfo<'info>,
+    pub stake_list: AccountInfo<'info>,
+    pub stake_account: AccountInfo<'info>,
+    pub stake_authority: AccountInfo<'info>,
+    pub duplication_flag: AccountInfo<'info>,
+    pub rent_payer: AccountInfo<'info>,
+    pub msol_mint: AccountInfo<'info>,
+    pub mint_to: AccountInfo<'info>,
+    pub msol_mint_authority: AccountInfo<'info>,
+    pub clock: Sysvar<'info, Clock>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+    pub stake_program: AccountInfo<'info>,
+}
+
+impl<'info> DepositStakeAccount<'info> {
+    pub fn into_deposit_stake_account_cpi_ctx(
+        &self,
+    ) -> CpiContext<'_, '_, '_, 'info, DepositStakeAccountWrapper<'info>> {
+        let cpi_accounts = DepositStakeAccountWrapper {
+            state: self.marinade_finance_state.clone(),
+            validator_list: self.validator_list.clone(),
+            stake_list: self.stake_list.clone(),
+            stake_account: self.stake_account.clone(),
+            stake_authority: self.stake_authority.clone(),
+            duplication_flag: self.duplication_flag.clone(),
+            rent_payer: self.rent_payer.clone(),
+            msol_mint: self.msol_mint.clone(),
+            mint_to: self.mint_to.clone(),
+            msol_mint_authority: self.msol_mint_authority.clone(),
+            clock: self.clock.clone(),
+            rent: self.rent.clone(),
+            system_program: self.system_program.clone(),
+            token_program: self.token_program.clone(),
+            stake_program: self.stake_program.clone(),
+        };
+
+        CpiContext::new(self.marinade_finance_program.clone(), cpi_accounts)
+    }
 }
 
 //-----------------------------------------------------

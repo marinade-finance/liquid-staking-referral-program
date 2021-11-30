@@ -5,7 +5,7 @@ use crate::instructions::*;
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
     // deposit-sol cpi
-    let cpi_ctx = ctx.accounts.into_deposit_sol_cpi_ctx();
+    let cpi_ctx = ctx.accounts.into_deposit_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);
     let data = MarinadeDeposit { lamports };
     let ix = Instruction {
