@@ -14,7 +14,7 @@ pub fn process_transfer_liq_shares(ctx: Context<TransferLiqShares>) -> ProgramRe
     if ctx.accounts.msol_mint.mint_authority.unwrap()
         != Pubkey::from_str(MSOL_MINT_AUTHORITY_ADDRESS).unwrap()
     {
-        return Err(ReferralError::AccessDenied.into());
+        return Err(ReferralError::InvalidMintAuthority.into());
     }
 
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
@@ -29,7 +29,7 @@ pub fn process_transfer_liq_shares(ctx: Context<TransferLiqShares>) -> ProgramRe
         // clears all accumulators
         ctx.accounts.referral_state.reset_liq_unstake_accumulators();
     } else {
-        return Err(ReferralError::ClaimNotAvailable.into());
+        return Err(ReferralError::TransferNotAvailable.into());
     }
 
     Ok(())

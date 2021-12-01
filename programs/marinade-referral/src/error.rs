@@ -8,6 +8,9 @@ pub enum ReferralError {
     #[msg("Paused")]
     Paused,
 
-    #[msg("Claim is not available")]
-    ClaimNotAvailable,
+    #[msg("Transfer is not available")]
+    TransferNotAvailable,
+
+    #[msg("Invalid mSOL mint authority")]
+    InvalidMintAuthority,
 }

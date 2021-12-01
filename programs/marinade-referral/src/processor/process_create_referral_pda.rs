@@ -23,7 +23,7 @@ pub fn process_create_referral_pda(
     if ctx.accounts.msol_mint.mint_authority.unwrap()
         != Pubkey::from_str(MSOL_MINT_AUTHORITY_ADDRESS).unwrap()
     {
-        return Err(ReferralError::AccessDenied.into());
+        return Err(ReferralError::InvalidMintAuthority.into());
     }
 
     // create associated token account for partner
