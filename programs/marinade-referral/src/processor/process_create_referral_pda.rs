@@ -1,30 +1,12 @@
-use std::str::FromStr;
-
 use anchor_lang::{prelude::*, solana_program::clock};
 
-use crate::{associated_token, constant::*, error::*, fees::Fee, instructions::*};
+use crate::{associated_token, constant::*, fees::Fee, instructions::*};
 
 pub fn process_create_referral_pda(
     ctx: Context<CreateReferralPda>,
     _bump: u8,
     partner_name: [u8; 10],
 ) -> ProgramResult {
-    // check authority
-    if ctx
-        .accounts
-        .global_state
-        .admin_account
-        .ne(ctx.accounts.admin_account.key)
-    {
-        return Err(ReferralError::AccessDenied.into());
-    }
-
-    // verify msol_mint_authority
-    if ctx.accounts.msol_mint.mint_authority.unwrap()
-        != Pubkey::from_str(MSOL_MINT_AUTHORITY_ADDRESS).unwrap()
-    {
-        return Err(ReferralError::InvalidMintAuthority.into());
-    }
 
     // create associated token account for partner
     if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
