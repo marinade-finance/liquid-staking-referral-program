@@ -8,6 +8,7 @@ pub fn process_create_referral_pda(
     partner_name: [u8; 10],
 ) -> ProgramResult {
     // create associated token account for partner
+    // TODO: validate beneficiary ATA in a better way
     if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
         associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
     }

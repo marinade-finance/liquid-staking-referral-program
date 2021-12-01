@@ -10,7 +10,4 @@ pub enum ReferralError {
 
     #[msg("Transfer is not available")]
     TransferNotAvailable,
-
-    #[msg("Invalid mSOL mint authority")]
-    InvalidMintAuthority,
 }

@@ -1,7 +1,7 @@
 use std::{mem::size_of, str::FromStr};
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount};
+use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 use crate::{
     associated_token::Create as CreateAssociatedTokenAccount, constant::*,
@@ -269,20 +269,44 @@ impl<'info> LiquidUnstake<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct TransferLiqShares<'info> {
+    // mSOL mint
     #[account(address = Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap())]
     pub msol_mint: CpiAccount<'info, Mint>,
 
-    #[account(mut)]
-    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
-
+    // mSOL beneficiary account
     #[account(mut)]
     pub beneficiary_account: CpiAccount<'info, TokenAccount>,
 
+    // mSOL treasury token account
+    #[account(mut)]
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+
+    // treasury token account owner
     #[account(mut, signer)]
     pub treasury_account: AccountInfo<'info>,
 
-    #[account(mut)]
+    // referral state
+    #[account(
+        mut,
+        constraint = !referral_state.pause,
+        constraint = referral_state.liq_unstake_amount > 0,
+        constraint = referral_state.beneficiary_account.key() == *beneficiary_account.to_account_info().key,
+    )]
     pub referral_state: ProgramAccount<'info, ReferralState>,
+
+    pub token_program: AccountInfo<'info>,
+}
+
+impl<'info> TransferLiqShares<'info> {
+    pub fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        let cpi_accounts = Transfer {
+            from: self.treasury_msol_account.to_account_info().clone(),
+            to: self.beneficiary_account.to_account_info().clone(),
+            authority: self.treasury_account.clone(),
+        };
+
+        CpiContext::new(self.token_program.clone(), cpi_accounts)
+    }
 }
 
 //-----------------------------------------------------

@@ -21,8 +21,6 @@ pub mod utils;
 
 use crate::{instructions::*, processor::*};
 
-// declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
-
 #[program]
 pub mod marinade_referral {
     use super::*;

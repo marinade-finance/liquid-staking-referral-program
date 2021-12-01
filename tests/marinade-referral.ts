@@ -31,6 +31,9 @@ describe("marinade-referral", () => {
   // beneficiary associated token address
   let beneficiaryPda: InstanceType<typeof PublicKey>;
 
+  // treasury associated token address
+  let treasuryPda: InstanceType<typeof PublicKey>;
+
   // global state PDA
   let globalStatePda: InstanceType<typeof PublicKey>;
   let globalStateBump: number;
@@ -39,16 +42,16 @@ describe("marinade-referral", () => {
   let referralStatePda: InstanceType<typeof PublicKey>;
   let referralStateBump: number;
 
-  // mSOL mint authority
-  const MSOL_MINT_AUTHORITY_ID = new PublicKey(
-    "3JLPCS1qM2zRw3Dp6V4hZnYHd4toMNPkNesXdX9tg6KM"
-  );
   // partner name - length should be 10
   const PARTNER_NAME = "abcde12345";
+  // mSOL mint authority
+  const MSOL_MINT_AUTHORITY = Keypair.generate();
   // admin account
   const ADMIN = Keypair.generate();
   // partner account
   const PARTNER = Keypair.generate();
+  // treasury holder account
+  const TREASURY = Keypair.generate();
 
   const GLOBAL_STATE_SEED = "mrp_initialize";
   const REFERRAL_STATE_SEED = "mrp_create_referral";
@@ -60,11 +63,17 @@ describe("marinade-referral", () => {
       "confirmed"
     );
 
+    // Airdrop SOLs to the treasury holder.
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(TREASURY.publicKey, 1e9),
+      "confirmed"
+    );
+
     // create mSOL token mint
     msolMint = await Token.createMint(
       provider.connection,
       ADMIN,
-      MSOL_MINT_AUTHORITY_ID,
+      MSOL_MINT_AUTHORITY.publicKey,
       null,
       0,
       TOKEN_PROGRAM_ID
@@ -81,6 +90,24 @@ describe("marinade-referral", () => {
         ASSOCIATED_TOKEN_PROGRAM_ID
       )
     )[0];
+
+    // treasury - mSOL ATA for treasury
+    treasuryPda = await msolMint.createAssociatedTokenAccount(
+      TREASURY.publicKey
+    );
+    // Airdrop mSOL to trasury_msol_account
+    await msolMint.mintTo(
+      treasuryPda,
+      MSOL_MINT_AUTHORITY.publicKey,
+      [MSOL_MINT_AUTHORITY],
+      1_000
+    );
+
+    console.log(
+      msolMint.publicKey.toString(),
+      beneficiaryPda.toString(),
+      treasuryPda.toString()
+    );
 
     // global state PDA & bump
     const [_global_state_pda, _global_state_bump] =
@@ -134,7 +161,7 @@ describe("marinade-referral", () => {
       signers: [ADMIN],
     });
 
-    // old admin no longer has permission to change authority
+    // prev admin no longer has permission to change authority
     await assert.rejects(async () => {
       await program.rpc.changeAuthority({
         accounts: {
@@ -146,7 +173,7 @@ describe("marinade-referral", () => {
       });
     });
 
-    // update authority back to previous admin
+    // update authority back to prev admin
     await program.rpc.changeAuthority({
       accounts: {
         newAdminAccount: ADMIN.publicKey,
@@ -192,7 +219,8 @@ describe("marinade-referral", () => {
   });
 
   it("should update referral state", async () => {
-    const NEW_TRANSFER_DURATION = 2_592_000 * 2;
+    const TRANSFER_DURATION = 2_592_000;
+    const NEW_TRANSFER_DURATION = TRANSFER_DURATION * 2;
 
     // update referral state
     await program.rpc.updateReferral(NEW_TRANSFER_DURATION, true, {
@@ -212,5 +240,30 @@ describe("marinade-referral", () => {
     assert.ok(referralState.transferDuration === NEW_TRANSFER_DURATION);
     // check if pause is updated
     assert.ok(referralState.pause);
+
+    // reset settings to default
+    await program.rpc.updateReferral(TRANSFER_DURATION, false, {
+      accounts: {
+        adminAccount: ADMIN.publicKey,
+        referralState: referralStatePda,
+        globalState: globalStatePda,
+      },
+      signers: [ADMIN],
+    });
+  });
+
+  it("should transfer mSOL from treasury to beneficiary", async () => {
+    // transfer mSOL
+    await program.rpc.transferLiqShares({
+      accounts: {
+        msolMint: msolMint.publicKey,
+        beneficiaryAccount: beneficiaryPda,
+        treasuryMsolAccount: treasuryPda,
+        treasuryAccount: TREASURY.publicKey,
+        referralState: referralStatePda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      },
+      signers: [TREASURY],
+    });
   });
 });
