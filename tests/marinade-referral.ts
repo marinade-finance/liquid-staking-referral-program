@@ -12,6 +12,9 @@ const { Keypair, SystemProgram, PublicKey, SYSVAR_RENT_PUBKEY } = web3;
 
 describe("marinade-referral", () => {
   // Local cluster provider.
+  if (!process.env.ANCHOR_PROVIDER_URL) {
+    process.env.ANCHOR_PROVIDER_URL = "http://localhost:8899";
+  }
   const provider = anchor.Provider.env();
 
   // Configure the client to use the local cluster.
@@ -25,7 +28,7 @@ describe("marinade-referral", () => {
   // mSOL token mint
   let msolMint: Token;
 
-  // benefinciary associated token address
+  // beneficiary associated token address
   let beneficiaryPda: InstanceType<typeof PublicKey>;
 
   // global state PDA

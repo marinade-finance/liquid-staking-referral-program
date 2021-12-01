@@ -3,12 +3,15 @@
         "lint": "eslint '**/*.ts' --fix",
         "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
     },
-    "keywords": ["marinade", "referral"],
+    "keywords": [
+        "marinade",
+        "referral"
+    ],
     "author": "keisukew53@gmail.com",
     "license": "ISC",
     "engines": {
         "node": ">=10.6.0"
-    },    
+    },
     "dependencies": {
         "@project-serum/anchor": "^0.14.0",
         "@solana/spl-token": "^0.1.8"
