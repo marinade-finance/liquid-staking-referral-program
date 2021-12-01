@@ -1,22 +1,8 @@
-use std::str::FromStr;
-
 use anchor_lang::{prelude::*, solana_program::clock};
 
-use crate::{constant::*, error::*, instructions::*};
+use crate::{error::*, instructions::*};
 
 pub fn process_transfer_liq_shares(ctx: Context<TransferLiqShares>) -> ProgramResult {
-    // check emergency pause
-    if ctx.accounts.referral_state.pause {
-        return Err(ReferralError::Paused.into());
-    }
-
-    // verify msol_mint_authority
-    if ctx.accounts.msol_mint.mint_authority.unwrap()
-        != Pubkey::from_str(MSOL_MINT_AUTHORITY_ADDRESS).unwrap()
-    {
-        return Err(ReferralError::InvalidMintAuthority.into());
-    }
-
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
     let elapsed_time = current_time.wrapping_sub(ctx.accounts.referral_state.last_transfer_time);
 

@@ -1,17 +1,12 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::DepositStakeAccount as MarinadeDepositStakeAccount;
 
-use crate::{error::*, instructions::*};
+use crate::instructions::*;
 
 pub fn process_deposit_stake_account(
     ctx: Context<DepositStakeAccount>,
     validator_index: u32,
 ) -> ProgramResult {
-    // check emergency pause
-    if ctx.accounts.referral_state.pause {
-        return Err(ReferralError::Paused.into());
-    }
-
     // deposit-stake-account cpi
     let cpi_ctx = ctx.accounts.into_deposit_stake_account_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);

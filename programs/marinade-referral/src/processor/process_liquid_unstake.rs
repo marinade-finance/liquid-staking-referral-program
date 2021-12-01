@@ -1,14 +1,9 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::LiquidUnstake as MarinadeLiquidUnstake;
 
-use crate::{error::*, instructions::*};
+use crate::instructions::*;
 
 pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
-    // check emergency pause
-    if ctx.accounts.referral_state.pause {
-        return Err(ReferralError::Paused.into());
-    }
-
     // liquid-unstake cpi
     let cpi_ctx = ctx.accounts.into_liquid_unstake_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);

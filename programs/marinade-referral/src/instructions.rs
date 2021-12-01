@@ -63,7 +63,7 @@ pub struct CreateReferralPda<'info> {
     pub admin_account: AccountInfo<'info>,
 
     // mSOL mint
-    #[account(address = Pubkey::from_str("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So").unwrap())]
+    #[account(address = Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap())]
     pub msol_mint: CpiAccount<'info, Mint>,
 
     // partner account
@@ -113,7 +113,6 @@ impl<'info> CreateReferralPda<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct UpdateReferral<'info> {
-
     // global state
     #[account(has_one = admin_account)]
     pub global_state: ProgramAccount<'info, GlobalState>,
@@ -125,15 +124,13 @@ pub struct UpdateReferral<'info> {
     // referral state
     #[account(mut)]
     pub referral_state: ProgramAccount<'info, ReferralState>,
-
 }
 
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct Deposit<'info> {
-
     // this part is equivalent to marinade-finance deposit instructions
-    pub state: AccountInfo<'info>,  // marinade state
+    pub state: AccountInfo<'info>, // marinade state
     pub msol_mint: AccountInfo<'info>,
     pub liq_pool_sol_leg_pda: AccountInfo<'info>,
     pub liq_pool_msol_leg: AccountInfo<'info>,
@@ -148,9 +145,8 @@ pub struct Deposit<'info> {
 
     // accounts added are: Marinade main program ID & referral_state
     pub marinade_finance_program: AccountInfo<'info>,
-    #[account(mut)]
+    #[account(mut, constraint = !referral_state.pause)]
     pub referral_state: ProgramAccount<'info, ReferralState>,
-
 }
 
 impl<'info> Deposit<'info> {
@@ -176,18 +172,11 @@ impl<'info> Deposit<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct DepositStakeAccount<'info> {
-    #[account(
-        mut,
-        // constraint = !state.pause @ ReferralError::Paused,
-    )]
-    pub referral_state: ProgramAccount<'info, ReferralState>,
-
+    // this part is equivalent to marinade-finance deposit-stake-account instructions
     #[account(signer)]
     pub stake_authority: AccountInfo<'info>,
-
     #[account(signer)]
     pub rent_payer: AccountInfo<'info>,
-
     pub validator_list: AccountInfo<'info>,
     pub stake_list: AccountInfo<'info>,
     pub stake_account: AccountInfo<'info>,
@@ -196,16 +185,16 @@ pub struct DepositStakeAccount<'info> {
     pub mint_to: AccountInfo<'info>,
     pub msol_mint_authority: AccountInfo<'info>,
     pub marinade_finance_state: AccountInfo<'info>,
-
     pub clock: Sysvar<'info, Clock>,
     pub rent: Sysvar<'info, Rent>,
-
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub stake_program: AccountInfo<'info>,
 
-    // Marinade main program ID
+    // accounts added are: Marinade main program ID & referral_state
     pub marinade_finance_program: AccountInfo<'info>,
+    #[account(mut, constraint = !referral_state.pause)]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 }
 
 impl<'info> DepositStakeAccount<'info> {
@@ -237,12 +226,7 @@ impl<'info> DepositStakeAccount<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct LiquidUnstake<'info> {
-    #[account(
-        mut,
-        // constraint = !state.pause @ ReferralError::Paused,
-    )]
-    pub referral_state: ProgramAccount<'info, ReferralState>,
-
+    // this part is equivalent to marinade-finance liquid-unstake instructions
     #[account(signer)]
     pub get_msol_from_authority: AccountInfo<'info>, //burn_msol_from owner or delegate_authority
     pub msol_mint: AccountInfo<'info>,
@@ -252,12 +236,13 @@ pub struct LiquidUnstake<'info> {
     pub treasury_msol_account: AccountInfo<'info>,
     pub transfer_sol_to: AccountInfo<'info>,
     pub marinade_finance_state: AccountInfo<'info>,
-
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 
-    // Marinade main program ID
+    // accounts added are: Marinade main program ID & referral_state
     pub marinade_finance_program: AccountInfo<'info>,
+    #[account(mut, constraint = !referral_state.pause)]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 }
 
 impl<'info> LiquidUnstake<'info> {
@@ -284,6 +269,7 @@ impl<'info> LiquidUnstake<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct TransferLiqShares<'info> {
+    #[account(address = Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap())]
     pub msol_mint: CpiAccount<'info, Mint>,
 
     #[account(mut)]
