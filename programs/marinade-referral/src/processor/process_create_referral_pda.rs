@@ -1,6 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::clock};
+use marinade_finance::Fee;
 
-use crate::{associated_token, constant::*, fees::Fee, instructions::*};
+use crate::{associated_token, constant::*, instructions::*};
 
 pub fn process_create_referral_pda(
     ctx: Context<CreateReferralPda>,

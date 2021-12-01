@@ -8,8 +8,6 @@ pub mod constant;
 pub mod cpi_context_instructions;
 ///error
 pub mod error;
-///fees
-pub mod fees;
 ///instructions
 pub mod instructions;
 ///processor

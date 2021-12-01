@@ -18,6 +18,11 @@ anchor build
 anchor test
 ```
 
+## Deploy to devnet
+```bash
+anchor deploy --provider.cluster devnet
+```
+
 ## Autofix TypeScript lint errors
 ```bash
 yarn lint
@@ -37,4 +42,27 @@ cd programs/marinade-referrral
 soteria .
 # check vulnerabilities in all library codes
 soteria -analyzeAll .
+```
+
+## Custom types that should be manually injected to idl.json
+```json
+{
+...
+  "types": [
+    ...,
+    {
+      "name": "Fee",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basisPoints",
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ],
+...
+}
 ```

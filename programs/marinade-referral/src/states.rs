@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-
-use crate::fees::Fee;
+use marinade_finance::Fee;
 
 //-----------------------------------------------------
 ///marinade-referral-program PDA
@@ -75,7 +74,9 @@ impl ReferralState {
         let mut net_stake = 0;
 
         if self.deposit_sol_amount > self.liq_unstake_amount {
-            net_stake = self.deposit_sol_amount - self.liq_unstake_amount;
+            net_stake = self
+                .deposit_sol_amount
+                .wrapping_sub(self.liq_unstake_amount);
         }
 
         if net_stake == 0 {
@@ -83,7 +84,10 @@ impl ReferralState {
         } else if net_stake > self.max_net_stake {
             self.max_fee.apply(self.liq_unstake_amount)
         } else {
-            let delta = self.max_fee.basis_points - self.base_fee.basis_points;
+            let delta = self
+                .max_fee
+                .basis_points
+                .wrapping_sub(self.base_fee.basis_points);
             let proportion = net_stake.wrapping_div(self.max_net_stake);
             let proportion_fee = Fee {
                 basis_points: self
