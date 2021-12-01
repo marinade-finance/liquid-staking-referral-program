@@ -73,8 +73,8 @@ pub mod marinade_referral {
         process_liquid_unstake(ctx, msol_amount)
     }
 
-    ///claim transfer, permissionless
-    pub fn claim_transfer(ctx: Context<ClaimTransfer>) -> ProgramResult {
-        process_claim_transfer(ctx)
+    ///transfer shares, treasury holders can transfer shares manually
+    pub fn transfer_liq_shares(ctx: Context<TransferLiqShares>) -> ProgramResult {
+        process_transfer_liq_shares(ctx)
     }
 }

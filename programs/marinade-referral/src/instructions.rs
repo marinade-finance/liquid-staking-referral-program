@@ -281,7 +281,7 @@ impl<'info> LiquidUnstake<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct ClaimTransfer<'info> {
+pub struct TransferLiqShares<'info> {
     pub msol_mint: CpiAccount<'info, Mint>,
 
     #[account(mut)]

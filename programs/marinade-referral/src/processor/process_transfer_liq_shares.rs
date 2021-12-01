@@ -4,7 +4,7 @@ use anchor_lang::{prelude::*, solana_program::clock};
 
 use crate::{constant::*, error::*, instructions::*};
 
-pub fn process_claim_transfer(ctx: Context<ClaimTransfer>) -> ProgramResult {
+pub fn process_transfer_liq_shares(ctx: Context<TransferLiqShares>) -> ProgramResult {
     // check emergency pause
     if ctx.accounts.referral_state.pause {
         return Err(ReferralError::Paused.into());
