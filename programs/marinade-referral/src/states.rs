@@ -3,11 +3,17 @@ use anchor_lang::prelude::*;
 use crate::fees::*;
 
 //-----------------------------------------------------
+///marinade-referral-program PDA
 #[account]
-pub struct ReferralState {
+pub struct GlobalState {
     // Authority (admin address)
     pub admin_account: Pubkey,
+}
 
+//-----------------------------------------------------
+///referral PDA
+#[account]
+pub struct ReferralState {
     // Partner name
     pub partner_name: [u8; 10],
 

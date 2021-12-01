@@ -1,11 +1,59 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
+use std::mem::size_of;
 
-use crate::{associated_token::Create as CreateAssociatedTokenAccount, states::*};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, TokenAccount};
+
+use crate::{
+    associated_token::Create as CreateAssociatedTokenAccount, constant::*,
+    cpi_context_instructions::Deposit as MarinadeDeposit,
+    cpi_context_instructions::DepositStakeAccount as MarinadeDepositStakeAccount,
+    cpi_context_instructions::LiquidUnstake as MarinadeLiquidUnstake, states::*,
+};
 
 //-----------------------------------------------------
 #[derive(Accounts)]
+#[instruction(
+    bump: u8,
+)]
 pub struct Initialize<'info> {
+    // admin account
+    #[account(mut, signer)]
+    pub admin_account: AccountInfo<'info>,
+
+    // global state
+    #[account(
+        init,
+        payer = admin_account,
+        space = 8 + size_of::<GlobalState>(),
+        seeds = [GLOBAL_STATE_SEED.as_ref()],
+        bump = bump,
+    )]
+    pub global_state: ProgramAccount<'info, GlobalState>,
+
+    pub system_program: AccountInfo<'info>,
+}
+
+//-----------------------------------------------------
+#[derive(Accounts)]
+pub struct ChangeAuthority<'info> {
+    // new admin account
+    pub new_admin_account: AccountInfo<'info>,
+
+    // admin account
+    #[account(mut, signer)]
+    pub admin_account: AccountInfo<'info>,
+
+    // global state
+    #[account(mut)]
+    pub global_state: ProgramAccount<'info, GlobalState>,
+}
+
+//-----------------------------------------------------
+#[derive(Accounts)]
+#[instruction(
+    bump: u8,
+)]
+pub struct CreateReferralPda<'info> {
     // mSOL mint
     pub msol_mint: CpiAccount<'info, Mint>,
 
@@ -16,13 +64,25 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub beneficiary_account: AccountInfo<'info>,
 
-    // partner account, signer
+    // admin account, signer
     #[account(mut, signer)]
     pub admin_account: AccountInfo<'info>,
 
     // referral state
-    #[account(zero)]
-    pub state: ProgramAccount<'info, ReferralState>,
+    #[account(
+        init,
+        payer = admin_account,
+        space = 8 + size_of::<ReferralState>(),
+        seeds = [
+            partner_account.key().as_ref(),
+            REFERRAL_STATE_SEED.as_ref()
+        ],
+        bump = bump,
+    )]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
+
+    // global state
+    pub global_state: ProgramAccount<'info, GlobalState>,
 
     pub system_program: AccountInfo<'info>,
     pub associated_token_program: AccountInfo<'info>,
@@ -30,7 +90,7 @@ pub struct Initialize<'info> {
     pub rent: AccountInfo<'info>,
 }
 
-impl<'info> Initialize<'info> {
+impl<'info> CreateReferralPda<'info> {
     pub fn into_create_associated_token_account_ctx(
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
@@ -50,35 +110,17 @@ impl<'info> Initialize<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct ChangeAuthority<'info> {
-    // new admin account
-    pub new_admin_account: AccountInfo<'info>,
-
+pub struct UpdateReferral<'info> {
     // admin account
     #[account(mut, signer)]
     pub admin_account: AccountInfo<'info>,
 
     // referral state
-    #[account(
-        mut,
-        // has_one = admin_account @ ReferralError::AccessDenied,
-    )]
-    pub state: ProgramAccount<'info, ReferralState>,
-}
+    #[account(mut)]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 
-//-----------------------------------------------------
-#[derive(Accounts)]
-pub struct Update<'info> {
-    // admin account
-    #[account(mut, signer)]
-    pub admin_account: AccountInfo<'info>,
-
-    // referral state
-    #[account(
-        mut,
-        // has_one = admin_account @ ReferralError::AccessDenied,
-    )]
-    pub state: ProgramAccount<'info, ReferralState>,
+    // global state
+    pub global_state: ProgramAccount<'info, GlobalState>,
 }
 
 //-----------------------------------------------------
@@ -88,7 +130,7 @@ pub struct Deposit<'info> {
         mut,
         // constraint = !state.pause @ ReferralError::Paused,
     )]
-    pub state: ProgramAccount<'info, ReferralState>,
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 
     #[account(signer)]
     pub transfer_from: AccountInfo<'info>,
@@ -109,24 +151,9 @@ pub struct Deposit<'info> {
     pub marinade_finance_program: AccountInfo<'info>,
 }
 
-#[derive(Accounts)]
-pub struct DepositWrapper<'info> {
-    pub state: AccountInfo<'info>,
-    pub msol_mint: AccountInfo<'info>,
-    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
-    pub liq_pool_msol_leg: AccountInfo<'info>,
-    pub liq_pool_msol_leg_authority: AccountInfo<'info>,
-    pub reserve_pda: AccountInfo<'info>,
-    pub transfer_from: AccountInfo<'info>,
-    pub mint_to: AccountInfo<'info>,
-    pub msol_mint_authority: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-}
-
 impl<'info> Deposit<'info> {
-    pub fn into_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, DepositWrapper<'info>> {
-        let cpi_accounts = DepositWrapper {
+    pub fn into_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
+        let cpi_accounts = MarinadeDeposit {
             state: self.marinade_finance_state.clone(),
             msol_mint: self.msol_mint.clone(),
             liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
@@ -151,7 +178,7 @@ pub struct DepositStakeAccount<'info> {
         mut,
         // constraint = !state.pause @ ReferralError::Paused,
     )]
-    pub state: ProgramAccount<'info, ReferralState>,
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 
     #[account(signer)]
     pub stake_authority: AccountInfo<'info>,
@@ -179,30 +206,11 @@ pub struct DepositStakeAccount<'info> {
     pub marinade_finance_program: AccountInfo<'info>,
 }
 
-#[derive(Accounts)]
-pub struct DepositStakeAccountWrapper<'info> {
-    pub state: AccountInfo<'info>,
-    pub validator_list: AccountInfo<'info>,
-    pub stake_list: AccountInfo<'info>,
-    pub stake_account: AccountInfo<'info>,
-    pub stake_authority: AccountInfo<'info>,
-    pub duplication_flag: AccountInfo<'info>,
-    pub rent_payer: AccountInfo<'info>,
-    pub msol_mint: AccountInfo<'info>,
-    pub mint_to: AccountInfo<'info>,
-    pub msol_mint_authority: AccountInfo<'info>,
-    pub clock: Sysvar<'info, Clock>,
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-    pub stake_program: AccountInfo<'info>,
-}
-
 impl<'info> DepositStakeAccount<'info> {
     pub fn into_deposit_stake_account_cpi_ctx(
         &self,
-    ) -> CpiContext<'_, '_, '_, 'info, DepositStakeAccountWrapper<'info>> {
-        let cpi_accounts = DepositStakeAccountWrapper {
+    ) -> CpiContext<'_, '_, '_, 'info, MarinadeDepositStakeAccount<'info>> {
+        let cpi_accounts = MarinadeDepositStakeAccount {
             state: self.marinade_finance_state.clone(),
             validator_list: self.validator_list.clone(),
             stake_list: self.stake_list.clone(),
@@ -231,7 +239,7 @@ pub struct LiquidUnstake<'info> {
         mut,
         // constraint = !state.pause @ ReferralError::Paused,
     )]
-    pub state: ProgramAccount<'info, ReferralState>,
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 
     #[account(signer)]
     pub get_msol_from_authority: AccountInfo<'info>, //burn_msol_from owner or delegate_authority
@@ -250,25 +258,11 @@ pub struct LiquidUnstake<'info> {
     pub marinade_finance_program: AccountInfo<'info>,
 }
 
-#[derive(Accounts)]
-pub struct LiquidUnstakeWrapper<'info> {
-    pub get_msol_from_authority: AccountInfo<'info>, //burn_msol_from owner or delegate_authority
-    pub msol_mint: AccountInfo<'info>,
-    pub get_msol_from: AccountInfo<'info>,
-    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
-    pub liq_pool_msol_leg: AccountInfo<'info>,
-    pub treasury_msol_account: AccountInfo<'info>,
-    pub transfer_sol_to: AccountInfo<'info>,
-    pub state: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-}
-
 impl<'info> LiquidUnstake<'info> {
     pub fn into_liquid_unstake_cpi_ctx(
         &self,
-    ) -> CpiContext<'_, '_, '_, 'info, LiquidUnstakeWrapper<'info>> {
-        let cpi_accounts = LiquidUnstakeWrapper {
+    ) -> CpiContext<'_, '_, '_, 'info, MarinadeLiquidUnstake<'info>> {
+        let cpi_accounts = MarinadeLiquidUnstake {
             state: self.marinade_finance_state.clone(),
             msol_mint: self.msol_mint.clone(),
             liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
@@ -288,17 +282,19 @@ impl<'info> LiquidUnstake<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct ClaimTransfer<'info> {
-    #[account(
-        mut,
-        // constraint = !state.pause @ ReferralError::Paused,
-    )]
-    pub state: ProgramAccount<'info, ReferralState>,
+    pub msol_mint: CpiAccount<'info, Mint>,
+
+    #[account(mut)]
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub beneficiary_account: CpiAccount<'info, TokenAccount>,
 
     #[account(mut, signer)]
-    pub claimer_account: AccountInfo<'info>,
+    pub treasury_account: AccountInfo<'info>,
 
-    pub msol_mint: AccountInfo<'info>,
-    pub treasury_msol_account: AccountInfo<'info>,
+    #[account(mut)]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
 }
 
 //-----------------------------------------------------

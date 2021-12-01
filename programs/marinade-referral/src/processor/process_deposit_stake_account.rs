@@ -8,7 +8,7 @@ pub fn process_deposit_stake_account(
     validator_index: u32,
 ) -> ProgramResult {
     // check emergency pause
-    if ctx.accounts.state.pause == true {
+    if ctx.accounts.referral_state.pause {
         return Err(ReferralError::Paused.into());
     }
 
@@ -42,14 +42,14 @@ pub fn process_deposit_stake_account(
     )?;
 
     // TODO: confirm workflow
-    ctx.accounts.state.deposit_stake_account_amount = ctx
+    ctx.accounts.referral_state.deposit_stake_account_amount = ctx
         .accounts
-        .state
+        .referral_state
         .deposit_stake_account_amount
         .wrapping_add(**ctx.accounts.stake_account.lamports.borrow());
-    ctx.accounts.state.deposit_stake_account_operations = ctx
+    ctx.accounts.referral_state.deposit_stake_account_operations = ctx
         .accounts
-        .state
+        .referral_state
         .deposit_stake_account_operations
         .wrapping_add(1);
 

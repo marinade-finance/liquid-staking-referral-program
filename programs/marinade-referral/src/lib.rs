@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub mod associated_token;
 ///constant
 pub mod constant;
+///cpi context instructions
+pub mod cpi_context_instructions;
 ///error
 pub mod error;
 ///fees
@@ -25,14 +27,27 @@ use crate::{instructions::*, processor::*};
 pub mod marinade_referral {
     use super::*;
 
+    ///create global state
+    pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
+        process_initialize(ctx, bump)
+    }
+
     ///create referral state
-    pub fn initialize(ctx: Context<Initialize>, partner_name: [u8; 10]) -> ProgramResult {
-        process_initialize(ctx, partner_name)
+    pub fn create_referral_pda(
+        ctx: Context<CreateReferralPda>,
+        bump: u8,
+        partner_name: [u8; 10],
+    ) -> ProgramResult {
+        process_create_referral_pda(ctx, bump, partner_name)
     }
 
     ///update referral state
-    pub fn update(ctx: Context<Update>, transfer_duration: u32, pause: bool) -> ProgramResult {
-        process_update(ctx, transfer_duration, pause)
+    pub fn update_referral(
+        ctx: Context<UpdateReferral>,
+        transfer_duration: u32,
+        pause: bool,
+    ) -> ProgramResult {
+        process_update_referral(ctx, transfer_duration, pause)
     }
 
     ///update partner, authority and beneficiary account based on the new partner

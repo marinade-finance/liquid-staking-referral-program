@@ -5,7 +5,7 @@ use crate::{error::*, instructions::*};
 
 pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
     // check emergency pause
-    if ctx.accounts.state.pause == true {
+    if ctx.accounts.referral_state.pause {
         return Err(ReferralError::Paused.into());
     }
 
@@ -36,13 +36,16 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     )?;
 
     // update accumulators
-    ctx.accounts.state.liq_unstake_amount = ctx
+    ctx.accounts.referral_state.liq_unstake_amount = ctx
         .accounts
-        .state
+        .referral_state
         .liq_unstake_amount
         .wrapping_add(msol_amount);
-    ctx.accounts.state.liq_unstake_operations =
-        ctx.accounts.state.liq_unstake_operations.wrapping_add(1);
+    ctx.accounts.referral_state.liq_unstake_operations = ctx
+        .accounts
+        .referral_state
+        .liq_unstake_operations
+        .wrapping_add(1);
 
     Ok(())
 }

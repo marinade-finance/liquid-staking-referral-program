@@ -1,5 +1,10 @@
+///seeds
+pub const GLOBAL_STATE_SEED: &[u8] = b"mrp_initialize";
+pub const REFERRAL_STATE_SEED: &[u8] = b"mrp_create_referral";
+
 ///mSOL Mint address
 pub const MSOL_MINT_ADDRESS: &str = "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So";
+///mSOL Mint authority
 pub const MSOL_MINT_AUTHORITY_ADDRESS: &str = "3JLPCS1qM2zRw3Dp6V4hZnYHd4toMNPkNesXdX9tg6KM";
 
 ///30 days in seconds, 3600 * 24 * 30

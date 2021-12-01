@@ -5,7 +5,7 @@ use crate::{error::*, instructions::*};
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
     // check emergency pause
-    if ctx.accounts.state.pause == true {
+    if ctx.accounts.referral_state.pause {
         return Err(ReferralError::Paused.into());
     }
 
@@ -37,10 +37,16 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
     )?;
 
     // update accumulators
-    ctx.accounts.state.deposit_sol_amount =
-        ctx.accounts.state.deposit_sol_amount.wrapping_add(lamports);
-    ctx.accounts.state.deposit_sol_operations =
-        ctx.accounts.state.deposit_sol_operations.wrapping_add(1);
+    ctx.accounts.referral_state.deposit_sol_amount = ctx
+        .accounts
+        .referral_state
+        .deposit_sol_amount
+        .wrapping_add(lamports);
+    ctx.accounts.referral_state.deposit_sol_operations = ctx
+        .accounts
+        .referral_state
+        .deposit_sol_operations
+        .wrapping_add(1);
 
     Ok(())
 }
