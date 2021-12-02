@@ -268,7 +268,7 @@ impl<'info> LiquidUnstake<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct TransferLiqShares<'info> {
+pub struct TransferLiqUnstakeShares<'info> {
     // mSOL mint
     #[account(address = Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap())]
     pub msol_mint: CpiAccount<'info, Mint>,
@@ -297,7 +297,7 @@ pub struct TransferLiqShares<'info> {
     pub token_program: AccountInfo<'info>,
 }
 
-impl<'info> TransferLiqShares<'info> {
+impl<'info> TransferLiqUnstakeShares<'info> {
     pub fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
             from: self.treasury_msol_account.to_account_info().clone(),

@@ -393,7 +393,7 @@
       ]
     },
     {
-      "name": "transferLiqShares",
+      "name": "transferLiqUnstakeShares",
       "accounts": [
         {
           "name": "msolMint",

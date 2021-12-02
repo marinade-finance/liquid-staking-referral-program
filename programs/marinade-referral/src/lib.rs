@@ -70,7 +70,7 @@ pub mod marinade_referral {
     }
 
     ///transfer shares, treasury holders can transfer shares manually
-    pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqShares>) -> ProgramResult {
+    pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
         process_transfer_liq_unstake_shares(ctx)
     }
 }

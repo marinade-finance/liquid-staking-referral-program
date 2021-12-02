@@ -47,9 +47,9 @@ soteria -analyzeAll .
 ## Custom types that should be manually injected to idl.json
 ```json
 {
-...
+// ...
   "types": [
-    ...,
+    // ...,
     {
       "name": "Fee",
       "type": {
@@ -63,6 +63,6 @@ soteria -analyzeAll .
       }
     }
   ],
-...
+// ...
 }
 ```
