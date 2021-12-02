@@ -36,7 +36,7 @@ pub fn process_deposit_stake_account(
         cpi_ctx.signer_seeds,
     )?;
 
-    // TODO: confirm workflow
+    // TODO: TBD - how to accumulate deposit_stake_account_amount
     ctx.accounts.referral_state.deposit_stake_account_amount = ctx
         .accounts
         .referral_state

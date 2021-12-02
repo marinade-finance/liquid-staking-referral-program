@@ -4,9 +4,7 @@ use anchor_lang::{solana_program::entrypoint::ProgramResult, Accounts};
 
 pub use spl_associated_token_account::{create_associated_token_account, ID};
 
-pub fn create<'info>(
-    ctx: CpiContext<'_, '_, '_, 'info, Create<'info>>,
-) -> ProgramResult {
+pub fn create<'info>(ctx: CpiContext<'_, '_, '_, 'info, Create<'info>>) -> ProgramResult {
     let ix = create_associated_token_account(
         ctx.accounts.payer.key,
         ctx.accounts.authority.key,

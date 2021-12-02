@@ -10,4 +10,7 @@ pub enum ReferralError {
 
     #[msg("Transfer is not available")]
     TransferNotAvailable,
+
+    #[msg("Invalid beneficiary account")]
+    InvalidBeneficiaryAccount,
 }

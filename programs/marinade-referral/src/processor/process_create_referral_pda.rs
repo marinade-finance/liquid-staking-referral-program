@@ -1,15 +1,26 @@
 use anchor_lang::{prelude::*, solana_program::clock};
 use marinade_finance::Fee;
 
-use crate::{associated_token, constant::*, instructions::*};
+use crate::{associated_token, constant::*, error::*, instructions::*};
+use spl_associated_token_account::get_associated_token_address;
 
 pub fn process_create_referral_pda(
     ctx: Context<CreateReferralPda>,
     _bump: u8,
     partner_name: [u8; 10],
 ) -> ProgramResult {
-    // create associated token account for partner
-    // TODO: validate beneficiary ATA in a better way
+    // get beneficiary ATA
+    let beneficiary_ata = get_associated_token_address(
+        ctx.accounts.partner_account.key,
+        &ctx.accounts.msol_mint.key(),
+    );
+
+    // check if beneficiary account address matches to partner_address and msol_mint
+    if *ctx.accounts.beneficiary_account.key != beneficiary_ata {
+        return Err(ReferralError::InvalidBeneficiaryAccount.into());
+    }
+
+    // create mSOL ATA for partner if it doesn't have yet
     if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
         associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
     }

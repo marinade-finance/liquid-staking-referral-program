@@ -553,6 +553,11 @@
       "code": 302,
       "name": "TransferNotAvailable",
       "msg": "Transfer is not available"
+    },
+    {
+      "code": 303,
+      "name": "InvalidBeneficiaryAccount",
+      "msg": "Invalid beneficiary account"
     }
   ]
 }
