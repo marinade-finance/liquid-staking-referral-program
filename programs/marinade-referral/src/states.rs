@@ -61,6 +61,7 @@ impl ReferralState {
         self.deposit_sol_operations = 0;
         self.liq_unstake_amount = 0;
         self.liq_unstake_operations = 0;
+        // TODO: reset accumulated treasury shares
     }
 
     pub fn reset_del_unstake_accumulators(&mut self) {
@@ -70,7 +71,7 @@ impl ReferralState {
         self.del_unstake_operations = 0;
     }
 
-    pub fn share_amount(&self) -> u64 {
+    pub fn get_liq_unstake_share_amount(&self) -> u64 {
         let mut net_stake = 0;
 
         if self.deposit_sol_amount > self.liq_unstake_amount {
@@ -79,24 +80,26 @@ impl ReferralState {
                 .wrapping_sub(self.liq_unstake_amount);
         }
 
-        if net_stake == 0 {
-            self.base_fee.apply(self.liq_unstake_amount)
+        let share_fee = if net_stake == 0 {
+            self.base_fee
         } else if net_stake > self.max_net_stake {
-            self.max_fee.apply(self.liq_unstake_amount)
+            self.max_fee
         } else {
             let delta = self
                 .max_fee
                 .basis_points
                 .wrapping_sub(self.base_fee.basis_points);
             let proportion = net_stake.wrapping_div(self.max_net_stake);
-            let proportion_fee = Fee {
+            Fee {
                 basis_points: self
                     .base_fee
                     .basis_points
                     .wrapping_add(proportion.wrapping_mul(delta.into()) as u32),
-            };
-            proportion_fee.apply(self.liq_unstake_amount)
-        }
+            }
+        };
+
+        // TODO: calculate share amount based on accumulated treasury shares
+        share_fee.apply(self.liq_unstake_amount)
     }
 }
 

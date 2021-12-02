@@ -41,6 +41,7 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         .referral_state
         .liq_unstake_operations
         .wrapping_add(1);
+    // TODO: accumulate accumulate treasury shares for the liq-unstake
 
     Ok(())
 }

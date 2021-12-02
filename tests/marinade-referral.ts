@@ -254,7 +254,7 @@ describe("marinade-referral", () => {
 
   it("should transfer mSOL from treasury to beneficiary", async () => {
     // transfer mSOL
-    await program.rpc.transferLiqShares({
+    await program.rpc.transferLiqUnstakeShares({
       accounts: {
         msolMint: msolMint.publicKey,
         beneficiaryAccount: beneficiaryPda,
