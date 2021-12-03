@@ -20,10 +20,10 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
             cpi_ctx.accounts.msol_mint,
             cpi_ctx.accounts.liq_pool_sol_leg_pda,
             cpi_ctx.accounts.liq_pool_msol_leg,
+            cpi_ctx.accounts.treasury_msol_account,
             cpi_ctx.accounts.get_msol_from,
             cpi_ctx.accounts.get_msol_from_authority,
             cpi_ctx.accounts.transfer_sol_to,
-            cpi_ctx.accounts.treasury_msol_account,
             cpi_ctx.accounts.system_program,
             cpi_ctx.accounts.token_program,
         ],
@@ -31,6 +31,13 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     )?;
 
     // update accumulators
+    // TODO: accumulate treasury fees for the liq-unstake
+    ctx.accounts.referral_state.liq_unstake_msol_fees = ctx
+        .accounts
+        .referral_state
+        .liq_unstake_msol_fees
+        .wrapping_add(msol_amount);
+
     ctx.accounts.referral_state.liq_unstake_amount = ctx
         .accounts
         .referral_state
@@ -41,7 +48,6 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         .referral_state
         .liq_unstake_operations
         .wrapping_add(1);
-    // TODO: accumulate accumulate treasury shares for the liq-unstake
 
     Ok(())
 }

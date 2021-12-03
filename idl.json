@@ -485,6 +485,10 @@
             "type": "u64"
           },
           {
+            "name": "liqUnstakeMsolFees",
+            "type": "u64"
+          },
+          {
             "name": "liqUnstakeAmount",
             "type": "u64"
           },
@@ -493,7 +497,7 @@
             "type": "u64"
           },
           {
-            "name": "delUnstakeAmount",
+            "name": "delayedUnstakeAmount",
             "type": "u64"
           },
           {

@@ -34,13 +34,15 @@ pub struct ReferralState {
     // accumulated count of deposit-stake-account operations (u64, for stats/monitoring)
     pub deposit_stake_account_operations: u64,
 
+    // accumulated liquid-unstake treasury fees (SOL, u64)
+    pub liq_unstake_msol_fees: u64,
     // accumulated liquid-unstake amount (SOL, u64)
     pub liq_unstake_amount: u64,
     // accumulated count of unstake operations (u64, for stats/monitoring)
     pub liq_unstake_operations: u64,
 
     // accumulated delayed-unstake amount (SOL, u64)
-    pub del_unstake_amount: u64,
+    pub delayed_unstake_amount: u64,
     // accumulated count of delayed-unstake operations (u64, for stats/monitoring)
     pub del_unstake_operations: u64,
 
@@ -59,15 +61,15 @@ impl ReferralState {
     pub fn reset_liq_unstake_accumulators(&mut self) {
         self.deposit_sol_amount = 0;
         self.deposit_sol_operations = 0;
+        self.liq_unstake_msol_fees = 0;
         self.liq_unstake_amount = 0;
         self.liq_unstake_operations = 0;
-        // TODO: reset accumulated treasury shares
     }
 
     pub fn reset_del_unstake_accumulators(&mut self) {
         self.deposit_stake_account_amount = 0;
         self.deposit_stake_account_operations = 0;
-        self.del_unstake_amount = 0;
+        self.delayed_unstake_amount = 0;
         self.del_unstake_operations = 0;
     }
 
@@ -98,8 +100,7 @@ impl ReferralState {
             }
         };
 
-        // TODO: calculate share amount based on accumulated treasury shares
-        share_fee.apply(self.liq_unstake_amount)
+        share_fee.apply(self.liq_unstake_msol_fees)
     }
 }
 
