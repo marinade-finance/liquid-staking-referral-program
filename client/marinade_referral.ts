@@ -82,7 +82,7 @@ const setup = async () => {
   // G38vdEMpKne9kHByCg6G4AwJXxAyG3i6Hc96DUB1DKQA
   console.log("Referral state address: ", referralStatePda.toString());
 
-  // initialize referral account
+  // initialize admin
   await program.rpc.initialize(globalStateBump, {
     accounts: {
       adminAccount: ADMIN.publicKey,
@@ -92,7 +92,7 @@ const setup = async () => {
     signers: [ADMIN],
   });
 
-  // create referral account
+  // create a referral pda
   await program.rpc.createReferralPda(
     referralStateBump,
     [...Buffer.from(PARTNER_NAME)],

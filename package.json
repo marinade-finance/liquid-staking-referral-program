@@ -1,7 +1,7 @@
 {
     "scripts": {
         "lint": "eslint '**/*.ts' --fix",
-        "client:init": "node -r ts-node/register client/index.ts",
+        "cli:setup": "node -r ts-node/register client/index.ts",
         "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
     },
     "keywords": [

@@ -274,10 +274,10 @@ impl<'info> LiquidUnstake<'info> {
             msol_mint: self.msol_mint.clone(),
             liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
             liq_pool_msol_leg: self.liq_pool_msol_leg.clone(),
+            treasury_msol_account: self.treasury_msol_account.clone(),
             get_msol_from: self.get_msol_from.clone(),
             get_msol_from_authority: self.get_msol_from_authority.clone(),
             transfer_sol_to: self.transfer_sol_to.clone(),
-            treasury_msol_account: self.treasury_msol_account.clone(),
             system_program: self.system_program.clone(),
             token_program: self.token_program.clone(),
         };
