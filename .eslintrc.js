@@ -20,14 +20,14 @@ module.exports = {
   rules: {},
   overrides: [
     {
-      files: ["tests/**"],
+      files: ["client/**", "tests/**"],
       rules: {
         camelcase: "off",
         "node/no-missing-import": "off",
       },
     },
     {
-      files: ["migrations/**", "tests/**"],
+      files: ["client/**", "migrations/**", "tests/**"],
       rules: {
         "node/no-unpublished-import": "off",
         "node/no-unsupported-features/es-syntax": "off",

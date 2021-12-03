@@ -4,9 +4,7 @@
 
 import * as anchor from "@project-serum/anchor";
 
-module.exports = async function (provider) {
+export default async (provider) => {
   // Configure client to use the provider.
   anchor.setProvider(provider);
-
-  // Add your deploy script here.
 };

@@ -154,22 +154,22 @@
       "accounts": [
         {
           "name": "state",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "msolMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "liqPoolSolLegPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "liqPoolMsolLeg",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -179,17 +179,17 @@
         },
         {
           "name": "reservePda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "transferFrom",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
           "name": "mintTo",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -229,52 +229,52 @@
       "name": "depositStakeAccount",
       "accounts": [
         {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "validatorList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakeList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "stakeAuthority",
           "isMut": false,
           "isSigner": true
         },
         {
+          "name": "duplicationFlag",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "rentPayer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
-          "name": "validatorList",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "stakeList",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "stakeAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "duplicationFlag",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "msolMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "mintTo",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "msolMintAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marinadeFinanceState",
           "isMut": false,
           "isSigner": false
         },
@@ -325,43 +325,43 @@
       "name": "liquidUnstake",
       "accounts": [
         {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "msolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolSolLegPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolMsolLeg",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMsolAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "getMsolFrom",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "getMsolFromAuthority",
           "isMut": false,
           "isSigner": true
         },
         {
-          "name": "msolMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "getMsolFrom",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "liqPoolSolLegPda",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "liqPoolMsolLeg",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treasuryMsolAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "transferSolTo",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marinadeFinanceState",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

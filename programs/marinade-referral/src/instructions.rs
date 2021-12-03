@@ -130,14 +130,20 @@ pub struct UpdateReferral<'info> {
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     // this part is equivalent to marinade-finance deposit instructions
+    #[account(mut)]
     pub state: AccountInfo<'info>, // marinade state
+    #[account(mut)]
     pub msol_mint: AccountInfo<'info>,
+    #[account(mut)]
     pub liq_pool_sol_leg_pda: AccountInfo<'info>,
+    #[account(mut)]
     pub liq_pool_msol_leg: AccountInfo<'info>,
     pub liq_pool_msol_leg_authority: AccountInfo<'info>,
+    #[account(mut)]
     pub reserve_pda: AccountInfo<'info>,
-    #[account(signer)]
+    #[account(mut, signer)]
     pub transfer_from: AccountInfo<'info>,
+    #[account(mut)]
     pub mint_to: AccountInfo<'info>,
     pub msol_mint_authority: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
@@ -173,18 +179,25 @@ impl<'info> Deposit<'info> {
 #[derive(Accounts)]
 pub struct DepositStakeAccount<'info> {
     // this part is equivalent to marinade-finance deposit-stake-account instructions
+    #[account(mut)]
+    pub state: AccountInfo<'info>,
+    #[account(mut)]
+    pub validator_list: AccountInfo<'info>,
+    #[account(mut)]
+    pub stake_list: AccountInfo<'info>,
+    #[account(mut)]
+    pub stake_account: AccountInfo<'info>,
     #[account(signer)]
     pub stake_authority: AccountInfo<'info>,
-    #[account(signer)]
-    pub rent_payer: AccountInfo<'info>,
-    pub validator_list: AccountInfo<'info>,
-    pub stake_list: AccountInfo<'info>,
-    pub stake_account: AccountInfo<'info>,
+    #[account(mut)]
     pub duplication_flag: AccountInfo<'info>,
+    #[account(mut, signer)]
+    pub rent_payer: AccountInfo<'info>,
+    #[account(mut)]
     pub msol_mint: AccountInfo<'info>,
+    #[account(mut)]
     pub mint_to: AccountInfo<'info>,
     pub msol_mint_authority: AccountInfo<'info>,
-    pub marinade_finance_state: AccountInfo<'info>,
     pub clock: Sysvar<'info, Clock>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: AccountInfo<'info>,
@@ -202,7 +215,7 @@ impl<'info> DepositStakeAccount<'info> {
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, MarinadeDepositStakeAccount<'info>> {
         let cpi_accounts = MarinadeDepositStakeAccount {
-            state: self.marinade_finance_state.clone(),
+            state: self.state.clone(),
             validator_list: self.validator_list.clone(),
             stake_list: self.stake_list.clone(),
             stake_account: self.stake_account.clone(),
@@ -227,15 +240,22 @@ impl<'info> DepositStakeAccount<'info> {
 #[derive(Accounts)]
 pub struct LiquidUnstake<'info> {
     // this part is equivalent to marinade-finance liquid-unstake instructions
+    #[account(mut)]
+    pub state: AccountInfo<'info>,
+    #[account(mut)]
+    pub msol_mint: AccountInfo<'info>,
+    #[account(mut)]
+    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
+    #[account(mut)]
+    pub liq_pool_msol_leg: AccountInfo<'info>,
+    #[account(mut)]
+    pub treasury_msol_account: AccountInfo<'info>,
+    #[account(mut)]
+    pub get_msol_from: AccountInfo<'info>,
     #[account(signer)]
     pub get_msol_from_authority: AccountInfo<'info>, //burn_msol_from owner or delegate_authority
-    pub msol_mint: AccountInfo<'info>,
-    pub get_msol_from: AccountInfo<'info>,
-    pub liq_pool_sol_leg_pda: AccountInfo<'info>,
-    pub liq_pool_msol_leg: AccountInfo<'info>,
-    pub treasury_msol_account: AccountInfo<'info>,
+    #[account(mut)]
     pub transfer_sol_to: AccountInfo<'info>,
-    pub marinade_finance_state: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 
@@ -250,7 +270,7 @@ impl<'info> LiquidUnstake<'info> {
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, MarinadeLiquidUnstake<'info>> {
         let cpi_accounts = MarinadeLiquidUnstake {
-            state: self.marinade_finance_state.clone(),
+            state: self.state.clone(),
             msol_mint: self.msol_mint.clone(),
             liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
             liq_pool_msol_leg: self.liq_pool_msol_leg.clone(),

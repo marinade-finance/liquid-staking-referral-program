@@ -80,16 +80,14 @@ describe("marinade-referral", () => {
     );
 
     // beneficiary - mSOL ATA for partner
-    beneficiaryPda = (
-      await PublicKey.findProgramAddress(
-        [
-          PARTNER.publicKey.toBuffer(),
-          TOKEN_PROGRAM_ID.toBuffer(),
-          msolMint.publicKey.toBuffer(),
-        ],
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      )
-    )[0];
+    [beneficiaryPda] = await PublicKey.findProgramAddress(
+      [
+        PARTNER.publicKey.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        msolMint.publicKey.toBuffer(),
+      ],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
 
     // treasury - mSOL ATA for treasury
     treasuryPda = await msolMint.createAssociatedTokenAccount(
@@ -103,32 +101,20 @@ describe("marinade-referral", () => {
       1_000
     );
 
-    console.log(
-      msolMint.publicKey.toString(),
-      beneficiaryPda.toString(),
-      treasuryPda.toString()
+    // global state PDA & bump
+    [globalStatePda, globalStateBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(anchor.utils.bytes.utf8.encode(GLOBAL_STATE_SEED))],
+      program.programId
     );
 
-    // global state PDA & bump
-    const [_global_state_pda, _global_state_bump] =
-      await PublicKey.findProgramAddress(
-        [Buffer.from(anchor.utils.bytes.utf8.encode(GLOBAL_STATE_SEED))],
-        program.programId
-      );
-    globalStatePda = _global_state_pda;
-    globalStateBump = _global_state_bump;
-
     // referral state PDA & bump
-    const [_referral_state_pda, _referral_state_bump] =
-      await PublicKey.findProgramAddress(
-        [
-          PARTNER.publicKey.toBuffer(),
-          Buffer.from(anchor.utils.bytes.utf8.encode(REFERRAL_STATE_SEED)),
-        ],
-        program.programId
-      );
-    referralStatePda = _referral_state_pda;
-    referralStateBump = _referral_state_bump;
+    [referralStatePda, referralStateBump] = await PublicKey.findProgramAddress(
+      [
+        PARTNER.publicKey.toBuffer(),
+        Buffer.from(anchor.utils.bytes.utf8.encode(REFERRAL_STATE_SEED)),
+      ],
+      program.programId
+    );
   });
 
   it("should initialize global state", async () => {
