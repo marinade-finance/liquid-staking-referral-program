@@ -13,6 +13,11 @@ yarn install
 anchor build
 ```
 
+## Integration Tests (separate project)
+```bash
+bash test.sh
+```
+
 ## Test program
 ```bash
 anchor test
@@ -25,7 +30,7 @@ anchor deploy --provider.cluster devnet
 
 ## Upgrade program
 ```bash
-anchor upgrade --program-id FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR --provider.cluster devnet ./target/deploy/marinade_referral.so
+anchor upgrade --program-id FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR --provider.cluster devnet ./target/deploy/marinade_referral.so --provider.wallet ~/.config/solana/AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn.json
 ```
 
 ## Autofix TypeScript lint errors
