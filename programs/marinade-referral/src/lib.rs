@@ -14,9 +14,8 @@ pub mod instructions;
 pub mod processor;
 ///states
 pub mod states;
-///utils
-pub mod utils;
 
+use crate::process_create_referral_pda::process_create_referral_pda;
 use crate::{instructions::*, processor::*};
 
 #[program]

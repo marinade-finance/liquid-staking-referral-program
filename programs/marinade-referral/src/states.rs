@@ -34,14 +34,14 @@ pub struct ReferralState {
     // accumulated count of deposit-stake-account operations (u64, for stats/monitoring)
     pub deposit_stake_account_operations: u64,
 
-    // accumulated liquid-unstake treasury fees (SOL, u64)
+    // accumulated liquid-unstake treasury fees (mSOL, u64)
     pub liq_unstake_msol_fees: u64,
-    // accumulated liquid-unstake amount (SOL, u64)
+    // accumulated liquid-unstake amount (mSOL, u64)
     pub liq_unstake_amount: u64,
     // accumulated count of unstake operations (u64, for stats/monitoring)
     pub liq_unstake_operations: u64,
 
-    // accumulated delayed-unstake amount (SOL, u64)
+    // accumulated delayed-unstake amount (mSOL, u64)
     pub delayed_unstake_amount: u64,
     // accumulated count of delayed-unstake operations (u64, for stats/monitoring)
     pub delayed_unstake_operations: u64,

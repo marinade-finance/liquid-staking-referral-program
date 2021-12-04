@@ -3,7 +3,9 @@ use anchor_spl::token;
 
 use crate::{error::*, instructions::*};
 
-pub fn process_transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
+pub fn process_transfer_liq_unstake_shares(
+    ctx: Context<TransferLiqUnstakeShares>,
+) -> ProgramResult {
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
     let elapsed_time = current_time.wrapping_sub(ctx.accounts.referral_state.last_transfer_time);
 

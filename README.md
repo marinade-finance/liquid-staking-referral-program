@@ -42,7 +42,7 @@ export PATH=$HOME/soteria-linux-develop/bin/:$PATH
 cd -
 
 # check vulnerabilities
-cd programs/marinade-referrral
+cd programs/marinade-referral
 # check vulnerabilities in selected library codes
 soteria .
 # check vulnerabilities in all library codes

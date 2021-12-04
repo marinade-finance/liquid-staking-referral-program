@@ -3,12 +3,14 @@ use std::{mem::size_of, str::FromStr};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
-use crate::{
-    associated_token::Create as CreateAssociatedTokenAccount, constant::*,
-    cpi_context_instructions::Deposit as MarinadeDeposit,
-    cpi_context_instructions::DepositStakeAccount as MarinadeDepositStakeAccount,
-    cpi_context_instructions::LiquidUnstake as MarinadeLiquidUnstake, states::*,
+use crate::associated_token::Create as CreateAssociatedTokenAccount;
+
+use crate::constant::*;
+use crate::cpi_context_instructions::{
+    Deposit as MarinadeDeposit, DepositStakeAccount as MarinadeDepositStakeAccount,
+    LiquidUnstake as MarinadeLiquidUnstake,
 };
+use crate::states::*;
 
 //-----------------------------------------------------
 #[derive(Accounts)]
