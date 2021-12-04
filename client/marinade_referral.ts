@@ -44,6 +44,11 @@ const ADMIN = Keypair.fromSecretKey(
   ])
 ); // AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
 
+// partner address
+const PARTNER_ID = new PublicKey(
+  "4yMfRHP8T5c54sm8NFT2euvNpir2TsSukS5GK8Y9h7wg"
+);
+
 // mSOL token mint
 const MSOL_MINT_ID = new PublicKey(
   "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"
@@ -56,7 +61,7 @@ const setup = async () => {
   // beneficiary - mSOL ATA for partner
   [beneficiaryPda] = await PublicKey.findProgramAddress(
     [
-      ADMIN.publicKey.toBuffer(),
+      PARTNER_ID.toBuffer(),
       TOKEN_PROGRAM_ID.toBuffer(),
       MSOL_MINT_ID.toBuffer(),
     ],
@@ -74,12 +79,12 @@ const setup = async () => {
   // referral state PDA & bump
   [referralStatePda, referralStateBump] = await PublicKey.findProgramAddress(
     [
-      ADMIN.publicKey.toBuffer(),
+      PARTNER_ID.toBuffer(),
       Buffer.from(anchor.utils.bytes.utf8.encode(REFERRAL_STATE_SEED)),
     ],
     program.programId
   );
-  // G38vdEMpKne9kHByCg6G4AwJXxAyG3i6Hc96DUB1DKQA
+  // 5H2yKwFRmB1o3syXfXM72mR3iSyop47D1RxF1RcZ8ky5
   console.log("Referral state address: ", referralStatePda.toString());
 
   // initialize admin
@@ -99,7 +104,7 @@ const setup = async () => {
     {
       accounts: {
         msolMint: MSOL_MINT_ID,
-        partnerAccount: ADMIN.publicKey,
+        partnerAccount: PARTNER_ID,
         beneficiaryAccount: beneficiaryPda,
         adminAccount: ADMIN.publicKey,
         referralState: referralStatePda,

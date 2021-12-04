@@ -18,9 +18,14 @@ anchor build
 anchor test
 ```
 
-## Deploy to devnet
+## Deploy program
 ```bash
 anchor deploy --provider.cluster devnet
+```
+
+## Upgrade program
+```bash
+anchor upgrade --program-id FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR --provider.cluster devnet ./target/deploy/marinade_referral.so
 ```
 
 ## Autofix TypeScript lint errors

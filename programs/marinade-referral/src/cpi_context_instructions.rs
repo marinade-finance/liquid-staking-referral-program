@@ -37,12 +37,12 @@ pub struct DepositStakeAccount<'info> {
 #[derive(Accounts)]
 pub struct LiquidUnstake<'info> {
     pub state: AccountInfo<'info>,
-    pub get_msol_from_authority: AccountInfo<'info>,
     pub msol_mint: AccountInfo<'info>,
-    pub get_msol_from: AccountInfo<'info>,
     pub liq_pool_sol_leg_pda: AccountInfo<'info>,
     pub liq_pool_msol_leg: AccountInfo<'info>,
     pub treasury_msol_account: AccountInfo<'info>,
+    pub get_msol_from: AccountInfo<'info>,
+    pub get_msol_from_authority: AccountInfo<'info>,
     pub transfer_sol_to: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
