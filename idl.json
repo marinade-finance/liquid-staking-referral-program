@@ -501,7 +501,7 @@
             "type": "u64"
           },
           {
-            "name": "delUnstakeOperations",
+            "name": "delayedUnstakeOperations",
             "type": "u64"
           },
           {

@@ -42,7 +42,7 @@ pub fn process_create_referral_pda(
     ctx.accounts.referral_state.liq_unstake_operations = 0;
 
     ctx.accounts.referral_state.delayed_unstake_amount = 0;
-    ctx.accounts.referral_state.del_unstake_operations = 0;
+    ctx.accounts.referral_state.delayed_unstake_operations = 0;
 
     ctx.accounts.referral_state.base_fee = Fee {
         basis_points: DEFAULT_BASE_FEE_POINTS,

@@ -44,7 +44,7 @@ pub struct ReferralState {
     // accumulated delayed-unstake amount (SOL, u64)
     pub delayed_unstake_amount: u64,
     // accumulated count of delayed-unstake operations (u64, for stats/monitoring)
-    pub del_unstake_operations: u64,
+    pub delayed_unstake_operations: u64,
 
     // Base % cut for the partner (Fee struct, basis points, default 10%)
     pub base_fee: Fee,
@@ -70,7 +70,7 @@ impl ReferralState {
         self.deposit_stake_account_amount = 0;
         self.deposit_stake_account_operations = 0;
         self.delayed_unstake_amount = 0;
-        self.del_unstake_operations = 0;
+        self.delayed_unstake_operations = 0;
     }
 
     pub fn get_liq_unstake_share_amount(&self) -> u64 {
