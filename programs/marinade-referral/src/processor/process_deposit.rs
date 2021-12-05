@@ -4,15 +4,16 @@ use marinade_finance::instruction::Deposit as MarinadeDeposit;
 use crate::account_structs::*;
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
-    // deposit-sol cpi
-    let cpi_ctx = ctx.accounts.into_deposit_cpi_ctx();
+    msg!("enter process_deposit {}",ctx.accounts.transfer_from.lamports());
+    let cpi_ctx = ctx.accounts.into_marinade_deposit_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);
     let data = MarinadeDeposit { lamports };
     let ix = Instruction {
-        program_id: *cpi_ctx.program.key,
+        program_id: *ctx.accounts.marinade_finance_program.key,
         accounts: cpi_accounts,
         data: data.data(),
     };
+    msg!("calling MarinadeDeposit");
     anchor_lang::solana_program::program::invoke_signed(
         &ix,
         &[
@@ -27,10 +28,13 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
             cpi_ctx.accounts.msol_mint_authority,
             cpi_ctx.accounts.system_program,
             cpi_ctx.accounts.token_program,
+            //
+            ctx.accounts.marinade_finance_program.clone(),
         ],
         cpi_ctx.signer_seeds,
     )?;
-
+    msg!("after MarinadeDeposit {}",ctx.accounts.transfer_from.lamports());
+    msg!("deposit-SOL: update accumulators, deposit-lamports {}",lamports);
     // update accumulators
     ctx.accounts.referral_state.deposit_sol_amount = ctx
         .accounts

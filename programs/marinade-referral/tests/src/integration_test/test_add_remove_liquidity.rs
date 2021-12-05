@@ -55,7 +55,7 @@ pub async fn do_add_liquidity(
     let user_sol_balance_before = user.sol_balance(test).await;
 
     // Create a user account for msol if not exists
-    let user_msol_account = user.get_or_create_msol_account(test).await;
+    let user_msol_account = user.get_or_create_msol_account_instruction(test).await;
     let user_msol_balance_before = test
         .get_token_balance_or_zero(&user_msol_account.pubkey)
         .await;
@@ -107,7 +107,7 @@ pub async fn do_remove_liquidity(
     // TODO: test remove_liquidity when there are msol in the liq_pool
     // The mSOL account is not used.
     // Create a user account for msol if not exists
-    let user_msol_account = user.get_or_create_msol_account(test).await;
+    let user_msol_account = user.get_or_create_msol_account_instruction(test).await;
     let user_msol_balance_before = test
         .get_token_balance_or_zero(&user_msol_account.pubkey)
         .await;

@@ -2,33 +2,37 @@ use anchor_lang::{prelude::*, solana_program::clock};
 use marinade_finance::Fee;
 
 use crate::error::*;
-use crate::{associated_token, constant::*, account_structs::*};
+use crate::{account_structs::*, associated_token, constant::*};
 use spl_associated_token_account::get_associated_token_address;
 
-pub fn process_create_referral_pda(
-    ctx: Context<CreateReferralPda>,
-    _bump: u8,
-    partner_name: [u8; 10],
+pub fn process_init_referral_account(
+    ctx: Context<InitReferralAccount>,
+    partner_name: String,
 ) -> ProgramResult {
-    // get beneficiary ATA
-    let beneficiary_ata = get_associated_token_address(
-        ctx.accounts.partner_account.key,
-        &ctx.accounts.msol_mint.key(),
-    );
+    msg!("process_init_referral_account");
+    // // get beneficiary ATA
+    // let beneficiary_ata = get_associated_token_address(
+    //     ctx.accounts.partner_account.key,
+    //     &ctx.accounts.payment_mint.key(),
+    // );
 
     // check if beneficiary account address matches to partner_address and msol_mint
-    if *ctx.accounts.beneficiary_account.key != beneficiary_ata {
-        return Err(ReferralError::InvalidBeneficiaryAccount.into());
+    if ctx.accounts.token_partner_account.owner != *ctx.accounts.partner_account.key {
+        return Err(ReferralError::InvalidBeneficiaryAccountOwner.into());
+    }
+    if ctx.accounts.token_partner_account.mint != ctx.accounts.payment_mint.key() {
+        return Err(ReferralError::InvalidBeneficiaryAccountMint.into());
     }
 
-    // create mSOL ATA for partner if it doesn't have yet
-    if **ctx.accounts.beneficiary_account.lamports.borrow() == 0_u64 {
-        associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
-    }
+    // // create mSOL ATA for partner if it is not created yet
+    // if **ctx.accounts.token_partner_account.lamports.borrow() == 0_u64 {
+    //     associated_token::create(ctx.accounts.into_create_associated_token_account_ctx())?;
+    // }
 
     ctx.accounts.referral_state.partner_name = partner_name.clone();
 
-    ctx.accounts.referral_state.beneficiary_account = *ctx.accounts.beneficiary_account.key;
+    ctx.accounts.referral_state.partner_account = ctx.accounts.partner_account.key();
+    ctx.accounts.referral_state.token_partner_account = ctx.accounts.token_partner_account.key();
 
     ctx.accounts.referral_state.transfer_duration = DEFAULT_TRANSFER_DURATION;
     ctx.accounts.referral_state.last_transfer_time = clock::Clock::get().unwrap().unix_timestamp;

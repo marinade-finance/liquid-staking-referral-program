@@ -5,7 +5,7 @@ description = "Integration tests for marinade-referral-program"
 edition = "2018"
 
 [dependencies]
-marinade-referral = { path = "../../../programs/marinade-referral", features = ["no-entrypoint"] }
+marinade-referral = { path = "../../../programs/marinade-referral", features = ["no-entrypoint","anchor-debug"] }
 rand = "0.7.3" # to be sync with solana keypairs
 marinade-finance-offchain-sdk = { path = "../../../../marinade-anchor/sdk/offchain" }
 #liquid-staking-onchain-sdk = { git = "https://github.com/marinade-finance/liquid-staking-onchain-sdk" }
@@ -13,6 +13,7 @@ marinade-finance-offchain-sdk = { path = "../../../../marinade-anchor/sdk/offcha
 solana-sdk = "1.7.11"
 solana-program-test = "1.7.11"
 spl-token = { version = "3.1", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.0.3", features = ["no-entrypoint"] }
 tokio = { version = "1.5.0", features = ["macros"] }
 log = "0.4.14"
 env_logger = "0.8.3"

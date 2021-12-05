@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 //use assert_json_diff::assert_json_eq;
+use marinade_finance_offchain_sdk::anchor_lang::InstructionData;
 use marinade_finance_offchain_sdk::marinade_finance;
 use marinade_finance_offchain_sdk::spl_token::solana_program;
 // use marinade_reflection::accounts_builder::AccountsBuilder;
@@ -45,11 +46,10 @@ use solana_vote_program::{
 };
 
 use crate::initialize::InitializeInput;
-//use crate::program_test;
 
-pub mod delayed_unstake;
-pub mod deposit_sol_liquid_unstake;
 pub mod test_add_remove_liquidity;
+pub mod test_delayed_unstake;
+pub mod test_deposit_sol_liquid_unstake;
 pub mod test_deposit_stake_account;
 
 pub struct StakeInfo {
@@ -116,7 +116,10 @@ impl TestUser {
         get_associated_token_address(&self.keypair.pubkey(), mint)
     }
 
-    pub async fn get_or_create_msol_account(&self, test: &mut IntegrationTest) -> TestTokenAccount {
+    pub async fn get_or_create_msol_account_instruction(
+        &self,
+        test: &mut IntegrationTest,
+    ) -> TestTokenAccount {
         const SYMBOL: &str = "mSOL";
         return TestTokenAccount {
             symbol: String::from(SYMBOL),
@@ -179,7 +182,7 @@ impl IntegrationTest {
         //clone main account keypair
         let fee_payer = Arc::new(Keypair::from_bytes(&context.payer.to_bytes())?);
 
-        // Set up the required instruction sequence for MARINADE-FINANCE initialization.
+        // Set up the required instruction sequence for MARINADE-FINANCE-LIQUID-STAKE-PROGRAM initialization.
         let builder = TransactionBuilder::unlimited(fee_payer);
         let mut builder = input.build(builder, &rent);
         let transaction = builder
@@ -187,13 +190,15 @@ impl IntegrationTest {
             .unwrap()
             .into_signed(context.last_blockhash)
             .unwrap();
-        // execute marinade initialization
+
+        // execute MARINADE-FINANCE-LIQUID-STAKE-PROGRAM initialization
         context
             .banks_client
             .process_transaction(transaction)
             .await
             .unwrap();
 
+        // read MARINADE-FINANCE-LIQUID-STAKE-PROGRAM state
         let state: State = AccountDeserialize::try_deserialize(
             &mut context
                 .banks_client
@@ -206,18 +211,8 @@ impl IntegrationTest {
         .unwrap();
 
         let state = WithKey::new(state, input.state().pubkey());
-        // check_initialize(input, &mut context.banks_client, &expected)
-        //     .await
-        //     .unwrap();
 
         let stakes = Self::read_stakes(state.as_ref(), &mut context.banks_client).await?;
-
-        // let referral_program= ProgramTest::new(
-        //     "marinade_referral",
-        //     marinade_referral::marinade_referral::ID,
-        //     processor!(marinade_referral::test_entry),
-        // );
-        //let mut context2 = referral_program.start_with_context().await;
 
         Ok(IntegrationTest {
             context,
@@ -231,7 +226,6 @@ impl IntegrationTest {
             validator_manager_authority: input.validator_manager_authority(),
             claim_ticket_accounts: HashSet::new(),
             test_validators: vec![],
-            //context2
         })
 
         // referral program, initialize global state
@@ -454,6 +448,7 @@ impl IntegrationTest {
         signers: Vec<Arc<dyn Signer>>,
     ) {
         let recent_blockhash = self.recent_blockhash().await;
+        println!("signers len()={}", &signers.len());
         transaction
             .try_sign(
                 &signers.iter().map(|arc| arc.as_ref()).collect::<Vec<_>>(),
@@ -567,6 +562,51 @@ impl IntegrationTest {
         Ok(())
     }
 
+    // returns Result
+    pub async fn try_execute_txn(
+        &mut self,
+        mut transaction: Transaction,
+        signers: Vec<Arc<dyn Signer>>,
+    ) -> Result<(), u32> {
+        let recent_blockhash = self.recent_blockhash().await;
+        println!("signers len()={}", &signers.len());
+        transaction
+            .try_sign(
+                &signers.iter().map(|arc| arc.as_ref()).collect::<Vec<_>>(),
+                recent_blockhash,
+            )
+            .unwrap();
+
+        let tx_result = self
+            .context
+            .banks_client
+            .process_transaction(transaction)
+            .await;
+
+        println!("try execute result {:x?}", tx_result);
+        if let Err(transport_error) = tx_result {
+            if let solana_sdk::transport::TransportError::TransactionError(transaction_error) =
+                transport_error
+            {
+                if let solana_sdk::transaction::TransactionError::InstructionError(
+                    _index,
+                    instruction_error,
+                ) = transaction_error
+                {
+                    if let solana_program::instruction::InstructionError::Custom(code) =
+                        instruction_error
+                    {
+                        return Err(code);
+                    }
+                }
+            }
+            return Err(2);
+        }
+
+        self.update_state().await.unwrap();
+        Ok(())
+    }
+
     ///read & deserialize account data
     pub async fn get_account_data<T: AccountDeserialize>(&mut self, account: &Pubkey) -> T {
         get_account_data(&mut self.context.banks_client, account).await
@@ -644,7 +684,12 @@ impl IntegrationTest {
     }
     /// Create a user account with some SOL
     /// it executes the tx (it does not add another instruction to transaction builder)
-    pub async fn create_test_user_from_keypair(&mut self, name: &str, lamports: u64, keypair: Keypair) -> TestUser {
+    pub async fn create_test_user_from_keypair(
+        &mut self,
+        name: &str,
+        lamports: u64,
+        keypair: Keypair,
+    ) -> TestUser {
         println!(
             "--- creating user {} with {} SOL",
             name,
@@ -670,11 +715,12 @@ impl IntegrationTest {
         return new_user;
     }
 
-
     /// Create a user account with some SOL
     /// it executes the tx (it does not add another instruction to transaction builder)
     pub async fn create_test_user(&mut self, name: &str, lamports: u64) -> TestUser {
-        return self.create_test_user_from_keypair(name,lamports,Keypair::new()).await
+        return self
+            .create_test_user_from_keypair(name, lamports, Keypair::new())
+            .await;
         // println!(
         //     "--- creating user {} with {} SOL",
         //     name,
@@ -729,8 +775,14 @@ impl IntegrationTest {
                 println!("Using existing associated {} account {:?}", symbol, account);
             }
             None => {
-                println!("Creating associated {} account {:?}", symbol, account);
-                let actual_account = self.create_associated_token_account(&user, symbol);
+                println!(
+                    "Creating associated {} account {:?} for {}",
+                    symbol,
+                    account,
+                    user.keypair.pubkey()
+                );
+                let actual_account =
+                    self.create_associated_token_account_instruction(&user, symbol);
                 assert_eq!(actual_account, account);
             }
         };
@@ -739,7 +791,11 @@ impl IntegrationTest {
 
     /// Creates an associated token account for some user
     /// (only adds the instruction, do not executes)
-    pub fn create_associated_token_account(&mut self, user: &TestUser, symbol: &str) -> Pubkey {
+    pub fn create_associated_token_account_instruction(
+        &mut self,
+        user: &TestUser,
+        symbol: &str,
+    ) -> Pubkey {
         let mint = match symbol {
             "mSOL" => &self.state.msol_mint,
             "mSOL-SOL-LP" => &self.state.liq_pool.lp_mint,
@@ -957,4 +1013,160 @@ pub fn get_clock(banks_client: &mut BanksClient) -> impl Future<Output = io::Res
 // returns a random lamports amount between from_sol..to_sol
 pub fn random_amount(from_sol: u64, to_sol: u64, rng: &mut impl RngCore) -> u64 {
     Uniform::from((from_sol * LAMPORTS_PER_SOL)..(to_sol * LAMPORTS_PER_SOL)).sample(rng)
+}
+
+// --------------------------------
+// -- INITIALIZE MARINADE REFERRAL
+// --------------------------------
+//
+pub struct MarinadeReferralTestGlobals {
+    admin_keypair: Keypair,
+    state_key: Pubkey,
+    referral_key: Pubkey,
+    partner: TestUser,
+}
+
+// initialize marinade-referral global state & a referral-account
+pub async fn init_marinade_referral_test_globals(
+    test: &mut IntegrationTest,
+) -> MarinadeReferralTestGlobals {
+    // admin_key = AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
+    const admin_private_key_bytes: [u8; 64] = [
+        136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38, 100, 72, 135,
+        189, 121, 32, 38, 93, 10, 41, 104, 38, 158, 171, 38, 138, 239, 196, 48, 200, 45, 19, 235,
+        223, 73, 101, 62, 195, 45, 48, 246, 226, 240, 177, 172, 213, 0, 184, 113, 158, 176, 17,
+        177, 2, 215, 168, 135,
+    ];
+    let admin_key: Keypair = Keypair::from_bytes(&admin_private_key_bytes).unwrap();
+
+    let mut admin = test
+        .create_test_user_from_keypair(
+            "test_referral_admin_user",
+            200 * LAMPORTS_PER_SOL,
+            admin_key,
+        )
+        .await;
+
+    let mut partner = test
+        .create_test_user("test_referral_partner", 200 * LAMPORTS_PER_SOL)
+        .await;
+
+    // referral global state PDA & bump
+    // let (global_state_pda, global_state_bump) = Pubkey::find_program_address(
+    //     &[GLOBAL_STATE_SEED],
+    //     &marinade_referral::marinade_referral::ID
+    //     );
+
+    // init global state
+    let global_state = Arc::new(Keypair::new());
+    let state_key = global_state.pubkey();
+    let state_space = 8 + std::mem::size_of::<marinade_referral::states::GlobalState>();
+    test.builder.add_signer(global_state); // need to sign with privkey to create account
+    test.builder
+        .add_instruction(
+            system_instruction::create_account(
+                &test.builder.fee_payer(),
+                &state_key,
+                test.rent.minimum_balance(state_space),
+                state_space as u64,
+                &marinade_referral::marinade_referral::ID,
+            ),
+            format!("pre-create marinade-referral global state acc because banks-clients do not support creation from program {}", state_key),
+        )
+        .unwrap();
+    println!("create global state account");
+    test.execute().await;
+
+    {
+        let accounts = marinade_referral::accounts::Initialize {
+            admin_account: admin.keypair.pubkey(),
+            payment_mint: test.state.msol_mint,
+            global_state: state_key,
+            system_program: system_program::ID,
+        };
+        let ix_data = marinade_referral::instruction::Initialize {};
+        let instruction = Instruction {
+            program_id: marinade_referral::marinade_referral::ID,
+            accounts: accounts.to_account_metas(None),
+            data: ix_data.data(),
+        };
+        println!("Init global state");
+        test.execute_instruction(
+            instruction,
+            vec![test.fee_payer_signer(), admin.keypair.clone()],
+        )
+        .await;
+        //}
+        //let tx = Transaction::new_signed_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()),&[user.keypair.as_ref()],test.recent_blockhash().await);
+        //let tx = Transaction::new_with_payer(&[instruction], Some(&user.keypair.pubkey()));
+        // marinade-referral execution
+        //test.execute_txn(tx, vec!(user.keypair.clone())).await;
+    }
+
+    // partner token account
+    let token_partner_account = partner.get_or_create_msol_account_instruction(test).await;
+    test.execute().await; // execute if the ATA needed to be created
+
+    // ----------------------
+    // create account and init referral state
+    // ----------------------
+    let referral_state = Arc::new(Keypair::new());
+    let referral_key = referral_state.pubkey();
+    // 8=Anchor sha-struct-ident, 10 partner-name string
+    let referral_state_size =
+        8 + 10 + std::mem::size_of::<marinade_referral::states::ReferralState>();
+    test.builder.add_signer(referral_state); // need to sign with privkey to create account
+    test.builder
+        .add_instruction(
+            system_instruction::create_account(
+                &test.builder.fee_payer(),
+                &referral_key,
+                test.rent.minimum_balance(referral_state_size),
+                referral_state_size as u64,
+                &marinade_referral::marinade_referral::ID,
+            ),
+            format!("pre-create referral-state because banks-clients do not support creation from program {}", referral_key),
+        )
+        .unwrap();
+    println!(
+        "create referral-state account. msol-mint {}",
+        &test.state.msol_mint
+    );
+    test.execute().await;
+
+    {
+        let accounts = marinade_referral::accounts::InitReferralAccount {
+            global_state: state_key,
+            admin_account: admin.keypair.pubkey(),
+            referral_state: referral_key,
+            partner_account: partner.keypair.pubkey(),
+            payment_mint: test.state.msol_mint,
+            token_partner_account: token_partner_account.pubkey,
+            system_program: system_program::ID,
+            token_program: spl_token::ID,
+            rent: solana_sdk::sysvar::rent::ID,
+        };
+        //let partner_name: [u8;10] = ascii::ascii_char::AsciiChar = "TEST_PART";
+        let ix_data = marinade_referral::instruction::InitReferralAccount {
+            partner_name: "TEST_PART".into(),
+        };
+        let instruction = Instruction {
+            program_id: marinade_referral::marinade_referral::ID,
+            accounts: accounts.to_account_metas(None),
+            data: ix_data.data(),
+        };
+        println!("Init referral-state");
+        test.execute_instruction(
+            instruction,
+            vec![test.fee_payer_signer(), admin.keypair.clone()],
+        )
+        .await;
+    }
+
+    return MarinadeReferralTestGlobals {
+        admin_keypair: Keypair::from_bytes(&admin_private_key_bytes).unwrap(),
+        state_key,
+        referral_key,
+        partner,
+    };
 }

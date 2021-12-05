@@ -14,23 +14,27 @@ use crate::states::*;
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-#[instruction(
-    bump: u8,
-)]
+// #[instruction(
+//     bump: u8,
+// )]
 pub struct Initialize<'info> {
     // admin account
     #[account(mut, signer)]
     pub admin_account: AccountInfo<'info>,
 
     // global state
-    #[account(
-        init,
-        payer = admin_account,
-        space = 8 + size_of::<GlobalState>(),
-        seeds = [GLOBAL_STATE_SEED.as_ref()],
-        bump = bump,
-    )]
+    // #[account(
+    //     init,
+    //     payer = admin_account,
+    //     space = 8 + size_of::<GlobalState>(),
+    //     seeds = [GLOBAL_STATE_SEED.as_ref()],
+    //     bump = bump,
+    // )]
+    #[account(zero)]
     pub global_state: ProgramAccount<'info, GlobalState>,
+
+    #[account()]
+    pub payment_mint: AccountInfo<'info>,
 
     pub system_program: AccountInfo<'info>,
 }
@@ -52,10 +56,10 @@ pub struct ChangeAuthority<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-#[instruction(
-    bump: u8,
-)]
-pub struct CreateReferralPda<'info> {
+// #[instruction(
+//     bump: u8,
+// )]
+pub struct InitReferralAccount<'info> {
     // global state
     #[account(has_one = admin_account)]
     pub global_state: ProgramAccount<'info, GlobalState>,
@@ -64,53 +68,53 @@ pub struct CreateReferralPda<'info> {
     #[account(mut, signer)]
     pub admin_account: AccountInfo<'info>,
 
-    // mSOL mint
-    #[account(address = Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap())]
-    pub msol_mint: CpiAccount<'info, Mint>,
-
     // partner account
     pub partner_account: AccountInfo<'info>,
-
+    // payment token mint (normally mSOL mint)
+    // #[account(address = Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap())]
+    #[account()]
+    pub payment_mint: CpiAccount<'info, Mint>,
     // partner beneficiary mSOL ATA
-    #[account(mut)]
-    pub beneficiary_account: AccountInfo<'info>,
+    #[account()]
+    pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
     // referral state
-    #[account(
-        init,
-        payer = admin_account,
-        space = 8 + size_of::<ReferralState>(),
-        seeds = [
-            partner_account.key().as_ref(),
-            REFERRAL_STATE_SEED.as_ref()
-        ],
-        bump = bump,
-    )]
+    // #[account(
+    //     init,
+    //     payer = admin_account,
+    //     space = 8 + 10 + size_of::<ReferralState>(),
+    //     seeds = [
+    //         partner_account.key().as_ref(),
+    //         REFERRAL_STATE_SEED.as_ref()
+    //     ],
+    //     bump = bump,
+    // )]
+    #[account(zero)]
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
     pub system_program: AccountInfo<'info>,
-    pub associated_token_program: AccountInfo<'info>,
+    //pub associated_token_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub rent: AccountInfo<'info>,
 }
 
-impl<'info> CreateReferralPda<'info> {
-    pub fn into_create_associated_token_account_ctx(
-        &self,
-    ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
-        let cpi_accounts = CreateAssociatedTokenAccount {
-            payer: self.admin_account.clone(),
-            associated_token: self.beneficiary_account.clone(),
-            authority: self.partner_account.clone(),
-            mint: self.msol_mint.to_account_info().clone(),
-            system_program: self.system_program.clone(),
-            token_program: self.token_program.clone(),
-            rent: self.rent.clone(),
-        };
+// impl<'info> InitReferralAccount<'info> {
+//     pub fn into_create_associated_token_account_ctx(
+//         &self,
+//     ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
+//         let cpi_accounts = CreateAssociatedTokenAccount {
+//             payer: self.admin_account.clone(),
+//             associated_token: self.token_partner_account.clone(),
+//             authority: self.partner_account.clone(),
+//             mint: self.payment_mint.to_account_info().clone(),
+//             system_program: self.system_program.clone(),
+//             token_program: self.token_program.clone(),
+//             rent: self.rent.clone(),
+//         };
 
-        CpiContext::new(self.associated_token_program.clone(), cpi_accounts)
-    }
-}
+//         CpiContext::new(self.associated_token_program.clone(), cpi_accounts)
+//     }
+// }
 
 //-----------------------------------------------------
 #[derive(Accounts)]
@@ -158,7 +162,7 @@ pub struct Deposit<'info> {
 }
 
 impl<'info> Deposit<'info> {
-    pub fn into_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
+    pub fn into_marinade_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
         let cpi_accounts = MarinadeDeposit {
             state: self.state.clone(),
             msol_mint: self.msol_mint.clone(),
@@ -297,7 +301,7 @@ pub struct TransferLiqUnstakeShares<'info> {
 
     // mSOL beneficiary account
     #[account(mut)]
-    pub beneficiary_account: CpiAccount<'info, TokenAccount>,
+    pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
     // mSOL treasury token account
     #[account(mut)]
@@ -312,7 +316,7 @@ pub struct TransferLiqUnstakeShares<'info> {
         mut,
         constraint = !referral_state.pause,
         constraint = referral_state.liq_unstake_amount > 0,
-        constraint = referral_state.beneficiary_account.key() == *beneficiary_account.to_account_info().key,
+        constraint = referral_state.token_partner_account.key() == *token_partner_account.to_account_info().key,
     )]
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
@@ -323,7 +327,7 @@ impl<'info> TransferLiqUnstakeShares<'info> {
     pub fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
             from: self.treasury_msol_account.to_account_info().clone(),
-            to: self.beneficiary_account.to_account_info().clone(),
+            to: self.token_partner_account.to_account_info().clone(),
             authority: self.treasury_account.clone(),
         };
 

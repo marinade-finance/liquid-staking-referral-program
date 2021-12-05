@@ -17,7 +17,7 @@ pub mod processor;
 ///states
 pub mod states;
 
-use crate::process_create_referral_pda::process_create_referral_pda;
+use crate::process_init_referral_account::process_init_referral_account;
 use crate::{account_structs::*, processor::*};
 
 // pub fn test_ep(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8])
@@ -51,17 +51,16 @@ pub mod marinade_referral {
         })
     }
     ///create global state
-    pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
-        process_initialize(ctx, bump)
+    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
+        process_initialize(ctx)
     }
 
     ///create referral state
-    pub fn create_referral_pda(
-        ctx: Context<CreateReferralPda>,
-        bump: u8,
-        partner_name: [u8; 10],
+    pub fn init_referral_account(
+        ctx: Context<InitReferralAccount>,
+        partner_name: String,
     ) -> ProgramResult {
-        process_create_referral_pda(ctx, bump, partner_name)
+        process_init_referral_account(ctx, partner_name)
     }
 
     ///update referral state

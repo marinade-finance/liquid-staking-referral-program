@@ -32,6 +32,8 @@ pub fn process_deposit_stake_account(
             cpi_ctx.accounts.system_program,
             cpi_ctx.accounts.token_program,
             cpi_ctx.accounts.stake_program,
+            //
+            ctx.accounts.marinade_finance_program.clone(),
         ],
         cpi_ctx.signer_seeds,
     )?;

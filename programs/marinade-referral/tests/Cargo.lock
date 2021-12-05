@@ -1529,6 +1529,7 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "solana-vote-program",
+ "spl-associated-token-account",
  "spl-token",
  "test-env-log",
  "tokio",

@@ -7,7 +7,6 @@ use marinade_referral::account_structs::*;
 use marinade_referral::constant::*;
 
 use crate::{initialize::InitializeInputWithSeeds, integration_test::*};
-use marinade_finance_offchain_sdk::spl_associated_token_account::get_associated_token_address;
 use marinade_finance_offchain_sdk::{
     anchor_lang::InstructionData,
     instruction_helpers::InstructionHelpers,
@@ -16,10 +15,12 @@ use marinade_finance_offchain_sdk::{
     spl_token,
 };
 
+pub use spl_associated_token_account::{get_associated_token_address, ID};
+
 use rand::{distributions::Uniform, prelude::Distribution, CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaChaRng;
 
-use solana_program::native_token::{lamports_to_sol, LAMPORTS_PER_SOL};
+use solana_program::native_token::{lamports_to_sol, sol_to_lamports, LAMPORTS_PER_SOL};
 use solana_sdk::{
     instruction::Instruction,
     pubkey::Pubkey,
@@ -59,13 +60,18 @@ impl DepositSolParams {
     }
 }
 
-pub async fn do_deposit_sol(user: &mut TestUser, lamports: u64, test: &mut IntegrationTest) {
+pub async fn do_deposit_sol(
+    user: &mut TestUser,
+    lamports: u64,
+    test: &mut IntegrationTest,
+    referral: &MarinadeReferralTestGlobals,
+) {
     //
-    // get initial balances
-    let user_initial_sol_balance = user.sol_balance(test).await;
 
     // Create a user account for msol if not exists
-    let user_msol_account = user.get_or_create_msol_account(test).await;
+    let user_msol_account = user.get_or_create_msol_account_instruction(test).await;
+    test.execute().await;
+
     let user_msol_balance_before = test
         .get_token_balance_or_zero(&user_msol_account.pubkey)
         .await;
@@ -76,78 +82,13 @@ pub async fn do_deposit_sol(user: &mut TestUser, lamports: u64, test: &mut Integ
         .await;
     let available_reserve_balance_before = test.state.available_reserve_balance;
 
-    // initialize the global state
-    // admin_key = AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
-    let admin_key:Keypair = Keypair::from_bytes(
-        &[
-          136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38,
-          100, 72, 135, 189, 121, 32, 38, 93, 10, 41, 104, 38, 158, 171, 38, 138, 239,
-          196, 48, 200, 45, 19, 235, 223, 73, 101, 62, 195, 45, 48, 246, 226, 240,
-          177, 172, 213, 0, 184, 113, 158, 176, 17, 177, 2, 215, 168, 135,
-        ]).unwrap();
-    let mut admin = test
-    .create_test_user_from_keypair("test_referral_admin_user", 200 * LAMPORTS_PER_SOL, admin_key)
-    .await;
+    // save user balance pre-deposit
+    let user_initial_sol_balance = user.sol_balance(test).await;
+    println!("user_initial_sol_balance {}", user_initial_sol_balance);
 
-    // referral global state PDA & bump
-    let (global_state_pda, global_state_bump) = Pubkey::find_program_address(
-        &[GLOBAL_STATE_SEED],
-        &marinade_referral::marinade_referral::ID
-        );
-
-    // test.builder
-    //     .add_instruction(
-    //         system_instruction::create_account(
-    //             &admin.keypair.pubkey(),
-    //             &global_state_pda,
-    //             1_000_000, //lamports,
-    //             8+std::mem::size_of::<marinade_referral::states::GlobalState>() as u64,
-    //             &marinade_referral::marinade_referral::ID,
-    //         ),
-    //         format!("pre-create marinade-referral global state acc because banks-clients do not support creation from program {}", global_state_pda),
-    //     )
-    //     .unwrap();
-    // test.execute().await;
-
-    {
-        let accounts = marinade_referral::accounts::Initialize {
-            admin_account: admin.keypair.pubkey(),
-            global_state: global_state_pda,
-            system_program: system_program::ID,
-        };
-        let ix_data = marinade_referral::instruction::Initialize { bump:global_state_bump };
-        let instruction = Instruction {
-            program_id: marinade_referral::marinade_referral::ID,
-            accounts: accounts.to_account_metas(None),
-            data: ix_data.data(),
-        };
-        println!("Init global state");
-        test.execute_instruction(instruction,vec!(user.keypair.clone(),admin.keypair.clone())).await;
-        //}
-        //let tx = Transaction::new_signed_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()),&[user.keypair.as_ref()],test.recent_blockhash().await);
-        //let tx = Transaction::new_with_payer(&[instruction], Some(&user.keypair.pubkey()));
-        // marinade-referral execution
-        //test.execute_txn(tx, vec!(user.keypair.clone())).await;
-    }
-    
-    let referral_state = Keypair::new();
-    // initialize the referral state
-    {
-        let accounts = marinade_referral::accounts::Initialize {
-            admin_account: Pubkey::from_str("AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn")
-                .unwrap(),
-            global_state: referral_state.pubkey(),
-            system_program: system_program::ID,
-        };
-    }
-
+    // -----------------------------------------
     // Create a referral DepositSol instruction.
-    // pub fn deposit(
-    //     state: &impl Located<State>,
-    //     transfer_from: Pubkey,
-    //     mint_to: Pubkey,
-    //     lamports: u64,
-    // ) -> Instruction {
+    // -----------------------------------------
     let transfer_from = user.keypair.clone().pubkey();
     let mint_to = user_msol_account.pubkey;
     let state_key = test.state.key();
@@ -166,35 +107,40 @@ pub async fn do_deposit_sol(user: &mut TestUser, lamports: u64, test: &mut Integ
         token_program: spl_token::ID,
         //----
         marinade_finance_program: marinade_finance::ID,
-        referral_state: referral_state.pubkey(),
+        referral_state: referral.referral_key,
     }
     .to_account_metas(None);
 
     let ix_data = marinade_referral::instruction::Deposit { lamports };
     let deposit_instruction = Instruction {
-        program_id: marinade_finance::ID,
+        program_id: marinade_referral::marinade_referral::ID,
         accounts,
         data: ix_data.data(),
     };
     //}
     //let tx = Transaction::new_signed_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()),&[user.keypair.as_ref()],test.recent_blockhash().await);
-    let tx = Transaction::new_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()));
+    let tx = Transaction::new_with_payer(&[deposit_instruction], Some(&test.fee_payer()));
     // marinade-referral execution
-    test.execute_txn(tx, vec!(user.keypair.clone())).await;
+    println!("marinade-referral deposit");
+    test.execute_txn(tx, vec![test.fee_payer_signer(), user.keypair.clone()]).await;
 
-    // marinade-finance builder deposit
-    test.builder.deposit(
-        &test.state,
-        user.keypair.clone(),
-        user_msol_account.pubkey,
-        lamports,
-    );
-    // execute
-    test.execute().await;
+    // // marinade-finance builder deposit
+    // commented: Direct call to marinade
+    // test.builder.deposit(
+    //     &test.state,
+    //     user.keypair.clone(),
+    //     user_msol_account.pubkey,
+    //     lamports,
+    // );
+    // // execute
+    // test.execute().await;
 
-    // User SOL account balance decremented.
+    // Check User SOL account balance decremented.
     let user_sol_balance_after = user.sol_balance(test).await;
-    assert_eq!(user_sol_balance_after, user_initial_sol_balance - lamports);
+    assert_eq!(
+        user_sol_balance_after,
+        user_initial_sol_balance - lamports 
+    );
 
     // User's mSOL account credited.
     let user_msol_balance_after = test.get_token_balance(&user_msol_account.pubkey).await;
@@ -221,6 +167,7 @@ pub async fn do_liquid_unstake(
     user: &mut TestUser,
     msol_lamports: u64,
     test: &mut IntegrationTest,
+    referral: &MarinadeReferralTestGlobals,
 ) -> Result<(), u32> {
     println!(
         "--- do_liquid_unstake {} mSOL ----------",
@@ -234,21 +181,58 @@ pub async fn do_liquid_unstake(
     println!("--- liquidity {} ", lamports_to_sol(liquidity_lamports));
 
     // Create a user account for msol if not exists
-    let user_msol_account = user.get_or_create_msol_account(test).await;
+    let user_msol_account = user.get_or_create_msol_account_instruction(test).await;
     let user_msol_balance_before = test
         .get_token_balance_or_zero(&user_msol_account.pubkey)
         .await;
 
     // Liquid unstake instruction setup
-    test.builder.liquid_unstake(
-        &test.state,
-        user_msol_account.pubkey,
-        user.keypair.clone(),
-        user.keypair.pubkey(),
-        msol_lamports,
-    );
 
-    let result = test.try_execute().await;
+    // -----------------------------------------
+    // Create a referral LiquidUnstake instruction.
+    // -----------------------------------------
+    let state_key = test.state.key();
+    let user_key = user.keypair.clone().pubkey();
+    let get_msol_from = user_msol_account.pubkey;
+
+    let accounts = marinade_referral::accounts::LiquidUnstake {
+        state: state_key,
+        get_msol_from,
+        get_msol_from_authority: user_key,
+        transfer_sol_to: user_key,
+        treasury_msol_account: test.state.treasury_msol_account,
+        msol_mint: test.state.as_ref().msol_mint,
+        liq_pool_sol_leg_pda: test.state.liq_pool_sol_leg_address(),
+        liq_pool_msol_leg: test.state.as_ref().liq_pool.msol_leg,
+        system_program: system_program::ID,
+        token_program: spl_token::ID,
+        //----
+        marinade_finance_program: marinade_finance::ID,
+        referral_state: referral.referral_key,
+    }
+    .to_account_metas(None);
+
+    let ix_data = marinade_referral::instruction::LiquidUnstake { msol_amount: msol_lamports };
+    let liquid_unstake_instruction = Instruction {
+        program_id: marinade_referral::marinade_referral::ID,
+        accounts,
+        data: ix_data.data(),
+    };
+    let tx = Transaction::new_with_payer(&[liquid_unstake_instruction], Some(&test.fee_payer()));
+    // marinade-referral liquid_unstake
+    println!("marinade-referral liquid_unstake");
+    let result = test.try_execute_txn(tx, vec![test.fee_payer_signer(), user.keypair.clone()]).await;
+
+    // COMMENTED - Direct call to marinade-finance
+    // test.builder.liquid_unstake(
+    //     &test.state,
+    //     user_msol_account.pubkey,
+    //     user.keypair.clone(),
+    //     user.keypair.pubkey(),
+    //     msol_lamports,
+    // );
+    // let result = test.try_execute().await;
+
     if result.is_err() {
         println!("-- do_liquid_unstake result: {:x?}", result);
         return result;
@@ -308,7 +292,16 @@ async fn test_deposit_sol() -> anyhow::Result<()> {
     let mut user = test
         .create_test_user("test_dep_sol_user", 200 * LAMPORTS_PER_SOL)
         .await;
-    do_deposit_sol(&mut user, random_amount(1, 100, &mut rng), &mut test).await;
+
+    let marinade_referral_test_globals = init_marinade_referral_test_globals(&mut test).await;
+
+    do_deposit_sol(
+        &mut user,
+        random_amount(1, 100, &mut rng),
+        &mut test,
+        &marinade_referral_test_globals,
+    )
+    .await;
     Ok(())
 }
 
@@ -321,18 +314,26 @@ async fn test_liquid_unstake() -> anyhow::Result<()> {
     let input = InitializeInputWithSeeds::random(&mut rng);
     let mut test = IntegrationTest::start(&input).await?;
 
+    let marinade_referral_test_globals = init_marinade_referral_test_globals(&mut test).await;
+
     let mut alice = test
         .create_test_user("alice", 1000 * LAMPORTS_PER_SOL)
         .await;
 
     let alice_deposit_amount = 26 * LAMPORTS_PER_SOL;
-    do_deposit_sol(&mut alice, alice_deposit_amount, &mut test).await;
+    do_deposit_sol(
+        &mut alice,
+        alice_deposit_amount,
+        &mut test,
+        &marinade_referral_test_globals,
+    )
+    .await;
 
     let alice_liquid_unstake_amount = 10 * LAMPORTS_PER_SOL;
 
     // 1st one should fail with Insufficient Liquidity in the Liquidity Pool
     const ERR_CODE_INSUFFICIENT_LIQUIDITY: u32 = 0x1199;
-    match do_liquid_unstake(&mut alice, alice_liquid_unstake_amount, &mut test).await {
+    match do_liquid_unstake(&mut alice, alice_liquid_unstake_amount, &mut test, &marinade_referral_test_globals).await {
         Ok(()) => debug_assert!(false, "expected err got Ok"),
         Err(ERR_CODE_INSUFFICIENT_LIQUIDITY) => println!(
             "(expected tx failure 0x{:x})",
@@ -355,7 +356,7 @@ async fn test_liquid_unstake() -> anyhow::Result<()> {
         .unwrap();
 
     // 2nd should work ok
-    do_liquid_unstake(&mut alice, 15 * LAMPORTS_PER_SOL, &mut test)
+    do_liquid_unstake(&mut alice, 15 * LAMPORTS_PER_SOL, &mut test, &marinade_referral_test_globals)
         .await
         .unwrap();
     Ok(())

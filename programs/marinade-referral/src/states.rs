@@ -7,6 +7,8 @@ use marinade_finance::Fee;
 pub struct GlobalState {
     // Authority (admin address)
     pub admin_account: Pubkey,
+    // payment token mint (normally mSOL mint)
+    pub payment_mint: Pubkey,
 }
 
 //-----------------------------------------------------
@@ -14,10 +16,12 @@ pub struct GlobalState {
 #[account]
 pub struct ReferralState {
     // Partner name
-    pub partner_name: [u8; 10],
+    pub partner_name: String, //max-length 10 bytes
 
-    // Beneficiary account (mSOL address)
-    pub beneficiary_account: Pubkey,
+    // partner Beneficiary account (native account)
+    pub partner_account: Pubkey,
+    // token account where to make payment (ATA mSOL address for partner_account)
+    pub token_partner_account: Pubkey,
 
     // Transfer-periodicity-seconds (u32 amount of seconds, default: a month)
     pub transfer_duration: u32,
