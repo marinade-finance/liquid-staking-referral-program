@@ -8,13 +8,13 @@ mod integration_test;
 
 pub mod initialize;
 
-pub fn program_test() -> ProgramTest {
-    ProgramTest::new(
-        "marinade_finance",
-        marinade_finance::ID,
-        processor!(marinade_finance::test_entry),
-    )
-}
+// pub fn program_test() -> ProgramTest {
+//     ProgramTest::new(
+//         "marinade_finance",
+//         marinade_finance::ID,
+//         processor!(marinade_finance::test_entry),
+//     )
+// }
 
 pub fn find_value<T, F: FnMut() -> Option<T>>(mut gen: F) -> T {
     loop {

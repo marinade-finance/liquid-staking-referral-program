@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::Deposit as MarinadeDeposit;
 
-use crate::instructions::*;
+use crate::account_structs::*;
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
     // deposit-sol cpi

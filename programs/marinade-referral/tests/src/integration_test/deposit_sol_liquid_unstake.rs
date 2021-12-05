@@ -2,11 +2,18 @@
 // Integration Test
 // deposit sol & liquid unstake
 //
+use marinade_referral;
+use marinade_referral::account_structs::*;
+use marinade_referral::constant::*;
+
 use crate::{initialize::InitializeInputWithSeeds, integration_test::*};
 use marinade_finance_offchain_sdk::spl_associated_token_account::get_associated_token_address;
 use marinade_finance_offchain_sdk::{
+    anchor_lang::InstructionData,
     instruction_helpers::InstructionHelpers,
+    marinade_finance,
     marinade_finance::{calc::proportional, liq_pool::LiqPoolHelpers, State},
+    spl_token,
 };
 
 use rand::{distributions::Uniform, prelude::Distribution, CryptoRng, RngCore, SeedableRng};
@@ -14,10 +21,11 @@ use rand_chacha::ChaChaRng;
 
 use solana_program::native_token::{lamports_to_sol, LAMPORTS_PER_SOL};
 use solana_sdk::{
+    instruction::Instruction,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
 };
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 use test_env_log::test;
 
 use crate::integration_test::test_add_remove_liquidity::*;
@@ -68,7 +76,113 @@ pub async fn do_deposit_sol(user: &mut TestUser, lamports: u64, test: &mut Integ
         .await;
     let available_reserve_balance_before = test.state.available_reserve_balance;
 
-    // Create a DepositSol instruction.
+    // initialize the global state
+    // admin_key = AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
+    let admin_key:Keypair = Keypair::from_bytes(
+        &[
+          136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38,
+          100, 72, 135, 189, 121, 32, 38, 93, 10, 41, 104, 38, 158, 171, 38, 138, 239,
+          196, 48, 200, 45, 19, 235, 223, 73, 101, 62, 195, 45, 48, 246, 226, 240,
+          177, 172, 213, 0, 184, 113, 158, 176, 17, 177, 2, 215, 168, 135,
+        ]).unwrap();
+    let mut admin = test
+    .create_test_user_from_keypair("test_referral_admin_user", 200 * LAMPORTS_PER_SOL, admin_key)
+    .await;
+
+    // referral global state PDA & bump
+    let (global_state_pda, global_state_bump) = Pubkey::find_program_address(
+        &[GLOBAL_STATE_SEED],
+        &marinade_referral::marinade_referral::ID
+        );
+
+    // test.builder
+    //     .add_instruction(
+    //         system_instruction::create_account(
+    //             &admin.keypair.pubkey(),
+    //             &global_state_pda,
+    //             1_000_000, //lamports,
+    //             8+std::mem::size_of::<marinade_referral::states::GlobalState>() as u64,
+    //             &marinade_referral::marinade_referral::ID,
+    //         ),
+    //         format!("pre-create marinade-referral global state acc because banks-clients do not support creation from program {}", global_state_pda),
+    //     )
+    //     .unwrap();
+    // test.execute().await;
+
+    {
+        let accounts = marinade_referral::accounts::Initialize {
+            admin_account: admin.keypair.pubkey(),
+            global_state: global_state_pda,
+            system_program: system_program::ID,
+        };
+        let ix_data = marinade_referral::instruction::Initialize { bump:global_state_bump };
+        let instruction = Instruction {
+            program_id: marinade_referral::marinade_referral::ID,
+            accounts: accounts.to_account_metas(None),
+            data: ix_data.data(),
+        };
+        println!("Init global state");
+        test.execute_instruction(instruction,vec!(user.keypair.clone(),admin.keypair.clone())).await;
+        //}
+        //let tx = Transaction::new_signed_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()),&[user.keypair.as_ref()],test.recent_blockhash().await);
+        //let tx = Transaction::new_with_payer(&[instruction], Some(&user.keypair.pubkey()));
+        // marinade-referral execution
+        //test.execute_txn(tx, vec!(user.keypair.clone())).await;
+    }
+    
+    let referral_state = Keypair::new();
+    // initialize the referral state
+    {
+        let accounts = marinade_referral::accounts::Initialize {
+            admin_account: Pubkey::from_str("AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn")
+                .unwrap(),
+            global_state: referral_state.pubkey(),
+            system_program: system_program::ID,
+        };
+    }
+
+    // Create a referral DepositSol instruction.
+    // pub fn deposit(
+    //     state: &impl Located<State>,
+    //     transfer_from: Pubkey,
+    //     mint_to: Pubkey,
+    //     lamports: u64,
+    // ) -> Instruction {
+    let transfer_from = user.keypair.clone().pubkey();
+    let mint_to = user_msol_account.pubkey;
+    let state_key = test.state.key();
+
+    let accounts = marinade_referral::accounts::Deposit {
+        state: state_key,
+        msol_mint: test.state.as_ref().msol_mint,
+        liq_pool_sol_leg_pda: test.state.liq_pool_sol_leg_address(),
+        liq_pool_msol_leg: test.state.as_ref().liq_pool.msol_leg,
+        liq_pool_msol_leg_authority: test.state.liq_pool_msol_leg_authority(),
+        reserve_pda: State::find_reserve_address(&state_key).0,
+        transfer_from,
+        mint_to,
+        msol_mint_authority: State::find_msol_mint_authority(&state_key).0,
+        system_program: system_program::ID,
+        token_program: spl_token::ID,
+        //----
+        marinade_finance_program: marinade_finance::ID,
+        referral_state: referral_state.pubkey(),
+    }
+    .to_account_metas(None);
+
+    let ix_data = marinade_referral::instruction::Deposit { lamports };
+    let deposit_instruction = Instruction {
+        program_id: marinade_finance::ID,
+        accounts,
+        data: ix_data.data(),
+    };
+    //}
+    //let tx = Transaction::new_signed_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()),&[user.keypair.as_ref()],test.recent_blockhash().await);
+    let tx = Transaction::new_with_payer(&[deposit_instruction], Some(&user.keypair.pubkey()));
+    // marinade-referral execution
+    test.execute_txn(tx, vec!(user.keypair.clone())).await;
+
+    // marinade-finance builder deposit
     test.builder.deposit(
         &test.state,
         user.keypair.clone(),

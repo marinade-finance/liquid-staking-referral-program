@@ -1,14 +1,14 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 //use crate::integration_test::Rent;
 
 // use crate::helper::{program_test, IntegrationTest};
-use crate::program_test;
+//use crate::program_test;
 use marinade_finance_offchain_sdk::anchor_lang::prelude::*;
 use marinade_finance_offchain_sdk::spl_token;
 use marinade_finance_offchain_sdk::{
     instruction_helpers::{initialize::InitializeBuilder, InstructionHelpers},
     marinade_finance::{liq_pool::LiqPool, Fee, State, MAX_REWARD_FEE},
-    transaction_builder::{TransactionBuilder},
+    transaction_builder::TransactionBuilder,
 };
 use solana_sdk::program_option::COption;
 
@@ -25,7 +25,7 @@ use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     //sysvar::clock::{self, Clock},
-    transaction::{TransactionError},
+    transaction::TransactionError,
 };
 use test_env_log::test;
 
@@ -375,7 +375,7 @@ impl InitializeInputWithoutSeeds {
     }
 }
 
-#[test(tokio::test)]
+/*#[test(tokio::test)]
 async fn test_initialization_without_seeds() -> anyhow::Result<()> {
     let (mut banks_client, payer, recent_blockhash) = crate::program_test().start().await;
     let fee_payer = Arc::new(payer);
@@ -448,7 +448,9 @@ async fn test_initialization_with_seeds() -> anyhow::Result<()> {
     //check_initialize(&input, &mut banks_client, &expected).await?;
     Ok(())
 }
+*/
 
+/*
 #[test(tokio::test)]
 async fn test_empty_reserve() -> anyhow::Result<()> {
     let (mut banks_client, payer, recent_blockhash) = program_test().start().await;
@@ -494,7 +496,9 @@ async fn test_empty_reserve() -> anyhow::Result<()> {
     );
     Ok(())
 }
+*/
 
+/*
 #[test(tokio::test)]
 async fn test_fake_mint() -> anyhow::Result<()> {
     let mut test = program_test();
@@ -552,3 +556,4 @@ async fn test_fake_mint() -> anyhow::Result<()> {
     );
     Ok(())
 }
+*/

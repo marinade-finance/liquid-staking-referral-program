@@ -686,6 +686,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "marinade-finance",
+ "solana-program",
  "spl-associated-token-account",
  "spl-token",
 ]

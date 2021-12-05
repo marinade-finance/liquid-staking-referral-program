@@ -1,5 +1,9 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::declare_id;
+use anchor_lang::solana_program::pubkey::Pubkey;
 
+///instructions
+pub mod account_structs;
 ///associated token
 pub mod associated_token;
 ///constant
@@ -8,20 +12,44 @@ pub mod constant;
 pub mod cpi_context_instructions;
 ///error
 pub mod error;
-///instructions
-pub mod instructions;
 ///processor
 pub mod processor;
 ///states
 pub mod states;
 
 use crate::process_create_referral_pda::process_create_referral_pda;
-use crate::{instructions::*, processor::*};
+use crate::{account_structs::*, processor::*};
+
+// pub fn test_ep(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8])
+//  -> ProgramResult {
+//     if data.len() < 8 {
+//         return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
+//     }
+//     dispatch(program_id, accounts,
+//              data).map_err(|e|
+//                                {
+//                                    ::solana_program::log::sol_log(&e.to_string());
+//                                    e
+//                                })
+// }
 
 #[program]
 pub mod marinade_referral {
     use super::*;
 
+    declare_id!("FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR");
+
+    // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
+    // in order to load two programs with entrypoints into the simulator
+    pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+        if data.len() < 8 {
+            return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
+        }
+        dispatch(program_id, accounts, data).map_err(|e| {
+            ::solana_program::log::sol_log(&e.to_string());
+            e
+        })
+    }
     ///create global state
     pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
         process_initialize(ctx, bump)

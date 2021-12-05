@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::LiquidUnstake as MarinadeLiquidUnstake;
 
-use crate::instructions::*;
+use crate::account_structs::*;
 
 pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
     // liquid-unstake cpi

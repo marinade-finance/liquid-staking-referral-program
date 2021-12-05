@@ -2,7 +2,7 @@ use anchor_lang::{prelude::*, solana_program::clock};
 use marinade_finance::Fee;
 
 use crate::error::*;
-use crate::{associated_token, constant::*, instructions::*};
+use crate::{associated_token, constant::*, account_structs::*};
 use spl_associated_token_account::get_associated_token_address;
 
 pub fn process_create_referral_pda(

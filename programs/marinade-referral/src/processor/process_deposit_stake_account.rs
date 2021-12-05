@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::DepositStakeAccount as MarinadeDepositStakeAccount;
 
-use crate::instructions::*;
+use crate::account_structs::*;
 
 pub fn process_deposit_stake_account(
     ctx: Context<DepositStakeAccount>,

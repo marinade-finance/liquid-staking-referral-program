@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 //use assert_json_diff::assert_json_eq;
+use marinade_finance_offchain_sdk::marinade_finance;
 use marinade_finance_offchain_sdk::spl_token::solana_program;
 // use marinade_reflection::accounts_builder::AccountsBuilder;
 // use marinade_reflection::marinade::Marinade;
@@ -18,7 +19,7 @@ use marinade_finance_offchain_sdk::anchor_lang::solana_program::{
     system_instruction, system_program, sysvar,
 };
 use marinade_finance_offchain_sdk::instruction_helpers::InstructionHelpers;
-use solana_sdk::account::{from_account};
+use solana_sdk::{account::from_account, instruction::Instruction, transaction::Transaction};
 
 use marinade_finance_offchain_sdk::anchor_lang::prelude::*;
 use marinade_finance_offchain_sdk::{
@@ -26,9 +27,11 @@ use marinade_finance_offchain_sdk::{
     transaction_builder::TransactionBuilder, WithKey,
 };
 
-use solana_program_test::{BanksClient, ProgramTestContext};
+use solana_program_test::{processor, BanksClient, ProgramTest, ProgramTestContext};
 
-use anyhow::{anyhow};
+use anyhow::anyhow;
+use marinade_finance_offchain_sdk::spl_associated_token_account::get_associated_token_address;
+use marinade_finance_offchain_sdk::spl_token::state::Account as TokenAccount;
 use solana_sdk::{
     fee_calculator::FeeCalculator,
     hash::Hash,
@@ -40,16 +43,14 @@ use solana_vote_program::{
     vote_instruction,
     vote_state::{VoteInit, VoteState},
 };
-use marinade_finance_offchain_sdk::spl_associated_token_account::get_associated_token_address;
-use marinade_finance_offchain_sdk::spl_token::state::Account as TokenAccount;
 
-use crate::initialize::{InitializeInput};
-use crate::program_test;
+use crate::initialize::InitializeInput;
+//use crate::program_test;
 
-pub mod test_add_remove_liquidity;
-pub mod deposit_sol_liquid_unstake;
-pub mod test_deposit_stake_account;
 pub mod delayed_unstake;
+pub mod deposit_sol_liquid_unstake;
+pub mod test_add_remove_liquidity;
+pub mod test_deposit_stake_account;
 
 pub struct StakeInfo {
     pub index: u32,
@@ -65,7 +66,7 @@ pub struct IntegrationTest {
     pub rent: Rent,
     pub clock: Clock,
     pub builder: TransactionBuilder,
-    pub state: WithKey<State>,
+    pub state: WithKey<State>, // marinade_finance state
     // Individual stakes are not present in reflection but in some tests we need to check it
     pub stakes: HashMap<Pubkey, StakeInfo>,
     //pub reflection: Marinade,
@@ -150,8 +151,26 @@ impl TestUser {
 impl IntegrationTest {
     /// Starts an integration test and initializes the common parameters.
     pub async fn start(input: &impl InitializeInput) -> anyhow::Result<Self> {
-        let test = program_test();
-        let mut context = test.start_with_context().await;
+        let mut main_test_program = ProgramTest::new(
+            "marinade_finance",
+            marinade_finance::ID,
+            processor!(marinade_finance::test_entry),
+        );
+
+        main_test_program.add_program(
+            "marinade_referral",
+            marinade_referral::marinade_referral::ID,
+            processor!(marinade_referral::marinade_referral::test_entry),
+            //None, //processor!(marinade_referral::test_entry),
+        );
+        // let marinade_referral =
+        //     ProgramTest::new(
+        //         "marinade_referral",
+        //         marinade_referral::marinade_referral::ID,
+        //         None //processor!(marinade_referral::test_entry),
+        //     );
+
+        let mut context = main_test_program.start_with_context().await;
         //let (mut banks_client, payer, recent_blockhash) = test.start().await;
 
         let rent = context.banks_client.get_rent().await?;
@@ -160,7 +179,7 @@ impl IntegrationTest {
         //clone main account keypair
         let fee_payer = Arc::new(Keypair::from_bytes(&context.payer.to_bytes())?);
 
-        // Set up the required instruction sequence.
+        // Set up the required instruction sequence for MARINADE-FINANCE initialization.
         let builder = TransactionBuilder::unlimited(fee_payer);
         let mut builder = input.build(builder, &rent);
         let transaction = builder
@@ -168,7 +187,7 @@ impl IntegrationTest {
             .unwrap()
             .into_signed(context.last_blockhash)
             .unwrap();
-
+        // execute marinade initialization
         context
             .banks_client
             .process_transaction(transaction)
@@ -193,6 +212,13 @@ impl IntegrationTest {
 
         let stakes = Self::read_stakes(state.as_ref(), &mut context.banks_client).await?;
 
+        // let referral_program= ProgramTest::new(
+        //     "marinade_referral",
+        //     marinade_referral::marinade_referral::ID,
+        //     processor!(marinade_referral::test_entry),
+        // );
+        //let mut context2 = referral_program.start_with_context().await;
+
         Ok(IntegrationTest {
             context,
             rent,
@@ -205,7 +231,39 @@ impl IntegrationTest {
             validator_manager_authority: input.validator_manager_authority(),
             claim_ticket_accounts: HashSet::new(),
             test_validators: vec![],
+            //context2
         })
+
+        // referral program, initialize global state
+        /*
+        //pub fn initialize_global_state()
+            // referral global state PDA & bump
+            let (global_state_pda, bump) = Pubkey::find_program_address(
+                &[GLOBAL_STATE_SEED],
+                &marinade_referral::marinade_referral::ID
+                );
+
+            // initialize the global state
+            {
+                let accounts = marinade_referral::accounts::Initialize {
+                    admin_account: Pubkey::from_str("AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn")
+                        .unwrap(),
+                    global_state: global_state_pda,
+                    system_program: system_program::ID,
+                };
+            }
+        }
+        pub fn initialize_referral(partner_main_account:Pubkey){
+                // referral state PDA & bump
+                let (referralStatePda, referralStateBump) = Pubkey::find_program_address(
+                    &[
+                        &partner_main_account.to_bytes()[..32],
+                        &REFERRAL_STATE_SEED,
+                    ],
+                    &marinade_referral::marinade_referral::ID
+                    );
+            }
+        */
     }
 
     // pub async fn start_synthetic(
@@ -390,6 +448,38 @@ impl IntegrationTest {
         self.context.banks_client.get_fees().await.unwrap().0
     }
 
+    pub async fn execute_txn(
+        &mut self,
+        mut transaction: Transaction,
+        signers: Vec<Arc<dyn Signer>>,
+    ) {
+        let recent_blockhash = self.recent_blockhash().await;
+        transaction
+            .try_sign(
+                &signers.iter().map(|arc| arc.as_ref()).collect::<Vec<_>>(),
+                recent_blockhash,
+            )
+            .unwrap();
+
+        self.context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap();
+
+        self.update_state().await.unwrap();
+    }
+
+    pub async fn execute_instruction(
+        &mut self,
+        instruction: Instruction,
+        signers: Vec<Arc<dyn Signer>>,
+    ) {
+        let tx = Transaction::new_with_payer(&[instruction], Some(&signers[0].pubkey()));
+        // marinade-referral execution
+        self.execute_txn(tx, signers).await;
+    }
+
     pub async fn execute(&mut self) {
         let transaction = self.builder.build_one_combined();
         let transaction = if let Some(transaction) = transaction {
@@ -478,10 +568,7 @@ impl IntegrationTest {
     }
 
     ///read & deserialize account data
-    pub async fn get_account_data<T: AccountDeserialize>(
-        &mut self,
-        account: &Pubkey,
-    ) -> T {
+    pub async fn get_account_data<T: AccountDeserialize>(&mut self, account: &Pubkey) -> T {
         get_account_data(&mut self.context.banks_client, account).await
     }
 
@@ -557,7 +644,7 @@ impl IntegrationTest {
     }
     /// Create a user account with some SOL
     /// it executes the tx (it does not add another instruction to transaction builder)
-    pub async fn create_test_user(&mut self, name: &str, lamports: u64) -> TestUser {
+    pub async fn create_test_user_from_keypair(&mut self, name: &str, lamports: u64, keypair: Keypair) -> TestUser {
         println!(
             "--- creating user {} with {} SOL",
             name,
@@ -565,7 +652,7 @@ impl IntegrationTest {
         );
         let new_user = TestUser {
             name: String::from(name),
-            keypair: Arc::new(Keypair::new()),
+            keypair: Arc::new(keypair),
         };
         // transfer sol to new pubkey
         self.builder
@@ -581,6 +668,36 @@ impl IntegrationTest {
         self.execute().await;
 
         return new_user;
+    }
+
+
+    /// Create a user account with some SOL
+    /// it executes the tx (it does not add another instruction to transaction builder)
+    pub async fn create_test_user(&mut self, name: &str, lamports: u64) -> TestUser {
+        return self.create_test_user_from_keypair(name,lamports,Keypair::new()).await
+        // println!(
+        //     "--- creating user {} with {} SOL",
+        //     name,
+        //     lamports_to_sol(lamports)
+        // );
+        // let new_user = TestUser {
+        //     name: String::from(name),
+        //     keypair: Arc::new(Keypair::new()),
+        // };
+        // // transfer sol to new pubkey
+        // self.builder
+        //     .transfer_lamports(
+        //         self.fee_payer_signer(),
+        //         &new_user.keypair.pubkey(),
+        //         lamports,
+        //         "fee payer",
+        //         name,
+        //     )
+        //     .unwrap();
+        // // create the user now
+        // self.execute().await;
+
+        // return new_user;
     }
 
     pub fn mint_from_symbol(&mut self, symbol: &str) -> &Pubkey {
@@ -760,8 +877,8 @@ impl IntegrationTest {
             let delegation = stake_state
                 .delegation()
                 .ok_or_else(|| anyhow!("Undelegated stake {}", stake_address))?;
-            let (_effective, activating, deactivating) = delegation
-                .stake_activating_and_deactivating(clock.epoch, Some(&stake_history));
+            let (_effective, activating, deactivating) =
+                delegation.stake_activating_and_deactivating(clock.epoch, Some(&stake_history));
             if activating == 0 && deactivating == 0 {
                 break Ok(());
             } else {

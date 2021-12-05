@@ -5,6 +5,7 @@ description = "Integration tests for marinade-referral-program"
 edition = "2018"
 
 [dependencies]
+marinade-referral = { path = "../../../programs/marinade-referral", features = ["no-entrypoint"] }
 rand = "0.7.3" # to be sync with solana keypairs
 marinade-finance-offchain-sdk = { path = "../../../../marinade-anchor/sdk/offchain" }
 #liquid-staking-onchain-sdk = { git = "https://github.com/marinade-finance/liquid-staking-onchain-sdk" }

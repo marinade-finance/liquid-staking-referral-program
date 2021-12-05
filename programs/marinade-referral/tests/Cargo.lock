@@ -1464,6 +1464,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "marinade-finance"
+version = "0.1.0"
+source = "git+https://github.com/marinade-finance/liquid-staking-program#9ca5acc4664524196c33f7807a842a7d09aa1461"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "bincode",
+ "spl-token",
+]
+
+[[package]]
 name = "marinade-finance-offchain-sdk"
 version = "0.1.0"
 dependencies = [
@@ -1484,7 +1495,19 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "marinade-finance",
+ "marinade-finance 0.1.0",
+]
+
+[[package]]
+name = "marinade-referral"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "marinade-finance 0.1.0 (git+https://github.com/marinade-finance/liquid-staking-program)",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
 ]
 
 [[package]]
@@ -1499,6 +1522,7 @@ dependencies = [
  "lazy_static",
  "log",
  "marinade-finance-offchain-sdk",
+ "marinade-referral",
  "rand 0.7.3",
  "rand_chacha 0.2.2",
  "serde_json",

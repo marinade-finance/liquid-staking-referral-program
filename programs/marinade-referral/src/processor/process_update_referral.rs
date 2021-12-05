@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::instructions::*;
+use crate::account_structs::*;
 
 pub fn process_update_referral(
     ctx: Context<UpdateReferral>,
