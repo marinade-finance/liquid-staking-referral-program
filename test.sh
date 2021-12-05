@@ -1,3 +1,4 @@
+clear
 export RUST_LOG=solana_runtime::system_instruction_processor=trace,solana_runtime::message_processor=debug,solana_bpf_loader=debug,solana_rbpf=debug
 #export RUST_LOG=solana_metrics=info,debug
 #cargo test delayed_unstake --manifest-path programs/marinade-finance/tests/Cargo.toml -- --nocapture 
