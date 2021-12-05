@@ -64,6 +64,27 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
     )?;
     let simple_stake_state: StakeWrapper = test.get_account_data(&simple_stake.pubkey()).await;
 
+    // -----------------------
+    // MARINADE-FINANCE direct call, commented
+    // -----------------------
+    // test.builder.deposit_stake_account(
+    //     &test.state,
+    //     simple_stake.pubkey(),
+    //     test.fee_payer_signer(),
+    //     user_msol,
+    //     0,
+    //     vote.pubkey(),
+    //     test.fee_payer_signer(),
+    // );
+    // 
+    
+    // execute prepared transactions
+    // (create stake accounts, etc)
+    test.execute().await;
+
+    // -----------------------
+    // REFERRAL-call
+    // -----------------------
     let tx = referral_deposit_stake_account_txn(
         simple_stake.pubkey(),
         test.fee_payer(),
@@ -77,26 +98,13 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
     // marinade-referral execution
     println!("marinade-referral deposit-stake-account");
     test.execute_txn(tx, vec![test.fee_payer_signer()])
-        .await;
-
-    // -----------------------
-    // MARINADE-FINANCE direct call, commented
-    // -----------------------
-    // test.builder.deposit_stake_account(
-    //     &test.state,
-    //     simple_stake.pubkey(),
-    //     test.fee_payer_signer(),
-    //     user_msol,
-    //     0,
-    //     vote.pubkey(),
-    //     test.fee_payer_signer(),
-    // );
-    // test.execute().await;
+         .await;
 
     assert_eq!(
         test.get_token_balance_or_zero(&user_msol).await,
         simple_stake_state.delegation().unwrap().stake
     );
+
     let stake_with_extra_lamports = test
         .create_activated_stake_account(&vote.pubkey(), 10 * LAMPORTS_PER_SOL)
         .await;
@@ -107,18 +115,44 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         "user",
         "stake",
     )?;
-    test.builder.deposit_stake_account(
-        &test.state,
+    // execute prepared transactions
+    // (transfer_lamports)
+    test.execute().await;
+
+    // DIRECT-CALL, commented
+    // test.builder.deposit_stake_account(
+    //     &test.state,
+    //     stake_with_extra_lamports.pubkey(),
+    //     test.fee_payer_signer(),
+    //     user_msol,
+    //     0,
+    //     vote.pubkey(),
+    //     test.fee_payer_signer(),
+    // );
+
+    // -----------------------
+    // REFERRAL-call
+    // -----------------------
+    let tx = referral_deposit_stake_account_txn(
         stake_with_extra_lamports.pubkey(),
-        test.fee_payer_signer(),
+        test.fee_payer(),
         user_msol,
         0,
         vote.pubkey(),
-        test.fee_payer_signer(),
+        &mut test,
+        marinade_referral_test_globals.referral_key,
     );
-    test.try_execute()
-        .await
-        .expect_err("Must not accept extra lamports on balance");
+
+    // marinade-referral execution
+    println!("marinade-referral deposit-stake-account");
+    test.try_execute_txn(tx, vec![test.fee_payer_signer()])
+         .await
+         .expect_err("Must not accept extra lamports on balance");
+
+    // DIRECT call, commented
+    // test.try_execute()
+    //     .await
+    //     .expect_err("Must not accept extra lamports on balance");
 
     let stake_with_lockup = test
         .create_activated_stake_account(&vote.pubkey(), 10 * LAMPORTS_PER_SOL)
@@ -136,30 +170,75 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         ),
         format!("Set lockup"),
     )?;
-    test.builder.deposit_stake_account(
-        &test.state,
-        stake_with_lockup.pubkey(),
-        test.fee_payer_signer(),
-        user_msol,
-        0,
-        vote.pubkey(),
-        test.fee_payer_signer(),
-    );
-    test.try_execute()
-        .await
-        .expect_err("Must not accept locked up stake");
-    test.move_to_next_epoch().await;
-
-    test.builder.deposit_stake_account(
-        &test.state,
-        stake_with_lockup.pubkey(),
-        test.fee_payer_signer(),
-        user_msol,
-        0,
-        vote.pubkey(),
-        test.fee_payer_signer(),
-    );
+    // execute prepared transactions
+    // (transfer_lamports)
     test.execute().await;
+
+    // DIRECT-CALL, commented
+    // test.builder.deposit_stake_account(
+    //     &test.state,
+    //     stake_with_lockup.pubkey(),
+    //     test.fee_payer_signer(),
+    //     user_msol,
+    //     0,
+    //     vote.pubkey(),
+    //     test.fee_payer_signer(),
+    // );
+    // test.try_execute()
+    //     .await
+    //     .expect_err("Must not accept locked up stake");
+
+    // -----------------------
+    // REFERRAL-call
+    // -----------------------
+    let tx = referral_deposit_stake_account_txn(
+        stake_with_lockup.pubkey(),
+        test.fee_payer(),
+        user_msol,
+        0,
+        vote.pubkey(),
+        &mut test,
+        marinade_referral_test_globals.referral_key,
+    );
+
+    // marinade-referral execution
+    println!("marinade-referral deposit-stake-account");
+    test.try_execute_txn(tx, vec![test.fee_payer_signer()])
+         .await
+         .expect_err("Must not accept locked up stake");
+
+    test.move_to_next_epoch().await;
+    // execute prepared transactions
+    test.execute().await;
+
+    // DIRECT-CALL, commented
+    // test.builder.deposit_stake_account(
+    //     &test.state,
+    //     stake_with_lockup.pubkey(),
+    //     test.fee_payer_signer(),
+    //     user_msol,
+    //     0,
+    //     vote.pubkey(),
+    //     test.fee_payer_signer(),
+    // );
+    // test.execute().await;
+
+    // -----------------------
+    // REFERRAL-call
+    // -----------------------
+    let tx = referral_deposit_stake_account_txn(
+        stake_with_lockup.pubkey(),
+        test.fee_payer(),
+        user_msol,
+        0,
+        vote.pubkey(),
+        &mut test,
+        marinade_referral_test_globals.referral_key,
+    );
+    // marinade-referral execution
+    println!("marinade-referral deposit-stake-account");
+    test.execute_txn(tx, vec![test.fee_payer_signer()])
+         .await;
 
     let stake_with_lockup: StakeWrapper = test.get_account_data(&simple_stake.pubkey()).await;
     assert_eq!(stake_with_lockup.lockup().unwrap(), Lockup::default());
@@ -192,7 +271,7 @@ pub fn referral_deposit_stake_account_txn(
         duplication_flag: ValidatorRecord::find_duplication_flag(&test.state.key, &validator_vote).0,
         rent_payer: test.fee_payer(),
         msol_mint: test.state.msol_mint,
-        mint_to,
+        mint_to: user_msol_account,
         msol_mint_authority: State::find_msol_mint_authority(&test.state.key).0,
         clock: clock::id(),
         rent: rent::id(),
