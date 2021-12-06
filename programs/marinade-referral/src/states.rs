@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use marinade_finance::Fee;
 
 //-----------------------------------------------------
 ///marinade-referral-program PDA
@@ -50,10 +49,10 @@ pub struct ReferralState {
     // accumulated count of delayed-unstake operations (u64, for stats/monitoring)
     pub delayed_unstake_operations: u64,
 
-    // Base % cut for the partner (Fee struct, basis points, default 10%)
-    pub base_fee: Fee,
-    // Max % cut for the partner (Fee struct, basis points, default 100%)
-    pub max_fee: Fee,
+    // Base % cut for the partner (basis points, default 1000 => 10%)
+    pub base_fee: u32,
+    // Max % cut for the partner (basis points, default 1000 => 10%)
+    pub max_fee: u32,
     // Net Stake target for the max % (for example 100K SOL)
     pub max_net_stake: u64,
 
@@ -78,33 +77,30 @@ impl ReferralState {
     }
 
     pub fn get_liq_unstake_share_amount(&self) -> u64 {
+
         let mut net_stake = 0;
 
+        // more deposited than unstaked
         if self.deposit_sol_amount > self.liq_unstake_amount {
             net_stake = self
                 .deposit_sol_amount
                 .wrapping_sub(self.liq_unstake_amount);
         }
 
-        let share_fee = if net_stake == 0 {
-            self.base_fee
+        let share_fee_bp = if net_stake == 0 {
+            self.base_fee  // minimum
         } else if net_stake > self.max_net_stake {
-            self.max_fee
+            self.max_fee // max
         } else {
             let delta = self
                 .max_fee
-                .basis_points
-                .wrapping_sub(self.base_fee.basis_points);
-            let proportion = net_stake.wrapping_div(self.max_net_stake);
-            Fee {
-                basis_points: self
-                    .base_fee
-                    .basis_points
-                    .wrapping_add(proportion.wrapping_mul(delta.into()) as u32),
-            }
+                .wrapping_sub(self.base_fee);
+            // base + delta proportional to net_stake/self.max_net_stake
+            self.base_fee + (delta as u128 * net_stake as u128 / self.max_net_stake as u128) as u32
         };
 
-        share_fee.apply(self.liq_unstake_msol_fees)
+        // apply fee basis_points, 100=1%
+        (self.liq_unstake_msol_fees as u128 * share_fee_bp as u128 / 10000) as u64
     }
 }
 
