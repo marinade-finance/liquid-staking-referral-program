@@ -23,10 +23,11 @@ bash test.sh
 anchor test
 ```
 
-## Deploy an new copy of the program on a random address
+## Deploy a new copy of the program on a random address
 ```bash
 anchor deploy --provider.cluster devnet
 ```
+
 ## Re-Deploy on devnet address mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY
 ```bash
 bash scripts/deploy-testnet.sh
@@ -56,27 +57,4 @@ cd programs/marinade-referral
 soteria .
 # check vulnerabilities in all library codes
 soteria -analyzeAll .
-```
-
-## Custom types that should be manually injected to idl.json
-```json
-{
-// ...
-  "types": [
-    // ...,
-    {
-      "name": "Fee",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "basisPoints",
-            "type": "u32"
-          }
-        ]
-      }
-    }
-  ],
-// ...
-}
 ```
