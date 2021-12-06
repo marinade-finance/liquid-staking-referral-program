@@ -82,7 +82,7 @@ export async function setup() {
     exit(1);
   }
 
-  // --- DELETE AN ACCOUNT with space/data as long as you've the priv-key and owner-program is System-Program
+  // --- ASSIGN AN ACCOUNT to our program, as long as you've the priv-key and owner-program is System-Program
   // tx.add(
   //   web3.SystemProgram.assign({
   //     accountPubkey: REFERRAL_TEST_PUBKEY,
@@ -90,6 +90,7 @@ export async function setup() {
   //   })
   // );
   /*
+  // --- DELETE AN ACCOUNT with space/data as long as you've the priv-key and our program is the owner-program
   tx.add(
     program.instruction.deleteAccount({
       accounts: {

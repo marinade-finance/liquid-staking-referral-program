@@ -100,10 +100,13 @@ pub mod marinade_referral {
         process_transfer_liq_unstake_shares(ctx)
     }
 
+    /*
+    // Utility to delete state or referral accounts in devnet
     pub fn delete_account(ctx: Context<DeleteAccount>) -> ProgramResult {
         // set lamports to zero
         **ctx.accounts.beneficiary.lamports.borrow_mut() = ctx.accounts.beneficiary.lamports() + ctx.accounts.to_delete.lamports();
         **ctx.accounts.to_delete.lamports.borrow_mut() = 0;
         Ok(())
     }
+    */
 }

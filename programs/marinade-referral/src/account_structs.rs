@@ -316,6 +316,9 @@ impl<'info> TransferLiqUnstakeShares<'info> {
     }
 }
 
+
+/*
+// Utility to delete state or referral accounts in devnet
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct DeleteAccount<'info> {
@@ -324,3 +327,4 @@ pub struct DeleteAccount<'info> {
     #[account()]
     pub beneficiary: AccountInfo<'info>,
 }
+*/
