@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::clock};
 use anchor_spl::token;
 
-use crate::{error::*, instructions::*};
+use crate::{account_structs::*, error::*};
 
 pub fn process_transfer_liq_unstake_shares(
     ctx: Context<TransferLiqUnstakeShares>,
@@ -13,7 +13,7 @@ pub fn process_transfer_liq_unstake_shares(
         // transfer shared mSOL to partner
         token::transfer(
             ctx.accounts.into_transfer_to_pda_context(),
-            ctx.accounts.referral_state.get_liq_unstake_share_amount(),
+            ctx.accounts.referral_state.get_liq_unstake_share_amount()?,
         )?;
 
         // sets “Last transfer to partner timestamp“

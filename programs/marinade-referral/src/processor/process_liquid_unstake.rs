@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::LiquidUnstake as MarinadeLiquidUnstake;
 
-use crate::instructions::*;
+use crate::account_structs::*;
 
 pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
     // liquid-unstake cpi
@@ -26,6 +26,8 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
             cpi_ctx.accounts.transfer_sol_to,
             cpi_ctx.accounts.system_program,
             cpi_ctx.accounts.token_program,
+            //
+            ctx.accounts.marinade_finance_program.clone(),
         ],
         cpi_ctx.signer_seeds,
     )?;

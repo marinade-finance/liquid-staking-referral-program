@@ -1,5 +1,9 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::declare_id;
+use anchor_lang::solana_program::pubkey::Pubkey;
 
+///instructions
+pub mod account_structs;
 ///associated token
 pub mod associated_token;
 ///constant
@@ -8,32 +12,55 @@ pub mod constant;
 pub mod cpi_context_instructions;
 ///error
 pub mod error;
-///instructions
-pub mod instructions;
 ///processor
 pub mod processor;
 ///states
 pub mod states;
 
-use crate::process_create_referral_pda::process_create_referral_pda;
-use crate::{instructions::*, processor::*};
+use crate::process_init_referral_account::process_init_referral_account;
+use crate::{account_structs::*, processor::*};
+
+// pub fn test_ep(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8])
+//  -> ProgramResult {
+//     if data.len() < 8 {
+//         return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
+//     }
+//     dispatch(program_id, accounts,
+//              data).map_err(|e|
+//                                {
+//                                    ::solana_program::log::sol_log(&e.to_string());
+//                                    e
+//                                })
+// }
 
 #[program]
 pub mod marinade_referral {
     use super::*;
 
+    declare_id!("FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR");
+
+    // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
+    // in order to load two programs with entrypoints into the simulator
+    pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+        if data.len() < 8 {
+            return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
+        }
+        dispatch(program_id, accounts, data).map_err(|e| {
+            ::solana_program::log::sol_log(&e.to_string());
+            e
+        })
+    }
     ///create global state
-    pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
-        process_initialize(ctx, bump)
+    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
+        process_initialize(ctx)
     }
 
     ///create referral state
-    pub fn create_referral_pda(
-        ctx: Context<CreateReferralPda>,
-        bump: u8,
-        partner_name: [u8; 10],
+    pub fn init_referral_account(
+        ctx: Context<InitReferralAccount>,
+        partner_name: String,
     ) -> ProgramResult {
-        process_create_referral_pda(ctx, bump, partner_name)
+        process_init_referral_account(ctx, partner_name)
     }
 
     ///update referral state
@@ -72,4 +99,14 @@ pub mod marinade_referral {
     pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
         process_transfer_liq_unstake_shares(ctx)
     }
+
+    /*
+    // Utility to delete state or referral accounts in devnet
+    pub fn delete_account(ctx: Context<DeleteAccount>) -> ProgramResult {
+        // set lamports to zero
+        **ctx.accounts.beneficiary.lamports.borrow_mut() = ctx.accounts.beneficiary.lamports() + ctx.accounts.to_delete.lamports();
+        **ctx.accounts.to_delete.lamports.borrow_mut() = 0;
+        Ok(())
+    }
+    */
 }

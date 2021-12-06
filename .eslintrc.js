@@ -24,6 +24,7 @@ module.exports = {
       rules: {
         camelcase: "off",
         "node/no-missing-import": "off",
+        "@typescript-eslint/no-explicit-any": "off",
       },
     },
     {

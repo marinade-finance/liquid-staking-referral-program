@@ -93,7 +93,7 @@ describe("marinade-referral", () => {
     treasuryPda = await msolMint.createAssociatedTokenAccount(
       TREASURY.publicKey
     );
-    // Airdrop mSOL to trasury_msol_account
+    // Airdrop mSOL to treasury_msol_account
     await msolMint.mintTo(
       treasuryPda,
       MSOL_MINT_AUTHORITY.publicKey,
@@ -129,7 +129,8 @@ describe("marinade-referral", () => {
     });
 
     // get global account
-    const globalState = await program.account.globalState.fetch(globalStatePda);
+    const globalState: Record<string, any> =
+      await program.account.globalState.fetch(globalStatePda);
     // check if admin address matches what we expect
     assert.ok(globalState.adminAccount.equals(ADMIN.publicKey));
   });
@@ -193,15 +194,12 @@ describe("marinade-referral", () => {
     );
 
     // get referral account
-    const referralState = await program.account.referralState.fetch(
-      referralStatePda
-    );
+    const referralState: Record<string, any> =
+      await program.account.referralState.fetch(referralStatePda);
     // check if partner mSOL ATA matches what we expect
     assert.ok(referralState.beneficiaryAccount.equals(beneficiaryPda));
     // check if partner name matches what we expect
-    assert.ok(
-      String.fromCharCode(...referralState.partnerName) === PARTNER_NAME
-    );
+    assert.ok(referralState.partnerName === PARTNER_NAME);
   });
 
   it("should update referral state", async () => {
@@ -219,9 +217,8 @@ describe("marinade-referral", () => {
     });
 
     // get referral state
-    const referralState = await program.account.referralState.fetch(
-      referralStatePda
-    );
+    const referralState: Record<string, any> =
+      await program.account.referralState.fetch(referralStatePda);
     // check if transfer period is updated
     assert.ok(referralState.transferDuration === NEW_TRANSFER_DURATION);
     // check if pause is updated

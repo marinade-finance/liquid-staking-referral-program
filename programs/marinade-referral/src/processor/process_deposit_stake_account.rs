@@ -1,12 +1,13 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::instruction::DepositStakeAccount as MarinadeDepositStakeAccount;
 
-use crate::instructions::*;
+use crate::account_structs::*;
 
 pub fn process_deposit_stake_account(
     ctx: Context<DepositStakeAccount>,
     validator_index: u32,
 ) -> ProgramResult {
+    msg!("enter process_deposit_stake_account");
     // deposit-stake-account cpi
     let cpi_ctx = ctx.accounts.into_deposit_stake_account_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);
@@ -16,6 +17,7 @@ pub fn process_deposit_stake_account(
         accounts: cpi_accounts,
         data: data.data(),
     };
+    msg!("call marinade deposit_stake_account");
     anchor_lang::solana_program::program::invoke_signed(
         &ix,
         &[
@@ -32,10 +34,15 @@ pub fn process_deposit_stake_account(
             cpi_ctx.accounts.system_program,
             cpi_ctx.accounts.token_program,
             cpi_ctx.accounts.stake_program,
+            cpi_ctx.accounts.clock,
+            cpi_ctx.accounts.rent,
+            //
+            ctx.accounts.marinade_finance_program.clone(),
         ],
         cpi_ctx.signer_seeds,
     )?;
 
+    msg!("deposit_stake_account accumulators");
     // TODO: TBD - how to accumulate deposit_stake_account_amount
     ctx.accounts.referral_state.deposit_stake_account_amount = ctx
         .accounts

@@ -13,19 +13,29 @@ yarn install
 anchor build
 ```
 
+## Integration Tests (separate project)
+```bash
+bash test.sh
+```
+
 ## Test program
 ```bash
 anchor test
 ```
 
-## Deploy program
+## Deploy a new copy of the program on a random address
 ```bash
 anchor deploy --provider.cluster devnet
 ```
 
+## Re-Deploy on devnet address mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY
+```bash
+bash scripts/deploy-testnet.sh
+```
+
 ## Upgrade program
 ```bash
-anchor upgrade --program-id FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR --provider.cluster devnet ./target/deploy/marinade_referral.so
+anchor upgrade --program-id mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY --provider.cluster devnet ./target/deploy/marinade_referral.so --provider.wallet ~/.config/solana/mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY.json
 ```
 
 ## Autofix TypeScript lint errors
@@ -47,27 +57,4 @@ cd programs/marinade-referral
 soteria .
 # check vulnerabilities in all library codes
 soteria -analyzeAll .
-```
-
-## Custom types that should be manually injected to idl.json
-```json
-{
-// ...
-  "types": [
-    // ...,
-    {
-      "name": "Fee",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "basisPoints",
-            "type": "u32"
-          }
-        ]
-      }
-    }
-  ],
-// ...
-}
 ```

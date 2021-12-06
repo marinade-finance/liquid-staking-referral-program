@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use marinade_finance::Fee;
+use marinade_finance::{calc::proportional, error::CommonError, Fee};
 
 //-----------------------------------------------------
 ///marinade-referral-program PDA
@@ -7,6 +7,8 @@ use marinade_finance::Fee;
 pub struct GlobalState {
     // Authority (admin address)
     pub admin_account: Pubkey,
+    // payment token mint (normally mSOL mint)
+    pub payment_mint: Pubkey,
 }
 
 //-----------------------------------------------------
@@ -14,10 +16,12 @@ pub struct GlobalState {
 #[account]
 pub struct ReferralState {
     // Partner name
-    pub partner_name: [u8; 10],
+    pub partner_name: String, //max-length 10 bytes
 
-    // Beneficiary account (mSOL address)
-    pub beneficiary_account: Pubkey,
+    // partner Beneficiary account (native account)
+    pub partner_account: Pubkey,
+    // token account where to make payment (ATA mSOL address for partner_account)
+    pub token_partner_account: Pubkey,
 
     // Transfer-periodicity-seconds (u32 amount of seconds, default: a month)
     pub transfer_duration: u32,
@@ -46,10 +50,10 @@ pub struct ReferralState {
     // accumulated count of delayed-unstake operations (u64, for stats/monitoring)
     pub delayed_unstake_operations: u64,
 
-    // Base % cut for the partner (Fee struct, basis points, default 10%)
-    pub base_fee: Fee,
-    // Max % cut for the partner (Fee struct, basis points, default 100%)
-    pub max_fee: Fee,
+    // Base % cut for the partner (basis points, default 1000 => 10%)
+    pub base_fee: u32,
+    // Max % cut for the partner (basis points, default 1000 => 10%)
+    pub max_fee: u32,
     // Net Stake target for the max % (for example 100K SOL)
     pub max_net_stake: u64,
 
@@ -73,34 +77,33 @@ impl ReferralState {
         self.delayed_unstake_operations = 0;
     }
 
-    pub fn get_liq_unstake_share_amount(&self) -> u64 {
+    pub fn get_liq_unstake_share_amount(&self) -> Result<u64, CommonError> {
         let mut net_stake = 0;
 
+        // more deposited than unstaked
         if self.deposit_sol_amount > self.liq_unstake_amount {
             net_stake = self
                 .deposit_sol_amount
                 .wrapping_sub(self.liq_unstake_amount);
         }
 
-        let share_fee = if net_stake == 0 {
-            self.base_fee
+        let share_fee_bp = if net_stake == 0 {
+            self.base_fee // minimum
         } else if net_stake > self.max_net_stake {
-            self.max_fee
+            self.max_fee // max
         } else {
-            let delta = self
-                .max_fee
-                .basis_points
-                .wrapping_sub(self.base_fee.basis_points);
-            let proportion = net_stake.wrapping_div(self.max_net_stake);
-            Fee {
-                basis_points: self
-                    .base_fee
-                    .basis_points
-                    .wrapping_add(proportion.wrapping_mul(delta.into()) as u32),
-            }
+            let delta = self.max_fee.wrapping_sub(self.base_fee);
+            let proportion = proportional(delta as u64, net_stake, self.max_net_stake)? as u32;
+            // base + delta proportional to net_stake/self.max_net_stake
+            self.base_fee.wrapping_add(proportion)
         };
 
-        share_fee.apply(self.liq_unstake_msol_fees)
+        let share_fee = Fee {
+            basis_points: share_fee_bp,
+        };
+
+        // apply fee basis_points, 100=1%
+        Ok(share_fee.apply(self.liq_unstake_msol_fees))
     }
 }
 

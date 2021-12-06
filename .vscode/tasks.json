@@ -1,0 +1,56 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "test",
+			"group": "test",
+			"problemMatcher": [],
+			"label": "npm: test",
+			"detail": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+		},
+		{
+			"type": "npm",
+			"script": "build:tsc",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"label": "npm build:tsc",
+			"detail": ""
+		},
+		{
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"test.sh"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"label": "bash test",
+			"detail": "integration tests with solana-program-test"
+		},
+		{
+			"type": "shell",
+			"command": "anchor",
+			"args": [
+				"build"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"label": "anchor build",
+			"detail": "anchor build"
+		},
+		{
+			"type": "cargo",
+			"subcommand": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "Rust: cargo build - liquid-staking-referral-program"
+		}
+	]
+}
