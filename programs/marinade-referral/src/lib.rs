@@ -99,4 +99,11 @@ pub mod marinade_referral {
     pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
         process_transfer_liq_unstake_shares(ctx)
     }
+
+    pub fn delete_account(ctx: Context<DeleteAccount>) -> ProgramResult {
+        // set lamports to zero
+        **ctx.accounts.beneficiary.lamports.borrow_mut() = ctx.accounts.beneficiary.lamports() + ctx.accounts.to_delete.lamports();
+        **ctx.accounts.to_delete.lamports.borrow_mut() = 0;
+        Ok(())
+    }
 }

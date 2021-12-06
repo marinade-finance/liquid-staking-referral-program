@@ -1,9 +1,7 @@
-use std::{mem::size_of, str::FromStr};
+use std::str::FromStr;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
-
-use crate::associated_token::Create as CreateAssociatedTokenAccount;
 
 use crate::constant::*;
 use crate::cpi_context_instructions::{
@@ -89,32 +87,13 @@ pub struct InitReferralAccount<'info> {
     //     ],
     //     bump = bump,
     // )]
-    #[account(zero)]
+    #[account(zero)] // must be created but empty, ready to be initialized
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
     pub system_program: AccountInfo<'info>,
-    //pub associated_token_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub rent: AccountInfo<'info>,
 }
-
-// impl<'info> InitReferralAccount<'info> {
-//     pub fn into_create_associated_token_account_ctx(
-//         &self,
-//     ) -> CpiContext<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>> {
-//         let cpi_accounts = CreateAssociatedTokenAccount {
-//             payer: self.admin_account.clone(),
-//             associated_token: self.token_partner_account.clone(),
-//             authority: self.partner_account.clone(),
-//             mint: self.payment_mint.to_account_info().clone(),
-//             system_program: self.system_program.clone(),
-//             token_program: self.token_program.clone(),
-//             rent: self.rent.clone(),
-//         };
-
-//         CpiContext::new(self.associated_token_program.clone(), cpi_accounts)
-//     }
-// }
 
 //-----------------------------------------------------
 #[derive(Accounts)]
@@ -162,7 +141,9 @@ pub struct Deposit<'info> {
 }
 
 impl<'info> Deposit<'info> {
-    pub fn into_marinade_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
+    pub fn into_marinade_deposit_cpi_ctx(
+        &self,
+    ) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
         let cpi_accounts = MarinadeDeposit {
             state: self.state.clone(),
             msol_mint: self.msol_mint.clone(),
@@ -336,3 +317,10 @@ impl<'info> TransferLiqUnstakeShares<'info> {
 }
 
 //-----------------------------------------------------
+#[derive(Accounts)]
+pub struct DeleteAccount<'info> {
+    #[account(mut, signer)]
+    pub to_delete: AccountInfo<'info>,
+    #[account()]
+    pub beneficiary: AccountInfo<'info>,
+}

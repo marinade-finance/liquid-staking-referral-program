@@ -15,4 +15,6 @@ pub enum ReferralError {
     InvalidBeneficiaryAccountOwner, // 303
     #[msg("Invalid beneficiary account mint")]
     InvalidBeneficiaryAccountMint, // 304
+    #[msg("Partner name too long")]
+    PartnerNameTooLong, // 305
 }

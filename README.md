@@ -23,14 +23,18 @@ bash test.sh
 anchor test
 ```
 
-## Deploy program
+## Deploy an new copy of the program on a random address
 ```bash
 anchor deploy --provider.cluster devnet
+```
+## Re-Deploy on devnet address mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY
+```bash
+bash scripts/deploy-testnet.sh
 ```
 
 ## Upgrade program
 ```bash
-anchor upgrade --program-id FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR --provider.cluster devnet ./target/deploy/marinade_referral.so --provider.wallet ~/.config/solana/AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn.json
+anchor upgrade --program-id mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY --provider.cluster devnet ./target/deploy/marinade_referral.so --provider.wallet ~/.config/solana/mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY.json
 ```
 
 ## Autofix TypeScript lint errors
