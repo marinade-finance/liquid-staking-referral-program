@@ -6,7 +6,6 @@ import {
 } from "@solana/spl-token";
 import { MarinadeUtils } from "@marinade.finance/marinade-ts-sdk";
 import { exit } from "process";
-import { timeStamp } from "console";
 
 const { Keypair, SystemProgram, PublicKey, SYSVAR_RENT_PUBKEY } = web3;
 

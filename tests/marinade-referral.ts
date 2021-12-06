@@ -129,7 +129,8 @@ describe("marinade-referral", () => {
     });
 
     // get global account
-    const globalState = await program.account.globalState.fetch(globalStatePda);
+    const globalState: Record<string, any> =
+      await program.account.globalState.fetch(globalStatePda);
     // check if admin address matches what we expect
     assert.ok(globalState.adminAccount.equals(ADMIN.publicKey));
   });
@@ -193,15 +194,12 @@ describe("marinade-referral", () => {
     );
 
     // get referral account
-    const referralState: Record<string:any> = await program.account.referralState.fetch(
-      referralStatePda
-    );
+    const referralState: Record<string, any> =
+      await program.account.referralState.fetch(referralStatePda);
     // check if partner mSOL ATA matches what we expect
     assert.ok(referralState.beneficiaryAccount.equals(beneficiaryPda));
     // check if partner name matches what we expect
-    assert.ok(
-      referralState.partnerName === PARTNER_NAME
-    );
+    assert.ok(referralState.partnerName === PARTNER_NAME);
   });
 
   it("should update referral state", async () => {
