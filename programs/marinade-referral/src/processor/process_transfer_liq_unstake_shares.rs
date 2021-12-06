@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::clock};
 use anchor_spl::token;
 
-use crate::{error::*, account_structs::*};
+use crate::{account_structs::*, error::*};
 
 pub fn process_transfer_liq_unstake_shares(
     ctx: Context<TransferLiqUnstakeShares>,

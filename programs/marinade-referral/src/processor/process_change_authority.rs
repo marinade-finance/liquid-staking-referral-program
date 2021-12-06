@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::*, account_structs::*};
+use crate::{account_structs::*, error::*};
 
 ///change admin
 pub fn process_change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {

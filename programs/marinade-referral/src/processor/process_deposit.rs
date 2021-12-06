@@ -4,7 +4,10 @@ use marinade_finance::instruction::Deposit as MarinadeDeposit;
 use crate::account_structs::*;
 
 pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
-    msg!("enter process_deposit {}",ctx.accounts.transfer_from.lamports());
+    msg!(
+        "enter process_deposit {}",
+        ctx.accounts.transfer_from.lamports()
+    );
     let cpi_ctx = ctx.accounts.into_marinade_deposit_cpi_ctx();
     let cpi_accounts = cpi_ctx.to_account_metas(None);
     let data = MarinadeDeposit { lamports };
@@ -33,8 +36,14 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
         ],
         cpi_ctx.signer_seeds,
     )?;
-    msg!("after MarinadeDeposit {}",ctx.accounts.transfer_from.lamports());
-    msg!("deposit-SOL: update accumulators, deposit-lamports {}",lamports);
+    msg!(
+        "after MarinadeDeposit {}",
+        ctx.accounts.transfer_from.lamports()
+    );
+    msg!(
+        "deposit-SOL: update accumulators, deposit-lamports {}",
+        lamports
+    );
     // update accumulators
     ctx.accounts.referral_state.deposit_sol_amount = ctx
         .accounts

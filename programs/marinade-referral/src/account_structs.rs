@@ -5,8 +5,7 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 use crate::constant::*;
 use crate::cpi_context_instructions::{
-    MarinadeDeposit, MarinadeDepositStakeAccount,
-    MarinadeLiquidUnstake,
+    MarinadeDeposit, MarinadeDepositStakeAccount, MarinadeLiquidUnstake,
 };
 use crate::states::*;
 
@@ -315,7 +314,6 @@ impl<'info> TransferLiqUnstakeShares<'info> {
         CpiContext::new(self.token_program.clone(), cpi_accounts)
     }
 }
-
 
 /*
 // Utility to delete state or referral accounts in devnet

@@ -8,7 +8,7 @@ pub fn process_init_referral_account(
     partner_name: String,
 ) -> ProgramResult {
     msg!("process_init_referral_account");
-    if partner_name.len()>20 {
+    if partner_name.len() > 20 {
         msg!("max partner_name.len() is 20");
         return Err(ReferralError::PartnerNameTooLong.into());
     }

@@ -93,9 +93,9 @@ impl ReferralState {
             self.max_fee // max
         } else {
             let delta = self.max_fee.wrapping_sub(self.base_fee);
+            let proportion = proportional(delta as u64, net_stake, self.max_net_stake)? as u32;
             // base + delta proportional to net_stake/self.max_net_stake
-            self.base_fee
-                .wrapping_add(proportional(delta as u64, net_stake, self.max_net_stake)? as u32)
+            self.base_fee.wrapping_add(proportion)
         };
 
         let share_fee = Fee {
