@@ -133,6 +133,7 @@ pub struct Deposit<'info> {
     pub msol_mint_authority: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
+
     // accounts added are: Marinade main program ID & referral_state
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]

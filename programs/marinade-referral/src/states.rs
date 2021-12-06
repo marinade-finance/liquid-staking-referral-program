@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use marinade_finance::{calc::proportional, error::CommonError, Fee};
 
 //-----------------------------------------------------
 ///marinade-referral-program PDA
@@ -76,8 +77,7 @@ impl ReferralState {
         self.delayed_unstake_operations = 0;
     }
 
-    pub fn get_liq_unstake_share_amount(&self) -> u64 {
-
+    pub fn get_liq_unstake_share_amount(&self) -> Result<u64, CommonError> {
         let mut net_stake = 0;
 
         // more deposited than unstaked
@@ -88,19 +88,22 @@ impl ReferralState {
         }
 
         let share_fee_bp = if net_stake == 0 {
-            self.base_fee  // minimum
+            self.base_fee // minimum
         } else if net_stake > self.max_net_stake {
             self.max_fee // max
         } else {
-            let delta = self
-                .max_fee
-                .wrapping_sub(self.base_fee);
+            let delta = self.max_fee.wrapping_sub(self.base_fee);
             // base + delta proportional to net_stake/self.max_net_stake
-            self.base_fee + (delta as u128 * net_stake as u128 / self.max_net_stake as u128) as u32
+            self.base_fee
+                .wrapping_add(proportional(delta as u64, net_stake, self.max_net_stake)? as u32)
+        };
+
+        let share_fee = Fee {
+            basis_points: share_fee_bp,
         };
 
         // apply fee basis_points, 100=1%
-        (self.liq_unstake_msol_fees as u128 * share_fee_bp as u128 / 10000) as u64
+        Ok(share_fee.apply(self.liq_unstake_msol_fees))
     }
 }
 
