@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct Deposit<'info> {
+pub struct MarinadeDeposit<'info> {
     pub state: AccountInfo<'info>,
     pub msol_mint: AccountInfo<'info>,
     pub liq_pool_sol_leg_pda: AccountInfo<'info>,
@@ -16,7 +16,7 @@ pub struct Deposit<'info> {
 }
 
 #[derive(Accounts)]
-pub struct DepositStakeAccount<'info> {
+pub struct MarinadeDepositStakeAccount<'info> {
     pub state: AccountInfo<'info>,
     pub validator_list: AccountInfo<'info>,
     pub stake_list: AccountInfo<'info>,
@@ -35,7 +35,7 @@ pub struct DepositStakeAccount<'info> {
 }
 
 #[derive(Accounts)]
-pub struct LiquidUnstake<'info> {
+pub struct MarinadeLiquidUnstake<'info> {
     pub state: AccountInfo<'info>,
     pub msol_mint: AccountInfo<'info>,
     pub liq_pool_sol_leg_pda: AccountInfo<'info>,

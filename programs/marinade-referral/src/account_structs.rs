@@ -5,8 +5,8 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 use crate::constant::*;
 use crate::cpi_context_instructions::{
-    Deposit as MarinadeDeposit, DepositStakeAccount as MarinadeDepositStakeAccount,
-    LiquidUnstake as MarinadeLiquidUnstake,
+    MarinadeDeposit, MarinadeDepositStakeAccount,
+    MarinadeLiquidUnstake,
 };
 use crate::states::*;
 
@@ -133,7 +133,6 @@ pub struct Deposit<'info> {
     pub msol_mint_authority: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
-
     // accounts added are: Marinade main program ID & referral_state
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]
