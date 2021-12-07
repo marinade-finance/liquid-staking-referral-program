@@ -1,5 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
-use marinade_finance::instruction::LiquidUnstake as MarinadeLiquidUnstake;
+use marinade_finance::{
+    instruction::LiquidUnstake as MarinadeLiquidUnstake, State as MarinadeSate,
+};
 
 use crate::account_structs::*;
 
@@ -32,14 +34,48 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         cpi_ctx.signer_seeds,
     )?;
 
+    // accumulate treasury fees for the liquid-unstake
+    let marinade_state: ProgramAccount<MarinadeSate> = ProgramAccount::try_from(
+        &ctx.accounts.marinade_finance_program.key(),
+        &ctx.accounts.state,
+    )?;
+
+    let is_treasury_msol_ready_for_transfer =
+        marinade_state.check_treasury_msol_account(&ctx.accounts.treasury_msol_account)?;
+    let max_lamports = ctx
+        .accounts
+        .liq_pool_sol_leg_pda
+        .lamports()
+        .saturating_sub(marinade_state.rent_exempt_for_token_acc);
+
+    // fee is computed based on the liquidity *after* the user takes the sol
+    let user_remove_lamports = marinade_state.calc_lamports_from_msol_amount(msol_amount)?;
+    let liquid_unstake_fee = if user_remove_lamports >= max_lamports {
+        // user is removing all liquidity
+        marinade_state.liq_pool.lp_max_fee
+    } else {
+        let after_lamports = max_lamports - user_remove_lamports; //how much will be left?
+        marinade_state.liq_pool.linear_fee(after_lamports)
+    };
+
+    // compute fee in msol
+    let msol_fee = liquid_unstake_fee.apply(msol_amount);
+    msg!("msol_fee {}", msol_fee);
+
+    // cut 25% from the fee for the treasury
+    let treasury_msol_cut = if is_treasury_msol_ready_for_transfer {
+        marinade_state.liq_pool.treasury_cut.apply(msol_fee)
+    } else {
+        0
+    };
+    msg!("treasury_msol_cut {}", treasury_msol_cut);
+
     // update accumulators
-    // TODO: accumulate treasury fees for the liq-unstake
     ctx.accounts.referral_state.liq_unstake_msol_fees = ctx
         .accounts
         .referral_state
         .liq_unstake_msol_fees
-        .wrapping_add(msol_amount);
-
+        .wrapping_add(treasury_msol_cut);
     ctx.accounts.referral_state.liq_unstake_amount = ctx
         .accounts
         .referral_state
