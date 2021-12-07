@@ -40,8 +40,6 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         &ctx.accounts.state,
     )?;
 
-    let is_treasury_msol_ready_for_transfer =
-        marinade_state.check_treasury_msol_account(&ctx.accounts.treasury_msol_account)?;
     let max_lamports = ctx
         .accounts
         .liq_pool_sol_leg_pda
@@ -62,6 +60,8 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     let msol_fee = liquid_unstake_fee.apply(msol_amount);
     msg!("msol_fee {}", msol_fee);
 
+    let is_treasury_msol_ready_for_transfer =
+        marinade_state.check_treasury_msol_account(&ctx.accounts.treasury_msol_account)?;
     // cut 25% from the fee for the treasury
     let treasury_msol_cut = if is_treasury_msol_ready_for_transfer {
         marinade_state.liq_pool.treasury_cut.apply(msol_fee)
