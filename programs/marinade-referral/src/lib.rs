@@ -2,14 +2,14 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::declare_id;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
-///instructions
+///context accounts
 pub mod account_structs;
 ///associated token
 pub mod associated_token;
 ///constant
 pub mod constant;
-///cpi context instructions
-pub mod cpi_context_instructions;
+///cpi context accounts
+pub mod cpi_context_accounts;
 ///error
 pub mod error;
 ///processor

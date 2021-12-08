@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 use crate::constant::*;
-use crate::cpi_context_instructions::{
+use crate::cpi_context_accounts::{
     MarinadeDeposit, MarinadeDepositStakeAccount, MarinadeLiquidUnstake,
 };
 use crate::states::*;
