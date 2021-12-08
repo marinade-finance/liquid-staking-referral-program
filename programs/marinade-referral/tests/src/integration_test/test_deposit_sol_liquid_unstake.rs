@@ -264,6 +264,30 @@ pub async fn do_liquid_unstake(
         lamports_to_sol(test.state.liq_pool.lp_liquidity_target)
     );
 
+    // liquid unstake fee
+    let liquid_unstake_fee = marinade_finance::Fee {
+        basis_points: fee_basis_points
+    };
+    // compute fee in msol
+    let msol_fee = liquid_unstake_fee.apply(msol_lamports);
+    // assuming is_treasury_msol_ready_for_transfer is always true
+    let treasury_msol_cut = test.state.liq_pool.treasury_cut.apply(msol_fee);
+
+    // read MARINADE-FINANCE-REFERRAL-PROGRAM state
+    let referral_state: marinade_referral::states::ReferralState = AccountDeserialize::try_deserialize(
+        &mut test.context
+            .banks_client
+            .get_account(referral.referral_key)
+            .await
+            .unwrap() // force unwrap
+            .unwrap()
+            .data
+            .as_slice(),
+    )
+    .unwrap();
+    // Check treasury_msol_cut == referral_state.liq_unstake_msol_fees
+    assert_eq!(referral_state.liq_unstake_msol_fees, treasury_msol_cut);
+
     // Check post-conditions.
     let user_sol_balance_after = user.sol_balance(test).await;
     assert_eq!(
