@@ -6,35 +6,8 @@ use marinade_finance::{
 use crate::account_structs::*;
 
 pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
-    // liquid-unstake cpi
-    let cpi_ctx = ctx.accounts.into_liquid_unstake_cpi_ctx();
-    let cpi_accounts = cpi_ctx.to_account_metas(None);
-    let data = MarinadeLiquidUnstake { msol_amount };
-    let ix = Instruction {
-        program_id: *cpi_ctx.program.key,
-        accounts: cpi_accounts,
-        data: data.data(),
-    };
-    anchor_lang::solana_program::program::invoke_signed(
-        &ix,
-        &[
-            cpi_ctx.accounts.state,
-            cpi_ctx.accounts.msol_mint,
-            cpi_ctx.accounts.liq_pool_sol_leg_pda,
-            cpi_ctx.accounts.liq_pool_msol_leg,
-            cpi_ctx.accounts.treasury_msol_account,
-            cpi_ctx.accounts.get_msol_from,
-            cpi_ctx.accounts.get_msol_from_authority,
-            cpi_ctx.accounts.transfer_sol_to,
-            cpi_ctx.accounts.system_program,
-            cpi_ctx.accounts.token_program,
-            //
-            ctx.accounts.marinade_finance_program.clone(),
-        ],
-        cpi_ctx.signer_seeds,
-    )?;
-
     // accumulate treasury fees for the liquid-unstake
+    // We are parsing manually to not make the IDL more complex with MarinadeSate
     let marinade_state: ProgramAccount<MarinadeSate> = ProgramAccount::try_from(
         &ctx.accounts.marinade_finance_program.key(),
         &ctx.accounts.state,
@@ -69,6 +42,34 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         0
     };
     msg!("treasury_msol_cut {}", treasury_msol_cut);
+
+    // liquid-unstake cpi
+    let cpi_ctx = ctx.accounts.into_liquid_unstake_cpi_ctx();
+    let cpi_accounts = cpi_ctx.to_account_metas(None);
+    let data = MarinadeLiquidUnstake { msol_amount };
+    let ix = Instruction {
+        program_id: *cpi_ctx.program.key,
+        accounts: cpi_accounts,
+        data: data.data(),
+    };
+    anchor_lang::solana_program::program::invoke_signed(
+        &ix,
+        &[
+            cpi_ctx.accounts.state,
+            cpi_ctx.accounts.msol_mint,
+            cpi_ctx.accounts.liq_pool_sol_leg_pda,
+            cpi_ctx.accounts.liq_pool_msol_leg,
+            cpi_ctx.accounts.treasury_msol_account,
+            cpi_ctx.accounts.get_msol_from,
+            cpi_ctx.accounts.get_msol_from_authority,
+            cpi_ctx.accounts.transfer_sol_to,
+            cpi_ctx.accounts.system_program,
+            cpi_ctx.accounts.token_program,
+            //
+            ctx.accounts.marinade_finance_program.clone(),
+        ],
+        cpi_ctx.signer_seeds,
+    )?;
 
     // update accumulators
     ctx.accounts.referral_state.liq_unstake_msol_fees = ctx

@@ -9,6 +9,18 @@ pub fn process_deposit_stake_account(
     ctx: Context<DepositStakeAccount>,
     validator_index: u32,
 ) -> ProgramResult {
+    // compute deposit stake account amount
+    // We are parsing manually to not make the IDL more complex with StakeWrapper
+    let stake_account: CpiAccount<StakeWrapper> =
+        CpiAccount::try_from(&ctx.accounts.stake_account)?;
+    let delegation = stake_account.delegation().ok_or_else(|| {
+        msg!(
+            "Deposited stake {} must be delegated",
+            stake_account.to_account_info().key
+        );
+        ProgramError::InvalidAccountData
+    })?;
+
     msg!("enter process_deposit_stake_account");
     // deposit-stake-account cpi
     let cpi_ctx = ctx.accounts.into_deposit_stake_account_cpi_ctx();
@@ -43,17 +55,6 @@ pub fn process_deposit_stake_account(
         ],
         cpi_ctx.signer_seeds,
     )?;
-
-    // compute deposit stake account amount
-    let stake_account: CpiAccount<StakeWrapper> =
-        CpiAccount::try_from(&ctx.accounts.stake_account)?;
-    let delegation = stake_account.delegation().ok_or_else(|| {
-        msg!(
-            "Deposited stake {} must be delegated",
-            stake_account.to_account_info().key
-        );
-        ProgramError::InvalidAccountData
-    })?;
 
     msg!("deposit_stake_account accumulators");
     ctx.accounts.referral_state.deposit_stake_account_amount = ctx
