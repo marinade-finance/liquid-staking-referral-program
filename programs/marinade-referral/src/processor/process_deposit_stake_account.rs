@@ -1,5 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
-use marinade_finance::instruction::DepositStakeAccount as MarinadeDepositStakeAccount;
+use marinade_finance::{
+    instruction::DepositStakeAccount as MarinadeDepositStakeAccount, stake_wrapper::StakeWrapper,
+};
 
 use crate::account_structs::*;
 
@@ -42,13 +44,23 @@ pub fn process_deposit_stake_account(
         cpi_ctx.signer_seeds,
     )?;
 
+    // compute deposit stake account amount
+    let stake_account: CpiAccount<StakeWrapper> =
+        CpiAccount::try_from(&ctx.accounts.stake_account)?;
+    let delegation = stake_account.delegation().ok_or_else(|| {
+        msg!(
+            "Deposited stake {} must be delegated",
+            stake_account.to_account_info().key
+        );
+        ProgramError::InvalidAccountData
+    })?;
+
     msg!("deposit_stake_account accumulators");
-    // TODO: TBD - how to accumulate deposit_stake_account_amount
     ctx.accounts.referral_state.deposit_stake_account_amount = ctx
         .accounts
         .referral_state
         .deposit_stake_account_amount
-        .wrapping_add(**ctx.accounts.stake_account.lamports.borrow());
+        .wrapping_add(delegation.stake);
     ctx.accounts.referral_state.deposit_stake_account_operations = ctx
         .accounts
         .referral_state
