@@ -1,7 +1,6 @@
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction, InstructionData};
 use marinade_finance::{
     instruction::DepositStakeAccount as MarinadeDepositStakeAccount, stake_wrapper::StakeWrapper,
-    State as MarinadeSate,
 };
 
 use crate::account_structs::*;
@@ -45,11 +44,7 @@ pub fn process_deposit_stake_account(
         cpi_ctx.signer_seeds,
     )?;
 
-    // compute msol_to_mint
-    let marinade_state: ProgramAccount<MarinadeSate> = ProgramAccount::try_from(
-        &ctx.accounts.marinade_finance_program.key(),
-        &ctx.accounts.state,
-    )?;
+    // compute deposit stake account amount
     let stake_account: CpiAccount<StakeWrapper> =
         CpiAccount::try_from(&ctx.accounts.stake_account)?;
     let delegation = stake_account.delegation().ok_or_else(|| {
@@ -59,14 +54,13 @@ pub fn process_deposit_stake_account(
         );
         ProgramError::InvalidAccountData
     })?;
-    let msol_to_mint = marinade_state.calc_msol_from_lamports(delegation.stake)?;
 
     msg!("deposit_stake_account accumulators");
     ctx.accounts.referral_state.deposit_stake_account_amount = ctx
         .accounts
         .referral_state
         .deposit_stake_account_amount
-        .wrapping_add(msol_to_mint);
+        .wrapping_add(delegation.stake);
     ctx.accounts.referral_state.deposit_stake_account_operations = ctx
         .accounts
         .referral_state
