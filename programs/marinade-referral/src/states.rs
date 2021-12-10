@@ -40,8 +40,10 @@ pub struct ReferralState {
 
     // accumulated liquid-unstake treasury fees (mSOL, u64)
     pub liq_unstake_msol_fees: u64,
+    // accumulated liquid-unstake amount (SOL, u64)
+    pub liq_unstake_sol_amount: u64,
     // accumulated liquid-unstake amount (mSOL, u64)
-    pub liq_unstake_amount: u64,
+    pub liq_unstake_msol_amount: u64,
     // accumulated count of unstake operations (u64, for stats/monitoring)
     pub liq_unstake_operations: u64,
 
@@ -70,7 +72,7 @@ impl ReferralState {
         self.deposit_stake_account_operations = 0;
 
         self.liq_unstake_msol_fees = 0;
-        self.liq_unstake_amount = 0;
+        self.liq_unstake_msol_amount = 0;
         self.liq_unstake_operations = 0;
     }
 
@@ -89,8 +91,10 @@ impl ReferralState {
             .unwrap();
 
         // more deposited than unstaked
-        if total_deposit > self.liq_unstake_amount {
-            net_stake = total_deposit.checked_sub(self.liq_unstake_amount).unwrap();
+        if total_deposit > self.liq_unstake_msol_amount {
+            net_stake = total_deposit
+                .checked_sub(self.liq_unstake_sol_amount)
+                .unwrap();
         }
 
         let share_fee_bp = if net_stake == 0 {

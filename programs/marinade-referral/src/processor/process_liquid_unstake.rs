@@ -78,11 +78,19 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         .liq_unstake_msol_fees
         .checked_add(treasury_msol_cut)
         .unwrap();
-    ctx.accounts.referral_state.liq_unstake_amount = ctx
+
+    ctx.accounts.referral_state.liq_unstake_msol_amount = ctx
         .accounts
         .referral_state
-        .liq_unstake_amount
+        .liq_unstake_msol_amount
         .checked_add(msol_amount)
+        .unwrap();
+
+    ctx.accounts.referral_state.liq_unstake_sol_amount = ctx
+        .accounts
+        .referral_state
+        .liq_unstake_msol_amount
+        .checked_add(user_remove_lamports)
         .unwrap();
 
     // wrapping_add may not be harmful for operations accumulation but yet better performance

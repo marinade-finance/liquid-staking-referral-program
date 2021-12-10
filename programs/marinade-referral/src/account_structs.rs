@@ -295,7 +295,7 @@ pub struct TransferLiqUnstakeShares<'info> {
     #[account(
         mut,
         constraint = !referral_state.pause,
-        constraint = referral_state.liq_unstake_amount > 0,
+        constraint = referral_state.liq_unstake_msol_amount > 0,
         constraint = referral_state.token_partner_account.key() == *token_partner_account.to_account_info().key,
     )]
     pub referral_state: ProgramAccount<'info, ReferralState>,

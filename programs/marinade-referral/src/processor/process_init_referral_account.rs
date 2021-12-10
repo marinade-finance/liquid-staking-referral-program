@@ -35,7 +35,7 @@ pub fn process_init_referral_account(
     ctx.accounts.referral_state.deposit_stake_account_amount = 0;
     ctx.accounts.referral_state.deposit_stake_account_operations = 0;
 
-    ctx.accounts.referral_state.liq_unstake_amount = 0;
+    ctx.accounts.referral_state.liq_unstake_msol_amount = 0;
     ctx.accounts.referral_state.liq_unstake_operations = 0;
     ctx.accounts.referral_state.liq_unstake_msol_fees = 0;
 
