@@ -89,7 +89,7 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     ctx.accounts.referral_state.liq_unstake_sol_amount = ctx
         .accounts
         .referral_state
-        .liq_unstake_msol_amount
+        .liq_unstake_sol_amount
         .checked_add(user_remove_lamports)
         .unwrap();
 

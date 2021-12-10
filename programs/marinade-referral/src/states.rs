@@ -73,14 +73,8 @@ impl ReferralState {
 
         self.liq_unstake_msol_fees = 0;
         self.liq_unstake_msol_amount = 0;
+        self.liq_unstake_sol_amount = 0;
         self.liq_unstake_operations = 0;
-    }
-
-    pub fn reset_delayed_unstake_accumulators(&mut self) {
-        self.deposit_stake_account_amount = 0;
-        self.deposit_stake_account_operations = 0;
-        self.delayed_unstake_amount = 0;
-        self.delayed_unstake_operations = 0;
     }
 
     pub fn get_liq_unstake_share_amount(&self) -> Result<u64, CommonError> {
