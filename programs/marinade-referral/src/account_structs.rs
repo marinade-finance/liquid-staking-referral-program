@@ -16,7 +16,7 @@ use crate::states::*;
 // )]
 pub struct Initialize<'info> {
     // admin account
-    #[account(mut, signer)]
+    #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
     // global state
@@ -44,7 +44,7 @@ pub struct ChangeAuthority<'info> {
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // current admin account (must match the one in GlobalState)
-    #[account(mut, signer)]
+    #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
     // new admin account
@@ -62,7 +62,7 @@ pub struct InitReferralAccount<'info> {
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin account, signer
-    #[account(mut, signer)]
+    #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
     // partner account
@@ -102,7 +102,7 @@ pub struct UpdateReferral<'info> {
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin account
-    #[account(mut, signer)]
+    #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
     // referral state
