@@ -49,12 +49,14 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
         .accounts
         .referral_state
         .deposit_sol_amount
-        .wrapping_add(lamports);
+        .checked_add(lamports)
+        .unwrap();
     ctx.accounts.referral_state.deposit_sol_operations = ctx
         .accounts
         .referral_state
         .deposit_sol_operations
-        .wrapping_add(1);
+        .checked_add(1)
+        .unwrap();
 
     Ok(())
 }

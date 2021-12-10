@@ -84,7 +84,8 @@ impl ReferralState {
         if self.deposit_sol_amount > self.liq_unstake_amount {
             net_stake = self
                 .deposit_sol_amount
-                .wrapping_sub(self.liq_unstake_amount);
+                .checked_sub(self.liq_unstake_amount)
+                .unwrap();
         }
 
         let share_fee_bp = if net_stake == 0 {
@@ -92,10 +93,10 @@ impl ReferralState {
         } else if net_stake > self.max_net_stake {
             self.max_fee // max
         } else {
-            let delta = self.max_fee.wrapping_sub(self.base_fee);
+            let delta = self.max_fee.checked_sub(self.base_fee).unwrap();
             let proportion = proportional(delta as u64, net_stake, self.max_net_stake)? as u32;
             // base + delta proportional to net_stake/self.max_net_stake
-            self.base_fee.wrapping_add(proportion)
+            self.base_fee.checked_add(proportion).unwrap()
         };
 
         let share_fee = Fee {

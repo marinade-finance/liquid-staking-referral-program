@@ -25,7 +25,7 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         // user is removing all liquidity
         marinade_state.liq_pool.lp_max_fee
     } else {
-        let after_lamports = max_lamports - user_remove_lamports; //how much will be left?
+        let after_lamports = max_lamports.checked_sub(user_remove_lamports).unwrap(); //how much will be left?
         marinade_state.liq_pool.linear_fee(after_lamports)
     };
 
@@ -76,17 +76,20 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         .accounts
         .referral_state
         .liq_unstake_msol_fees
-        .wrapping_add(treasury_msol_cut);
+        .checked_add(treasury_msol_cut)
+        .unwrap();
     ctx.accounts.referral_state.liq_unstake_amount = ctx
         .accounts
         .referral_state
         .liq_unstake_amount
-        .wrapping_add(msol_amount);
+        .checked_add(msol_amount)
+        .unwrap();
     ctx.accounts.referral_state.liq_unstake_operations = ctx
         .accounts
         .referral_state
         .liq_unstake_operations
-        .wrapping_add(1);
+        .checked_add(1)
+        .unwrap();
 
     Ok(())
 }

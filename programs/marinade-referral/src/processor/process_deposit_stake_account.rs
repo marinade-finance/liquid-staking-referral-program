@@ -61,12 +61,14 @@ pub fn process_deposit_stake_account(
         .accounts
         .referral_state
         .deposit_stake_account_amount
-        .wrapping_add(delegation.stake);
+        .checked_add(delegation.stake)
+        .unwrap();
     ctx.accounts.referral_state.deposit_stake_account_operations = ctx
         .accounts
         .referral_state
         .deposit_stake_account_operations
-        .wrapping_add(1);
+        .checked_add(1)
+        .unwrap();
 
     Ok(())
 }
