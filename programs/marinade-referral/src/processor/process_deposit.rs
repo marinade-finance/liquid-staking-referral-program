@@ -51,12 +51,13 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
         .deposit_sol_amount
         .checked_add(lamports)
         .unwrap();
+
+    // wrapping_add may not be harmful for operations accumulation but yet better performance
     ctx.accounts.referral_state.deposit_sol_operations = ctx
         .accounts
         .referral_state
         .deposit_sol_operations
-        .checked_add(1)
-        .unwrap();
+        .wrapping_add(1);
 
     Ok(())
 }

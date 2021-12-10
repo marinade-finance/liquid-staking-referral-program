@@ -84,12 +84,13 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         .liq_unstake_amount
         .checked_add(msol_amount)
         .unwrap();
+
+    // wrapping_add may not be harmful for operations accumulation but yet better performance
     ctx.accounts.referral_state.liq_unstake_operations = ctx
         .accounts
         .referral_state
         .liq_unstake_operations
-        .checked_add(1)
-        .unwrap();
+        .wrapping_add(1);
 
     Ok(())
 }

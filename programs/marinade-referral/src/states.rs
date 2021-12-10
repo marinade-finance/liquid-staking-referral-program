@@ -65,12 +65,16 @@ impl ReferralState {
     pub fn reset_liq_unstake_accumulators(&mut self) {
         self.deposit_sol_amount = 0;
         self.deposit_sol_operations = 0;
+
+        self.deposit_stake_account_amount = 0;
+        self.deposit_stake_account_operations = 0;
+
         self.liq_unstake_msol_fees = 0;
         self.liq_unstake_amount = 0;
         self.liq_unstake_operations = 0;
     }
 
-    pub fn reset_del_unstake_accumulators(&mut self) {
+    pub fn reset_delayed_unstake_accumulators(&mut self) {
         self.deposit_stake_account_amount = 0;
         self.deposit_stake_account_operations = 0;
         self.delayed_unstake_amount = 0;
@@ -79,13 +83,14 @@ impl ReferralState {
 
     pub fn get_liq_unstake_share_amount(&self) -> Result<u64, CommonError> {
         let mut net_stake = 0;
+        let total_deposit = self
+            .deposit_sol_amount
+            .checked_add(self.deposit_stake_account_amount)
+            .unwrap();
 
         // more deposited than unstaked
-        if self.deposit_sol_amount > self.liq_unstake_amount {
-            net_stake = self
-                .deposit_sol_amount
-                .checked_sub(self.liq_unstake_amount)
-                .unwrap();
+        if total_deposit > self.liq_unstake_amount {
+            net_stake = total_deposit.checked_sub(self.liq_unstake_amount).unwrap();
         }
 
         let share_fee_bp = if net_stake == 0 {
