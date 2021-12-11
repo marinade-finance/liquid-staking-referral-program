@@ -285,8 +285,14 @@ pub async fn do_liquid_unstake(
             .as_slice(),
     )
     .unwrap();
+
     // Check treasury_msol_cut == referral_state.liq_unstake_msol_fees
     assert_eq!(referral_state.liq_unstake_msol_fees, treasury_msol_cut);
+    assert_eq!(referral_state.liq_unstake_msol_amount, msol_lamports);
+
+    // msol_amount in lamports
+    let user_remove_lamports = test.state.calc_lamports_from_msol_amount(msol_lamports).unwrap();
+    assert_eq!(referral_state.liq_unstake_sol_amount, user_remove_lamports);
 
     // Check post-conditions.
     let user_sol_balance_after = user.sol_balance(test).await;
