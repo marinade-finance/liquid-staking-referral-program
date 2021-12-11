@@ -25,7 +25,7 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
         // user is removing all liquidity
         marinade_state.liq_pool.lp_max_fee
     } else {
-        let after_lamports = max_lamports.checked_sub(user_remove_lamports).unwrap(); //how much will be left?
+        let after_lamports = max_lamports - user_remove_lamports; //how much will be left?
         marinade_state.liq_pool.linear_fee(after_lamports)
     };
 
@@ -72,33 +72,10 @@ pub fn process_liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> 
     )?;
 
     // update accumulators
-    ctx.accounts.referral_state.liq_unstake_msol_fees = ctx
-        .accounts
-        .referral_state
-        .liq_unstake_msol_fees
-        .checked_add(treasury_msol_cut)
-        .unwrap();
-
-    ctx.accounts.referral_state.liq_unstake_msol_amount = ctx
-        .accounts
-        .referral_state
-        .liq_unstake_msol_amount
-        .checked_add(msol_amount)
-        .unwrap();
-
-    ctx.accounts.referral_state.liq_unstake_sol_amount = ctx
-        .accounts
-        .referral_state
-        .liq_unstake_sol_amount
-        .checked_add(user_remove_lamports)
-        .unwrap();
-
-    // wrapping_add may not be harmful for operations accumulation but yet better performance
-    ctx.accounts.referral_state.liq_unstake_operations = ctx
-        .accounts
-        .referral_state
-        .liq_unstake_operations
-        .wrapping_add(1);
+    ctx.accounts.referral_state.liq_unstake_msol_fees += treasury_msol_cut;
+    ctx.accounts.referral_state.liq_unstake_msol_amount += msol_amount;
+    ctx.accounts.referral_state.liq_unstake_sol_amount += user_remove_lamports;
+    ctx.accounts.referral_state.liq_unstake_operations += 1;
 
     Ok(())
 }

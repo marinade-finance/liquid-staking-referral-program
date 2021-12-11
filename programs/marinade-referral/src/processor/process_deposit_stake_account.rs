@@ -57,19 +57,8 @@ pub fn process_deposit_stake_account(
     )?;
 
     msg!("deposit_stake_account accumulators");
-    ctx.accounts.referral_state.deposit_stake_account_amount = ctx
-        .accounts
-        .referral_state
-        .deposit_stake_account_amount
-        .checked_add(delegation.stake)
-        .unwrap();
-
-    // wrapping_add may not be harmful for operations accumulation but yet better performance
-    ctx.accounts.referral_state.deposit_stake_account_operations = ctx
-        .accounts
-        .referral_state
-        .deposit_stake_account_operations
-        .wrapping_add(1);
+    ctx.accounts.referral_state.deposit_stake_account_amount += delegation.stake;
+    ctx.accounts.referral_state.deposit_stake_account_operations += 1;
 
     Ok(())
 }

@@ -78,28 +78,17 @@ impl ReferralState {
     }
 
     pub fn get_liq_unstake_share_amount(&self) -> Result<u64, CommonError> {
-        let mut net_stake = 0;
-        let total_deposit = self
-            .deposit_sol_amount
-            .checked_add(self.deposit_stake_account_amount)
-            .unwrap();
-
-        // more deposited than unstaked
-        if total_deposit > self.liq_unstake_msol_amount {
-            net_stake = total_deposit
-                .checked_sub(self.liq_unstake_sol_amount)
-                .unwrap();
-        }
-
+        let total_deposit = self.deposit_sol_amount + self.deposit_stake_account_amount;
+        // zero if more unstaked than deposited
+        let net_stake = total_deposit.saturating_sub(self.liq_unstake_sol_amount);
         let share_fee_bp = if net_stake == 0 {
             self.base_fee // minimum
         } else if net_stake > self.max_net_stake {
             self.max_fee // max
         } else {
-            let delta = self.max_fee.checked_sub(self.base_fee).unwrap();
-            let proportion = proportional(delta as u64, net_stake, self.max_net_stake)? as u32;
+            let delta = self.max_fee - self.base_fee;
             // base + delta proportional to net_stake/self.max_net_stake
-            self.base_fee.checked_add(proportion).unwrap()
+            self.base_fee + proportional(delta as u64, net_stake, self.max_net_stake)? as u32
         };
 
         let share_fee = Fee {

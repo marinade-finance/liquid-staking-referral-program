@@ -45,19 +45,8 @@ pub fn process_deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
         lamports
     );
     // update accumulators
-    ctx.accounts.referral_state.deposit_sol_amount = ctx
-        .accounts
-        .referral_state
-        .deposit_sol_amount
-        .checked_add(lamports)
-        .unwrap();
-
-    // wrapping_add may not be harmful for operations accumulation but yet better performance
-    ctx.accounts.referral_state.deposit_sol_operations = ctx
-        .accounts
-        .referral_state
-        .deposit_sol_operations
-        .wrapping_add(1);
+    ctx.accounts.referral_state.deposit_sol_amount += lamports;
+    ctx.accounts.referral_state.deposit_sol_operations += 1;
 
     Ok(())
 }

@@ -7,9 +7,8 @@ pub fn process_transfer_liq_unstake_shares(
     ctx: Context<TransferLiqUnstakeShares>,
 ) -> ProgramResult {
     let current_time = clock::Clock::get().unwrap().unix_timestamp;
-    let elapsed_time = current_time
-        .checked_sub(ctx.accounts.referral_state.last_transfer_time)
-        .unwrap();
+    let elapsed_time = current_time - ctx.accounts.referral_state.last_transfer_time;
+    assert!(elapsed_time > 0 && elapsed_time < u32::MAX as i64);
 
     if elapsed_time as u32 > ctx.accounts.referral_state.transfer_duration {
         // transfer shared mSOL to partner
