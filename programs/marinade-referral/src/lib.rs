@@ -2,36 +2,20 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::declare_id;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
-///context accounts
-pub mod account_structs;
-///associated token
-pub mod associated_token;
+use instructions::{admin::*, deposit_sol::*, deposit_stake_account::*, liquid_unstake::*};
+
 ///constant
 pub mod constant;
 ///cpi context accounts
 pub mod cpi_context_accounts;
+///cpi context helpers
+pub mod cpi_util;
 ///error
 pub mod error;
-///processor
-pub mod processor;
+///instructions
+pub mod instructions;
 ///states
 pub mod states;
-
-use crate::process_init_referral_account::process_init_referral_account;
-use crate::{account_structs::*, processor::*};
-
-// pub fn test_ep(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8])
-//  -> ProgramResult {
-//     if data.len() < 8 {
-//         return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
-//     }
-//     dispatch(program_id, accounts,
-//              data).map_err(|e|
-//                                {
-//                                    ::solana_program::log::sol_log(&e.to_string());
-//                                    e
-//                                })
-// }
 
 #[program]
 pub mod marinade_referral {
@@ -39,8 +23,59 @@ pub mod marinade_referral {
 
     declare_id!("FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR");
 
+    ///deposit SOL
+    pub fn deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
+        ctx.accounts.process(lamports)
+    }
+
+    ///deposit stake account
+    pub fn deposit_stake_account(
+        ctx: Context<DepositStakeAccount>,
+        validator_index: u32,
+    ) -> ProgramResult {
+        ctx.accounts.process(validator_index)
+    }
+
+    ///liquid-unstake mSOL
+    pub fn liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
+        ctx.accounts.process(msol_amount)
+    }
+
+    ///Admin
+    ///create global state
+    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
+        ctx.accounts.process()
+    }
+
+    ///create referral state
+    pub fn init_referral_account(
+        ctx: Context<InitReferralAccount>,
+        partner_name: String,
+    ) -> ProgramResult {
+        ctx.accounts.process(partner_name)
+    }
+
+    ///update referral state
+    pub fn update_referral(
+        ctx: Context<UpdateReferral>,
+        transfer_duration: u32,
+        pause: bool,
+    ) -> ProgramResult {
+        ctx.accounts.process(transfer_duration, pause)
+    }
+
+    ///update partner, authority and beneficiary account based on the new partner
+    pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
+        ctx.accounts.process()
+    }
+
+    ///transfer shares, treasury holders can transfer shares manually
+    pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
+        ctx.accounts.process()
+    }
+
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
-    // in order to load two programs with entrypoints into the simulator
+    // in order to load two programs with entry points into the simulator
     pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         if data.len() < 8 {
             return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
@@ -50,63 +85,4 @@ pub mod marinade_referral {
             e
         })
     }
-    ///create global state
-    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
-        process_initialize(ctx)
-    }
-
-    ///create referral state
-    pub fn init_referral_account(
-        ctx: Context<InitReferralAccount>,
-        partner_name: String,
-    ) -> ProgramResult {
-        process_init_referral_account(ctx, partner_name)
-    }
-
-    ///update referral state
-    pub fn update_referral(
-        ctx: Context<UpdateReferral>,
-        transfer_duration: u32,
-        pause: bool,
-    ) -> ProgramResult {
-        process_update_referral(ctx, transfer_duration, pause)
-    }
-
-    ///update partner, authority and beneficiary account based on the new partner
-    pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
-        process_change_authority(ctx)
-    }
-
-    ///deposit SOL
-    pub fn deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
-        process_deposit(ctx, lamports)
-    }
-
-    ///deposit stake account
-    pub fn deposit_stake_account(
-        ctx: Context<DepositStakeAccount>,
-        validator_index: u32,
-    ) -> ProgramResult {
-        process_deposit_stake_account(ctx, validator_index)
-    }
-
-    ///liquid-unstake mSOL
-    pub fn liquid_unstake(ctx: Context<LiquidUnstake>, msol_amount: u64) -> ProgramResult {
-        process_liquid_unstake(ctx, msol_amount)
-    }
-
-    ///transfer shares, treasury holders can transfer shares manually
-    pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
-        process_transfer_liq_unstake_shares(ctx)
-    }
-
-    /*
-    // Utility to delete state or referral accounts in devnet
-    pub fn delete_account(ctx: Context<DeleteAccount>) -> ProgramResult {
-        // set lamports to zero
-        **ctx.accounts.beneficiary.lamports.borrow_mut() = ctx.accounts.beneficiary.lamports() + ctx.accounts.to_delete.lamports();
-        **ctx.accounts.to_delete.lamports.borrow_mut() = 0;
-        Ok(())
-    }
-    */
 }

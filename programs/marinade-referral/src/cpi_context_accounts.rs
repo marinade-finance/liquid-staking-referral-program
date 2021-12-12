@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+// Marinade Instructions structs but without parsed data, all fields are AccountInfo
+
 #[derive(Accounts)]
 pub struct MarinadeDeposit<'info> {
     pub state: AccountInfo<'info>,

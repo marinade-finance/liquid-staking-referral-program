@@ -1061,7 +1061,7 @@ pub async fn init_marinade_referral_test_globals(
     let global_state = Arc::new(Keypair::new());
     let state_key = global_state.pubkey();
     let state_space = 8 + std::mem::size_of::<marinade_referral::states::GlobalState>();
-    test.builder.add_signer(global_state); // need to sign with privkey to create account
+    test.builder.add_signer(global_state); // need to sign with private key to create account
     test.builder
         .add_instruction(
             system_instruction::create_account(
@@ -1115,7 +1115,7 @@ pub async fn init_marinade_referral_test_globals(
     // 8=Anchor sha-struct-ident, 10 partner-name string
     let referral_state_size =
         8 + 10 + std::mem::size_of::<marinade_referral::states::ReferralState>();
-    test.builder.add_signer(referral_state); // need to sign with privkey to create account
+    test.builder.add_signer(referral_state); // need to sign with private key to create account
     test.builder
         .add_instruction(
             system_instruction::create_account(

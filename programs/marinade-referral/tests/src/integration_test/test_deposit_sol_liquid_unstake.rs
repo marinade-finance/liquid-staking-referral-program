@@ -2,8 +2,8 @@
 // Integration Test
 // deposit sol & liquid unstake
 //
-use marinade_referral;
-use marinade_referral::account_structs::*;
+// use marinade_referral;
+use marinade_referral::instructions::*;
 use marinade_referral::constant::*;
 
 use crate::{initialize::InitializeInputWithSeeds, integration_test::*};
