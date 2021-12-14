@@ -68,12 +68,13 @@ pub struct InitReferralAccount<'info> {
     #[account()]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
+    // mSOL treasury account for this referral program (must be fed externally)
+    // owner must be self.global_state.get_treasury_auth()
+    #[account()]
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+
     #[account(zero)] // must be created but empty, ready to be initialized
     pub referral_state: ProgramAccount<'info, ReferralState>,
-
-    pub system_program: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-    pub rent: AccountInfo<'info>,
 }
 
 impl<'info> InitReferralAccount<'info> {
@@ -84,11 +85,18 @@ impl<'info> InitReferralAccount<'info> {
             return Err(ReferralError::PartnerNameTooLong.into());
         }
 
+        // verify the treasury account auth is this program get_treasury_auth() PDA (based on treasury_msol_auth_bump)
+        if self.treasury_msol_account.owner != self.global_state.get_treasury_auth() {
+            return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
+        }
+
         // check if beneficiary account address matches to partner_address and msol_mint
         if self.token_partner_account.owner != *self.partner_account.key {
             return Err(ReferralError::InvalidBeneficiaryAccountOwner.into());
         }
-        if self.token_partner_account.mint != Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap() {
+
+        // verify the partner token account mint equals to treasury_msol_account
+        if self.token_partner_account.mint != self.treasury_msol_account.mint {
             return Err(ReferralError::InvalidBeneficiaryAccountMint.into());
         }
 

@@ -96,9 +96,6 @@ export async function setup_referral_state() {
           partnerAccount: PARTNER_ID,
           tokenPartnerAccount: beneficiaryATA,
           referralState: REFERRAL_TEST_PUBKEY,
-          systemProgram: SystemProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
         },
         signers: [ADMIN_KEYPAIR],
       })

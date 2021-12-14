@@ -3,9 +3,6 @@ use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 ///Global state ID
 pub const GLOBAL_STATE_ADDRESS: &str = "mRg6bDsAd5uwERAdNTynoUeRbqQsLa7yzuK2kkCUPGW";
 
-///mSOL Mint address
-pub const MSOL_MINT_ADDRESS: &str = "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So";
-
 ///mSOL treasury PDA
 pub const MSOL_TREASURY_SEED: &[u8] = b"mr_treasury";
 
