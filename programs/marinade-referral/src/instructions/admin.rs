@@ -163,7 +163,7 @@ impl<'info> UpdateReferral<'info> {
 
 //-----------------------------------------------------
 #[derive(Accounts)]
-pub struct TransferLiqUnstakeShares<'info> {
+pub struct TransferToPartner<'info> {
     // mSOL beneficiary account
     #[account(mut)]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
@@ -192,7 +192,7 @@ pub struct TransferLiqUnstakeShares<'info> {
     pub token_program: AccountInfo<'info>,
 }
 
-impl<'info> TransferLiqUnstakeShares<'info> {
+impl<'info> TransferToPartner<'info> {
     pub fn process(&mut self) -> ProgramResult {
         let current_time = clock::Clock::get().unwrap().unix_timestamp;
         let elapsed_time = current_time - self.referral_state.last_transfer_time;
