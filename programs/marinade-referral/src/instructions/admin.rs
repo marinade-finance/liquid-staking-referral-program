@@ -16,7 +16,7 @@ pub struct Initialize<'info> {
 
     #[account(
         zero,
-        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
@@ -40,7 +40,7 @@ pub struct InitReferralAccount<'info> {
     // global state
     #[account(
         has_one = admin_account,
-        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
@@ -117,7 +117,7 @@ pub struct ChangeAuthority<'info> {
     #[account(
         mut,
         has_one = admin_account,
-        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
@@ -141,7 +141,7 @@ pub struct UpdateReferral<'info> {
     // global state
     #[account(
         has_one = admin_account,
-        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
