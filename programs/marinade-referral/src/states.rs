@@ -65,7 +65,7 @@ pub struct ReferralState {
 }
 
 impl ReferralState {
-    pub fn reset_liq_unstake_accumulators(&mut self) {
+    pub fn reset_accumulators(&mut self) {
         self.deposit_sol_amount = 0;
         self.deposit_sol_operations = 0;
 

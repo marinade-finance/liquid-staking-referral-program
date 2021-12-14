@@ -216,7 +216,7 @@ impl<'info> TransferLiqUnstakeShares<'info> {
             self.referral_state.last_transfer_time = current_time;
 
             // clears all accumulators
-            self.referral_state.reset_liq_unstake_accumulators();
+            self.referral_state.reset_accumulators();
         } else {
             return Err(ReferralError::TransferNotAvailable.into());
         }

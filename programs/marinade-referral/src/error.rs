@@ -8,7 +8,7 @@ pub enum ReferralError {
     #[msg("Paused")]
     Paused, // 301
 
-    #[msg("Transfer is not available")]
+    #[msg("Transfer is not available yet")]
     TransferNotAvailable, // 302
 
     #[msg("Invalid beneficiary account owner")]
