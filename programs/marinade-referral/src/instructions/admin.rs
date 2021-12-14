@@ -1,9 +1,11 @@
+use anchor_lang::prelude::*;
+use anchor_lang::solana_program::clock;
+use anchor_spl::token::{TokenAccount, Transfer};
+use std::str::FromStr;
+
 use crate::constant::*;
 use crate::error::*;
 use crate::states::{GlobalState, ReferralState};
-use anchor_lang::prelude::*;
-use anchor_lang::{solana_program::clock};
-use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 //-----------------------------------------------------
 #[derive(Accounts)]
@@ -12,18 +14,22 @@ pub struct Initialize<'info> {
     #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
-    #[account(zero)]
+    #[account(
+        zero,
+        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+    )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
+    // mSOL treasury account for referral program
     #[account()]
-    pub payment_mint: AccountInfo<'info>,
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
 
     pub system_program: AccountInfo<'info>,
 }
 impl<'info> Initialize<'info> {
-    pub fn process(&mut self) -> ProgramResult {
+    pub fn process(&mut self, treasury_msol_bump_seed: u8) -> ProgramResult {
         self.global_state.admin_account = *self.admin_account.key;
-        self.global_state.payment_mint = *self.payment_mint.key;
+        self.global_state.treasury_msol_bump_seed = treasury_msol_bump_seed;
         Ok(())
     }
 }
@@ -32,7 +38,10 @@ impl<'info> Initialize<'info> {
 #[derive(Accounts)]
 pub struct InitReferralAccount<'info> {
     // global state
-    #[account(has_one = admin_account)]
+    #[account(
+        has_one = admin_account,
+        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+    )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin account, signer
@@ -41,9 +50,7 @@ pub struct InitReferralAccount<'info> {
 
     // partner account
     pub partner_account: AccountInfo<'info>,
-    // payment token mint (normally mSOL mint)
-    #[account()]
-    pub payment_mint: CpiAccount<'info, Mint>,
+
     // partner beneficiary mSOL ATA
     #[account()]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
@@ -68,7 +75,7 @@ impl<'info> InitReferralAccount<'info> {
         if self.token_partner_account.owner != *self.partner_account.key {
             return Err(ReferralError::InvalidBeneficiaryAccountOwner.into());
         }
-        if self.token_partner_account.mint != self.payment_mint.key() {
+        if self.token_partner_account.mint != Pubkey::from_str(MSOL_MINT_ADDRESS).unwrap() {
             return Err(ReferralError::InvalidBeneficiaryAccountMint.into());
         }
 
@@ -107,7 +114,11 @@ impl<'info> InitReferralAccount<'info> {
 #[derive(Accounts)]
 pub struct ChangeAuthority<'info> {
     // global state
-    #[account(mut, has_one = admin_account)]
+    #[account(
+        mut,
+        has_one = admin_account,
+        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+    )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // current admin account (must match the one in GlobalState)
@@ -128,7 +139,10 @@ impl<'info> ChangeAuthority<'info> {
 #[derive(Accounts)]
 pub struct UpdateReferral<'info> {
     // global state
-    #[account(has_one = admin_account)]
+    #[account(
+        has_one = admin_account,
+        address = Pubkey::from_str(GLOBAL_STATE_ID).unwrap(),
+    )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin account
@@ -150,9 +164,6 @@ impl<'info> UpdateReferral<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct TransferLiqUnstakeShares<'info> {
-    // mSOL mint
-    pub msol_mint: CpiAccount<'info, Mint>,
-
     // mSOL beneficiary account
     #[account(mut)]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
@@ -161,9 +172,9 @@ pub struct TransferLiqUnstakeShares<'info> {
     #[account(mut)]
     pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
 
-    // treasury token account owner
-    #[account(mut, signer)]
-    pub treasury_account: AccountInfo<'info>,
+    // admin
+    #[account(signer)]
+    pub admin_account: AccountInfo<'info>,
 
     // referral state
     #[account(
@@ -174,20 +185,30 @@ pub struct TransferLiqUnstakeShares<'info> {
     )]
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
+    // global state
+    #[account(has_one = admin_account)]
+    pub global_state: ProgramAccount<'info, GlobalState>,
+
     pub token_program: AccountInfo<'info>,
 }
 
 impl<'info> TransferLiqUnstakeShares<'info> {
-
     pub fn process(&mut self) -> ProgramResult {
         let current_time = clock::Clock::get().unwrap().unix_timestamp;
         let elapsed_time = current_time - self.referral_state.last_transfer_time;
         assert!(elapsed_time > 0 && elapsed_time < u32::MAX as i64);
 
         if elapsed_time as u32 > self.referral_state.transfer_duration {
+            // mSOL treasury account seeds
+            let authority_seeds = &[
+                &MSOL_TREASURY_SEED[..],
+                &[self.global_state.treasury_msol_bump_seed],
+            ];
+
             // transfer shared mSOL to partner
             anchor_spl::token::transfer(
-                self.into_transfer_to_pda_context(),
+                self.into_transfer_to_pda_context()
+                    .with_signer(&[&authority_seeds[..]]),
                 self.referral_state.get_liq_unstake_share_amount()?,
             )?;
 
@@ -205,9 +226,9 @@ impl<'info> TransferLiqUnstakeShares<'info> {
 
     pub fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
-            from: self.treasury_msol_account.to_account_info().clone(),
-            to: self.token_partner_account.to_account_info().clone(),
-            authority: self.treasury_account.clone(),
+            from: self.treasury_msol_account.to_account_info(),
+            to: self.token_partner_account.to_account_info(),
+            authority: self.treasury_msol_account.to_account_info(),
         };
 
         CpiContext::new(self.token_program.clone(), cpi_accounts)

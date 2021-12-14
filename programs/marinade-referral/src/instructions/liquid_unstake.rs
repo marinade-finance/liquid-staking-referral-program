@@ -29,6 +29,7 @@ pub struct LiquidUnstake<'info> {
     pub token_program: AccountInfo<'info>,
 
     // accounts added are: Marinade main program ID & referral_state
+    #[account(address = marinade_finance::ID)]
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]
     pub referral_state: ProgramAccount<'info, ReferralState>,

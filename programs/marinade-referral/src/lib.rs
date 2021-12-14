@@ -21,7 +21,7 @@ pub mod states;
 pub mod marinade_referral {
     use super::*;
 
-    declare_id!("FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR");
+    declare_id!("mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY");
 
     ///deposit SOL
     pub fn deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
@@ -43,8 +43,8 @@ pub mod marinade_referral {
 
     ///Admin
     ///create global state
-    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
-        ctx.accounts.process()
+    pub fn initialize(ctx: Context<Initialize>, treasury_msol_bump_seed: u8) -> ProgramResult {
+        ctx.accounts.process(treasury_msol_bump_seed)
     }
 
     ///create referral state

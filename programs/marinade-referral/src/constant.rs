@@ -1,11 +1,13 @@
 use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 
-///seeds
-pub const GLOBAL_STATE_SEED: &[u8] = b"mrp_initialize";
-pub const REFERRAL_STATE_SEED: &[u8] = b"mrp_create_referral";
+///Global state ID
+pub const GLOBAL_STATE_ID: &'static str = "mRg6bDsAd5uwERAdNTynoUeRbqQsLa7yzuK2kkCUPGW";
 
 ///mSOL Mint address
-pub const MSOL_MINT_ADDRESS: &str = "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So";
+pub const MSOL_MINT_ADDRESS: &'static str = "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So";
+
+///mSOL treasury PDA
+pub const MSOL_TREASURY_SEED: &'static [u8] = b"mr_treasury";
 
 ///30 days in seconds, 3600 * 24 * 30
 pub const DEFAULT_TRANSFER_DURATION: u32 = 2_592_000;

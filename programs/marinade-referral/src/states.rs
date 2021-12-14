@@ -7,8 +7,9 @@ use marinade_finance::{calc::proportional, error::CommonError, Fee};
 pub struct GlobalState {
     // Authority (admin address)
     pub admin_account: Pubkey,
-    // payment token mint (normally mSOL mint)
-    pub payment_mint: Pubkey,
+
+    // bump seed for treasury_msol pda
+    pub treasury_msol_bump_seed: u8,
 }
 
 //-----------------------------------------------------

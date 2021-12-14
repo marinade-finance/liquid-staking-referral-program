@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 //use marinade_finance::instruction::Deposit as MarinadeDeposit;
-use crate::states::ReferralState;
 use crate::cpi_context_accounts::MarinadeDeposit;
+use crate::states::ReferralState;
 
 //-----------------------------------------------------
 #[derive(Accounts)]
@@ -27,6 +27,7 @@ pub struct Deposit<'info> {
     pub token_program: AccountInfo<'info>,
 
     // accounts added are: Marinade main program ID & referral_state
+    #[account(address = marinade_finance::ID)]
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]
     pub referral_state: ProgramAccount<'info, ReferralState>,
@@ -34,10 +35,7 @@ pub struct Deposit<'info> {
 
 impl<'info> Deposit<'info> {
     pub fn process(&mut self, lamports: u64) -> ProgramResult {
-        msg!(
-            "enter Deposit::process {}",
-            lamports
-        );
+        msg!("enter Deposit::process {}", lamports);
         let cpi_ctx = self.into_marinade_deposit_cpi_ctx();
         let data = marinade_finance::instruction::Deposit { lamports };
         // call Marinade
@@ -67,5 +65,4 @@ impl<'info> Deposit<'info> {
 
         CpiContext::new(self.marinade_finance_program.clone(), cpi_accounts)
     }
-
 }

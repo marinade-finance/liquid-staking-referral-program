@@ -36,6 +36,7 @@ pub struct DepositStakeAccount<'info> {
     pub stake_program: AccountInfo<'info>,
 
     // accounts added are: Marinade main program ID & referral_state
+    #[account(address = marinade_finance::ID)]
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]
     pub referral_state: ProgramAccount<'info, ReferralState>,
@@ -55,7 +56,8 @@ impl<'info> DepositStakeAccount<'info> {
         })?;
         // prepare deposit-stake-account cpi
         let cpi_ctx = self.into_deposit_stake_account_cpi_ctx();
-        let instruction_data = marinade_finance::instruction::DepositStakeAccount { validator_index };
+        let instruction_data =
+            marinade_finance::instruction::DepositStakeAccount { validator_index };
         // call Marinade
         crate::cpi_util::invoke_signed(cpi_ctx, instruction_data)?;
         // accumulate
@@ -88,4 +90,3 @@ impl<'info> DepositStakeAccount<'info> {
         CpiContext::new(self.marinade_finance_program.clone(), cpi_accounts)
     }
 }
-
