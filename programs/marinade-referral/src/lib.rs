@@ -70,10 +70,15 @@ pub mod marinade_referral {
     }
 
     ///transfer shares, treasury holders can transfer shares manually
-    pub fn transfer_liq_unstake_shares(ctx: Context<TransferToPartner>) -> ProgramResult {
+    pub fn transfer_to_partner(ctx: Context<TransferToPartner>) -> ProgramResult {
         ctx.accounts.process()
     }
 
+    ///transfer shares, treasury holders can transfer shares manually
+    pub fn delete_program_account(ctx: Context<DeleteProgramAccount>) -> ProgramResult {
+        ctx.accounts.process()
+    }
+    
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
     // in order to load two programs with entry points into the simulator
     pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

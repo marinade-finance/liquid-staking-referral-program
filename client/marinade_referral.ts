@@ -139,44 +139,52 @@ export async function setup() {
   );
   // create globalState account
   console.log("globalAccountBalance", globalAccountBalance);
-  if (globalAccountBalance === 0) {
-    const globalAccSize = program.account.globalState.size;
-    tx.add(
-      web3.SystemProgram.createAccount({
-        fromPubkey: provider.wallet.publicKey,
-        /** Public key of the created account */
-        newAccountPubkey: GLOBAL_STATE_PUBKEY,
-        /** Amount of lamports to transfer to the created account */
-        lamports: await provider.connection.getMinimumBalanceForRentExemption(
-          globalAccSize
-        ),
-        /** Amount of space in bytes to allocate to the created account */
-        space: globalAccSize,
-        /** Public key of the program to assign as the owner of the created account */
-        programId: program.programId,
-      })
-    );
-    // initialize global state
-    console.log(
-      "program.instruction.initialize ",
-      GLOBAL_STATE_PUBKEY.toBase58()
-    );
-    tx.add(
-      program.instruction.initialize({
-        accounts: {
-          adminAccount: ADMIN_PUBKEY,
-          globalState: GLOBAL_STATE_PUBKEY,
-          paymentMint: MSOL_MINT_PUBKEY,
-          systemProgram: SystemProgram.programId,
-        },
-        signers: [ADMIN_KEYPAIR],
-      })
-    );
-    // simulate the tx
-    provider.simulate(tx, [GLOBAL_STATE_KEYPAIR, ADMIN_KEYPAIR]);
-    // send the tx
-    provider.send(tx, [GLOBAL_STATE_KEYPAIR, ADMIN_KEYPAIR]);
+  if (globalAccountBalance !== 0) {
+    // delete global state
+    program.rpc.deleteProgramAccount({
+      accounts: {
+        accountToDelete: GLOBAL_STATE_PUBKEY,
+        beneficiary: provider.wallet.publicKey,
+      },
+    });
   }
+  const globalAccSize = program.account.globalState.size;
+  tx.add(
+    web3.SystemProgram.createAccount({
+      fromPubkey: provider.wallet.publicKey,
+      /** Public key of the created account */
+      newAccountPubkey: GLOBAL_STATE_PUBKEY,
+      /** Amount of lamports to transfer to the created account */
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(
+        globalAccSize
+      ),
+      /** Amount of space in bytes to allocate to the created account */
+      space: globalAccSize,
+      /** Public key of the program to assign as the owner of the created account */
+      programId: program.programId,
+    })
+  );
+  // initialize global state
+  console.log(
+    "program.instruction.initialize ",
+    GLOBAL_STATE_PUBKEY.toBase58()
+  );
+
+  tx.add(
+    program.instruction.initialize(treasuryMsolBumpSeed, {
+      accounts: {
+        adminAccount: ADMIN_PUBKEY,
+        globalState: GLOBAL_STATE_PUBKEY,
+        paymentMint: MSOL_MINT_PUBKEY,
+        systemProgram: SystemProgram.programId,
+      },
+      signers: [ADMIN_KEYPAIR],
+    })
+  );
+  // simulate the tx
+  provider.simulate(tx, [GLOBAL_STATE_KEYPAIR, ADMIN_KEYPAIR]);
+  // send the tx
+  provider.send(tx, [GLOBAL_STATE_KEYPAIR, ADMIN_KEYPAIR]);
 
   tx = new web3.Transaction();
   // check if referralAccount exists
@@ -184,50 +192,58 @@ export async function setup() {
     REFERRAL_TEST_PUBKEY
   );
   console.log("referralAccountBalance", referralAccountBalance);
-  if (referralAccountBalance === 0) {
-    // create referralState account
-    const referralAccSize = program.account.referralState.size + 20; // add some space for the string
-    tx.add(
-      web3.SystemProgram.createAccount({
-        fromPubkey: provider.wallet.publicKey,
-        /** Public key of the created account */
-        newAccountPubkey: REFERRAL_TEST_PUBKEY,
-        /** Amount of lamports to transfer to the created account */
-        lamports: await provider.connection.getMinimumBalanceForRentExemption(
-          referralAccSize
-        ),
-        /** Amount of space in bytes to allocate to the created account */
-        space: referralAccSize, // add some space for the string
-        /** Public key of the program to assign as the owner of the created account */
-        programId: program.programId,
-      })
-    );
-    // init referral account
-    console.log(
-      "program.rpc.initReferralAccount ",
-      REFERRAL_TEST_PUBKEY.toBase58()
-    );
-    tx.add(
-      program.instruction.initReferralAccount(PARTNER_NAME, {
-        accounts: {
-          partnerAccount: PARTNER_ID,
-          msolMint: MSOL_MINT_PUBKEY,
-          paymentMint: MSOL_MINT_PUBKEY,
-          tokenPartnerAccount: beneficiaryATA,
-          adminAccount: ADMIN_PUBKEY,
-          referralState: REFERRAL_TEST_PUBKEY,
-          globalState: GLOBAL_STATE_PUBKEY,
-          systemProgram: SystemProgram.programId,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
-        },
-        signers: [ADMIN_KEYPAIR],
-      })
-    );
-    // simulate the tx
-    provider.simulate(tx, [REFERRAL_TEST_KEYPAIR, ADMIN_KEYPAIR]);
-    // send the tx
-    provider.send(tx, [REFERRAL_TEST_KEYPAIR, ADMIN_KEYPAIR]);
+  if (referralAccountBalance !== 0) {
+    // delete referral state
+    program.rpc.deleteProgramAccount({
+      accounts: {
+        accountToDelete: REFERRAL_TEST_PUBKEY,
+        beneficiary: provider.wallet.publicKey,
+      },
+    });
   }
+
+  // create referralState account
+  const referralAccSize = program.account.referralState.size + 20; // add some space for the string
+  tx.add(
+    web3.SystemProgram.createAccount({
+      fromPubkey: provider.wallet.publicKey,
+      /** Public key of the created account */
+      newAccountPubkey: REFERRAL_TEST_PUBKEY,
+      /** Amount of lamports to transfer to the created account */
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(
+        referralAccSize
+      ),
+      /** Amount of space in bytes to allocate to the created account */
+      space: referralAccSize, // add some space for the string
+      /** Public key of the program to assign as the owner of the created account */
+      programId: program.programId,
+    })
+  );
+  // init referral account
+  console.log(
+    "program.rpc.initReferralAccount ",
+    REFERRAL_TEST_PUBKEY.toBase58()
+  );
+  tx.add(
+    program.instruction.initReferralAccount(PARTNER_NAME, {
+      accounts: {
+        partnerAccount: PARTNER_ID,
+        msolMint: MSOL_MINT_PUBKEY,
+        paymentMint: MSOL_MINT_PUBKEY,
+        tokenPartnerAccount: beneficiaryATA,
+        adminAccount: ADMIN_PUBKEY,
+        referralState: REFERRAL_TEST_PUBKEY,
+        globalState: GLOBAL_STATE_PUBKEY,
+        systemProgram: SystemProgram.programId,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+      },
+      signers: [ADMIN_KEYPAIR],
+    })
+  );
+  // simulate the tx
+  provider.simulate(tx, [REFERRAL_TEST_KEYPAIR, ADMIN_KEYPAIR]);
+  // send the tx
+  provider.send(tx, [REFERRAL_TEST_KEYPAIR, ADMIN_KEYPAIR]);
 }
