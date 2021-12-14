@@ -20,16 +20,29 @@ pub struct Initialize<'info> {
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
-    // mSOL treasury account for referral program
+    // mSOL treasury account for this referral program (must be fed externally)
+    // owner must be self.global_state.get_treasury_auth()
     #[account()]
     pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
-
-    pub system_program: AccountInfo<'info>,
 }
 impl<'info> Initialize<'info> {
-    pub fn process(&mut self, treasury_msol_bump_seed: u8) -> ProgramResult {
+    pub fn process(&mut self, treasury_msol_auth_bump: u8) -> ProgramResult {
         self.global_state.admin_account = *self.admin_account.key;
-        self.global_state.treasury_msol_bump_seed = treasury_msol_bump_seed;
+        self.global_state.treasury_msol_auth_bump = treasury_msol_auth_bump;
+
+        // verify the treasury account auth is this program get_treasury_auth() PDA (based on treasury_msol_auth_bump)
+        if self.treasury_msol_account.owner != self.global_state.get_treasury_auth() {
+            return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
+        }
+
+        if self.treasury_msol_account.delegate.is_some() {
+            return Err(ReferralError::TreasuryTokenAccountMustNotBeDelegated.into());
+        }
+
+        if self.treasury_msol_account.close_authority.is_some() {
+            return Err(ReferralError::TreasuryTokenAccountMustNotBeCloseable.into());
+        }
+
         Ok(())
     }
 }
@@ -165,12 +178,15 @@ impl<'info> UpdateReferral<'info> {
 #[derive(Accounts)]
 pub struct TransferToPartner<'info> {
     // mSOL beneficiary account
-    #[account(mut)]
+    #[account()]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
     // mSOL treasury token account
     #[account(mut)]
     pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+    // PDA authority for this treasury
+    #[account()]
+    pub treasury_msol_auth: AccountInfo<'info>,
 
     // admin
     #[account(signer)]
@@ -180,7 +196,6 @@ pub struct TransferToPartner<'info> {
     #[account(
         mut,
         constraint = !referral_state.pause,
-        constraint = referral_state.liq_unstake_msol_amount > 0,
         constraint = referral_state.token_partner_account.key() == *token_partner_account.to_account_info().key,
     )]
     pub referral_state: ProgramAccount<'info, ReferralState>,
@@ -202,13 +217,18 @@ impl<'info> TransferToPartner<'info> {
             // mSOL treasury account seeds
             let authority_seeds = &[
                 &MSOL_TREASURY_SEED[..],
-                &[self.global_state.treasury_msol_bump_seed],
+                &[self.global_state.treasury_msol_auth_bump],
             ];
 
+            let cpi_accounts = Transfer {
+                from: self.treasury_msol_account.to_account_info(),
+                to: self.token_partner_account.to_account_info(),
+                authority: self.treasury_msol_auth.clone(),
+            };
+            let transfer_cpi = CpiContext::new(self.token_program.clone(), cpi_accounts);
             // transfer shared mSOL to partner
             anchor_spl::token::transfer(
-                self.into_transfer_to_pda_context()
-                    .with_signer(&[&authority_seeds[..]]),
+                transfer_cpi.with_signer(&[&authority_seeds[..]]),
                 self.referral_state.get_liq_unstake_share_amount()?,
             )?;
 
@@ -223,16 +243,6 @@ impl<'info> TransferToPartner<'info> {
 
         Ok(())
     }
-
-    pub fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        let cpi_accounts = Transfer {
-            from: self.treasury_msol_account.to_account_info(),
-            to: self.token_partner_account.to_account_info(),
-            authority: self.treasury_msol_account.to_account_info(),
-        };
-
-        CpiContext::new(self.token_program.clone(), cpi_accounts)
-    }
 }
 
 //-----------------------------------------------------
@@ -246,7 +256,8 @@ pub struct DeleteProgramAccount<'info> {
 }
 impl<'info> DeleteProgramAccount<'info> {
     pub fn process(&mut self) -> ProgramResult {
-        **self.beneficiary.lamports.borrow_mut() = self.beneficiary.lamports() + self.account_to_delete.lamports();
+        **self.beneficiary.lamports.borrow_mut() =
+            self.beneficiary.lamports() + self.account_to_delete.lamports();
         **self.account_to_delete.lamports.borrow_mut() = 0;
         Ok(())
     }

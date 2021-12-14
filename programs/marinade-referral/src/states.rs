@@ -1,3 +1,4 @@
+use crate::constant::MSOL_TREASURY_SEED;
 use anchor_lang::prelude::*;
 use marinade_finance::{calc::proportional, error::CommonError, Fee};
 
@@ -9,7 +10,16 @@ pub struct GlobalState {
     pub admin_account: Pubkey,
 
     // bump seed for treasury_msol pda
-    pub treasury_msol_bump_seed: u8,
+    pub treasury_msol_auth_bump: u8,
+}
+impl GlobalState {
+    pub fn get_treasury_auth(&self) -> Pubkey {
+        Pubkey::create_program_address(
+            &[&MSOL_TREASURY_SEED[..], &[self.treasury_msol_auth_bump]],
+            &crate::ID,
+        )
+        .unwrap()
+    }
 }
 
 //-----------------------------------------------------

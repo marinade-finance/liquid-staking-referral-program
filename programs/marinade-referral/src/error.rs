@@ -17,4 +17,13 @@ pub enum ReferralError {
     InvalidBeneficiaryAccountMint, // 304
     #[msg("Partner name too long")]
     PartnerNameTooLong, // 305
+
+    #[msg("Treasury token authority does not match")]
+    TreasuryTokenAuthorityDoesNotMatch,
+    #[msg("Treasury token account must not be delegated")]
+    TreasuryTokenAccountMustNotBeDelegated,
+    #[msg("Treasury token account must not be closeable")]
+    TreasuryTokenAccountMustNotBeCloseable,
+
+
 }

@@ -7,6 +7,10 @@ import {
 import { MarinadeUtils } from "@marinade.finance/marinade-ts-sdk";
 import { exit } from "process";
 
+async function sleep(milliseconds): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 const { Keypair, SystemProgram, PublicKey, SYSVAR_RENT_PUBKEY } = web3;
 
 // Local cluster provider.
@@ -147,6 +151,7 @@ export async function setup() {
         beneficiary: provider.wallet.publicKey,
       },
     });
+    await sleep(5000);
   }
   const globalAccSize = program.account.globalState.size;
   tx.add(
@@ -170,12 +175,22 @@ export async function setup() {
     GLOBAL_STATE_PUBKEY.toBase58()
   );
 
+  const [referralMsolTreasury, treasuryMsolBumpSeed] =
+    await PublicKey.findProgramAddress(
+      [Buffer.from("mr_treasury")],
+      program.programId
+    );
+    console.log(
+      "referralMsolTreasury ",
+      referralMsolTreasury.toBase58(),"bump",treasuryMsolBumpSeed
+    );
+  
   tx.add(
     program.instruction.initialize(treasuryMsolBumpSeed, {
       accounts: {
         adminAccount: ADMIN_PUBKEY,
         globalState: GLOBAL_STATE_PUBKEY,
-        paymentMint: MSOL_MINT_PUBKEY,
+        treasuryMsolAccount: referralMsolTreasury,
         systemProgram: SystemProgram.programId,
       },
       signers: [ADMIN_KEYPAIR],
@@ -200,6 +215,7 @@ export async function setup() {
         beneficiary: provider.wallet.publicKey,
       },
     });
+    await sleep(5000);
   }
 
   // create referralState account
@@ -221,19 +237,19 @@ export async function setup() {
   );
   // init referral account
   console.log(
-    "program.rpc.initReferralAccount ",
+    "program.instruction.initReferralAccount ",
     REFERRAL_TEST_PUBKEY.toBase58()
   );
   tx.add(
     program.instruction.initReferralAccount(PARTNER_NAME, {
       accounts: {
+        globalState: GLOBAL_STATE_PUBKEY,
+        adminAccount: ADMIN_PUBKEY,
         partnerAccount: PARTNER_ID,
+        tokenPartnerAccount: beneficiaryATA,
         msolMint: MSOL_MINT_PUBKEY,
         paymentMint: MSOL_MINT_PUBKEY,
-        tokenPartnerAccount: beneficiaryATA,
-        adminAccount: ADMIN_PUBKEY,
         referralState: REFERRAL_TEST_PUBKEY,
-        globalState: GLOBAL_STATE_PUBKEY,
         systemProgram: SystemProgram.programId,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
