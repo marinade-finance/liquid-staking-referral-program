@@ -8,7 +8,7 @@ pub enum ReferralError {
     #[msg("Paused")]
     Paused, // 301
 
-    #[msg("Transfer is not available")]
+    #[msg("Transfer is not available yet")]
     TransferNotAvailable, // 302
 
     #[msg("Invalid beneficiary account owner")]
@@ -17,4 +17,13 @@ pub enum ReferralError {
     InvalidBeneficiaryAccountMint, // 304
     #[msg("Partner name too long")]
     PartnerNameTooLong, // 305
+
+    #[msg("Treasury token authority does not match")]
+    TreasuryTokenAuthorityDoesNotMatch,
+    #[msg("Treasury token account must not be delegated")]
+    TreasuryTokenAccountMustNotBeDelegated,
+    #[msg("Treasury token account must not be closeable")]
+    TreasuryTokenAccountMustNotBeCloseable,
+
+
 }

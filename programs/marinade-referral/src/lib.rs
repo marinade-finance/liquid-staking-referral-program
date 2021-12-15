@@ -21,7 +21,7 @@ pub mod states;
 pub mod marinade_referral {
     use super::*;
 
-    declare_id!("FqYPYHc3man91xYDCugbGuDdWgkNLp5TvbXPascHW6MR");
+    declare_id!("mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY");
 
     ///deposit SOL
     pub fn deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
@@ -43,8 +43,8 @@ pub mod marinade_referral {
 
     ///Admin
     ///create global state
-    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
-        ctx.accounts.process()
+    pub fn initialize(ctx: Context<Initialize>, treasury_msol_auth_bump: u8) -> ProgramResult {
+        ctx.accounts.process(treasury_msol_auth_bump)
     }
 
     ///create referral state
@@ -70,7 +70,7 @@ pub mod marinade_referral {
     }
 
     ///transfer shares, treasury holders can transfer shares manually
-    pub fn transfer_liq_unstake_shares(ctx: Context<TransferLiqUnstakeShares>) -> ProgramResult {
+    pub fn transfer_to_partner(ctx: Context<TransferToPartner>) -> ProgramResult {
         ctx.accounts.process()
     }
 

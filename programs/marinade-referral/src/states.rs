@@ -1,3 +1,4 @@
+use crate::constant::MSOL_TREASURY_SEED;
 use anchor_lang::prelude::*;
 use marinade_finance::{calc::proportional, error::CommonError, Fee};
 
@@ -7,8 +8,18 @@ use marinade_finance::{calc::proportional, error::CommonError, Fee};
 pub struct GlobalState {
     // Authority (admin address)
     pub admin_account: Pubkey,
-    // payment token mint (normally mSOL mint)
-    pub payment_mint: Pubkey,
+
+    // bump seed for treasury_msol pda
+    pub treasury_msol_auth_bump: u8,
+}
+impl GlobalState {
+    pub fn get_treasury_auth(&self) -> Pubkey {
+        Pubkey::create_program_address(
+            &[&MSOL_TREASURY_SEED[..], &[self.treasury_msol_auth_bump]],
+            &crate::ID,
+        )
+        .unwrap()
+    }
 }
 
 //-----------------------------------------------------
@@ -64,7 +75,7 @@ pub struct ReferralState {
 }
 
 impl ReferralState {
-    pub fn reset_liq_unstake_accumulators(&mut self) {
+    pub fn reset_accumulators(&mut self) {
         self.deposit_sol_amount = 0;
         self.deposit_sol_operations = 0;
 
