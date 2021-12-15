@@ -1,13 +1,9 @@
 import * as anchor from "@project-serum/anchor";
-import { Program, web3 } from "@project-serum/anchor";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  Token,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { web3 } from "@project-serum/anchor";
+import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { MarinadeUtils } from "@marinade.finance/marinade-ts-sdk";
 import { exit } from "process";
-import { getMintClient } from "@marinade.finance/marinade-ts-sdk/dist/util";
+
 import {
   ADMIN_KEYPAIR,
   ADMIN_PUBKEY,
@@ -22,7 +18,7 @@ import { sleep } from "./util";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-const { Keypair, SystemProgram, PublicKey, SYSVAR_RENT_PUBKEY } = web3;
+const { Keypair, PublicKey } = web3;
 
 export async function delete_global_state() {
   // check if globalStateAccount exists
@@ -161,42 +157,3 @@ async function createNewTokenAccount(
   // const mintClient = getMintClient(anchorProvider, mintAddress);
   return mintClient.createAccount(ownerAddress);
 }
-
-//
-// --- ASSIGN AN ACCOUNT to our program, as long as you've the priv-key and owner-program is System-Program
-// tx.add(
-//   web3.SystemProgram.assign({
-//     accountPubkey: REFERRAL_TEST_PUBKEY,
-//     programId: program.programId,
-//   })
-// );
-/*
-  // --- DELETE AN ACCOUNT with space/data as long as you've the priv-key and our program is the owner-program
-  tx.add(
-    program.instruction.deleteAccount({
-      accounts: {
-        toDelete: GLOBAL_STATE_PUBKEY,
-        beneficiary: new PublicKey(
-          "3Pb4Q6XcZCCgz7Gvd229YzFoU1DpQ4myUQFx8Z9AauQ6"
-        ),
-      },
-      //signers: [GLOBAL_STATE_KEYPAIR],
-    })
-  );
-  tx.add(
-    program.instruction.deleteAccount({
-      accounts: {
-        toDelete: REFERRAL_TEST_PUBKEY,
-        beneficiary: new PublicKey(
-          "3Pb4Q6XcZCCgz7Gvd229YzFoU1DpQ4myUQFx8Z9AauQ6"
-        ),
-      },
-      //signers: [REFERRAL_TEST_KEYPAIR],
-    })
-  );
-  // simulate the tx
-  provider.simulate(tx, [GLOBAL_STATE_KEYPAIR, REFERRAL_TEST_KEYPAIR]);
-  // send the tx
-  provider.send(tx, [GLOBAL_STATE_KEYPAIR, REFERRAL_TEST_KEYPAIR]);
-  return;
-  */

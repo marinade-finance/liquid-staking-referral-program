@@ -253,20 +253,3 @@ impl<'info> TransferToPartner<'info> {
     }
 }
 
-//-----------------------------------------------------
-#[derive(Accounts)]
-pub struct DeleteProgramAccount<'info> {
-    // global state
-    #[account(mut)]
-    pub account_to_delete: AccountInfo<'info>,
-    #[account()]
-    pub beneficiary: AccountInfo<'info>,
-}
-impl<'info> DeleteProgramAccount<'info> {
-    pub fn process(&mut self) -> ProgramResult {
-        **self.beneficiary.lamports.borrow_mut() =
-            self.beneficiary.lamports() + self.account_to_delete.lamports();
-        **self.account_to_delete.lamports.borrow_mut() = 0;
-        Ok(())
-    }
-}
