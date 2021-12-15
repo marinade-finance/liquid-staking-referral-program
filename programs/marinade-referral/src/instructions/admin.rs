@@ -209,7 +209,10 @@ pub struct TransferToPartner<'info> {
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
     // global state
-    #[account(has_one = admin_account)]
+    #[account(
+        has_one = admin_account,
+        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
+    )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     pub token_program: AccountInfo<'info>,
