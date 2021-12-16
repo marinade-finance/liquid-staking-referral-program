@@ -22,26 +22,27 @@ pub struct Initialize<'info> {
 
     // mSOL treasury account for this referral program (must be fed externally)
     // owner must be self.global_state.get_treasury_auth()
-    // #[account()]
-    // pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+    #[account()]
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
 }
 impl<'info> Initialize<'info> {
     pub fn process(&mut self, treasury_msol_auth_bump: u8) -> ProgramResult {
-        self.global_state.admin_account = *self.admin_account.key;
+        self.global_state.admin_account = self.admin_account.key();
         self.global_state.treasury_msol_auth_bump = treasury_msol_auth_bump;
+        self.global_state.treasury_msol_account = self.treasury_msol_account.key();
 
         // verify the treasury account auth is this program get_treasury_auth() PDA (based on treasury_msol_auth_bump)
-        // if self.treasury_msol_account.owner != self.global_state.get_treasury_auth() {
-        //     return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
-        // }
+        if self.treasury_msol_account.owner != self.global_state.get_treasury_auth() {
+            return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
+        }
 
-        // if self.treasury_msol_account.delegate.is_some() {
-        //     return Err(ReferralError::TreasuryTokenAccountMustNotBeDelegated.into());
-        // }
+        if self.treasury_msol_account.delegate.is_some() {
+            return Err(ReferralError::TreasuryTokenAccountMustNotBeDelegated.into());
+        }
 
-        // if self.treasury_msol_account.close_authority.is_some() {
-        //     return Err(ReferralError::TreasuryTokenAccountMustNotBeCloseable.into());
-        // }
+        if self.treasury_msol_account.close_authority.is_some() {
+            return Err(ReferralError::TreasuryTokenAccountMustNotBeCloseable.into());
+        }
 
         Ok(())
     }
@@ -53,6 +54,7 @@ pub struct InitReferralAccount<'info> {
     // global state
     #[account(
         has_one = admin_account,
+        has_one = treasury_msol_account,
         address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
@@ -61,20 +63,21 @@ pub struct InitReferralAccount<'info> {
     #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
-    // partner account
+    // mSOL treasury account for this referral program (added here to check partner totken mint)
+    #[account()]
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+
+    #[account(zero)] // must be created but empty, ready to be initialized
+    pub referral_state: ProgramAccount<'info, ReferralState>,
+
+    // partner main account
+    #[account()]
     pub partner_account: AccountInfo<'info>,
 
     // partner beneficiary mSOL ATA
     #[account()]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
-    // mSOL treasury account for this referral program (must be fed externally)
-    // owner must be self.global_state.get_treasury_auth()
-    // #[account()]
-    // pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
-
-    #[account(zero)] // must be created but empty, ready to be initialized
-    pub referral_state: ProgramAccount<'info, ReferralState>,
 }
 
 impl<'info> InitReferralAccount<'info> {
@@ -85,28 +88,15 @@ impl<'info> InitReferralAccount<'info> {
             return Err(ReferralError::PartnerNameTooLong.into());
         }
 
-        // verify the treasury account auth is this program get_treasury_auth() PDA (based on treasury_msol_auth_bump)
-        // if self.treasury_msol_account.owner != self.global_state.get_treasury_auth() {
-        //     return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
-        // }
-
-        // if self.treasury_msol_account.delegate.is_some() {
-        //     return Err(ReferralError::TreasuryTokenAccountMustNotBeDelegated.into());
-        // }
-
-        // if self.treasury_msol_account.close_authority.is_some() {
-        //     return Err(ReferralError::TreasuryTokenAccountMustNotBeCloseable.into());
-        // }
-
         // check if beneficiary account address matches to partner_address and msol_mint
-        // if self.token_partner_account.owner != *self.partner_account.key {
-        //     return Err(ReferralError::InvalidBeneficiaryAccountOwner.into());
-        // }
+        if self.token_partner_account.owner != *self.partner_account.key {
+            return Err(ReferralError::InvalidBeneficiaryAccountOwner.into());
+        }
 
         // verify the partner token account mint equals to treasury_msol_account
-        // if self.token_partner_account.mint != self.treasury_msol_account.mint {
-        //     return Err(ReferralError::InvalidBeneficiaryAccountMint.into());
-        // }
+        if self.token_partner_account.mint != self.treasury_msol_account.mint {
+            return Err(ReferralError::InvalidBeneficiaryAccountMint.into());
+        }
 
         self.referral_state.partner_name = partner_name.clone();
 
@@ -193,20 +183,29 @@ impl<'info> UpdateReferral<'info> {
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct TransferToPartner<'info> {
-    // mSOL beneficiary account
-    #[account()]
-    pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
-    // mSOL treasury token account
+    // global state
     #[account(
-        mut,
-        address = Pubkey::from_str(MSOL_TREASURY_ADDRESS).unwrap(),
+        has_one = admin_account,
+        has_one = treasury_msol_account,
+        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
     )]
-    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+    pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin
     #[account(signer)]
     pub admin_account: AccountInfo<'info>,
+
+    // mSOL treasury token account
+    #[account(mut)]
+    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
+    // mSOL treasury auth PDA
+    #[account()]
+    pub treasury_msol_auth: AccountInfo<'info>,
+
+    // mSOL beneficiary account
+    #[account()]
+    pub token_partner_account: CpiAccount<'info, TokenAccount>,
 
     // referral state
     #[account(
@@ -216,30 +215,14 @@ pub struct TransferToPartner<'info> {
     )]
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
-    // global state
-    #[account(
-        has_one = admin_account,
-        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
-    )]
-    pub global_state: ProgramAccount<'info, GlobalState>,
-
     pub token_program: AccountInfo<'info>,
 }
 
 impl<'info> TransferToPartner<'info> {
     pub fn process(&mut self) -> ProgramResult {
-        if self.treasury_msol_account.owner != self.global_state.get_treasury_auth() {
+        if self.treasury_msol_auth.key() != self.global_state.get_treasury_auth() {
             return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
         }
-
-        if self.treasury_msol_account.delegate.is_some() {
-            return Err(ReferralError::TreasuryTokenAccountMustNotBeDelegated.into());
-        }
-
-        if self.treasury_msol_account.close_authority.is_some() {
-            return Err(ReferralError::TreasuryTokenAccountMustNotBeCloseable.into());
-        }
-
         let current_time = clock::Clock::get().unwrap().unix_timestamp;
         let elapsed_time = current_time - self.referral_state.last_transfer_time;
         assert!(elapsed_time > 0 && elapsed_time < u32::MAX as i64);
@@ -254,7 +237,7 @@ impl<'info> TransferToPartner<'info> {
             let cpi_accounts = Transfer {
                 from: self.treasury_msol_account.to_account_info(),
                 to: self.token_partner_account.to_account_info(),
-                authority: self.treasury_msol_account.to_account_info(),
+                authority: self.treasury_msol_auth.to_account_info(),
             };
             let transfer_cpi = CpiContext::new(self.token_program.clone(), cpi_accounts);
             // transfer shared mSOL to partner

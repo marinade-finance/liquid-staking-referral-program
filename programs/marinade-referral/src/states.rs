@@ -9,7 +9,9 @@ pub struct GlobalState {
     // Authority (admin address)
     pub admin_account: Pubkey,
 
-    // bump seed for treasury_msol pda
+    // treasury_msol_account to the referral program - must be fed externally
+    pub treasury_msol_account: Pubkey,
+    // bump seed for treasury_msol_account auth pda
     pub treasury_msol_auth_bump: u8,
 }
 impl GlobalState {
