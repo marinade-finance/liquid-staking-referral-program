@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
-//use marinade_finance::instruction::Deposit as MarinadeDeposit;
-use crate::cpi_context_accounts::MarinadeDeposit;
+
+use marinade_onchain_helper::{cpi_context_accounts::MarinadeDeposit,cpi_util::invoke_signed};
+
 use crate::states::ReferralState;
 
 //-----------------------------------------------------
@@ -39,7 +40,7 @@ impl<'info> Deposit<'info> {
         let cpi_ctx = self.into_marinade_deposit_cpi_ctx();
         let data = marinade_finance::instruction::Deposit { lamports };
         // call Marinade
-        crate::cpi_util::invoke_signed(cpi_ctx, data)?;
+        invoke_signed(cpi_ctx, data)?;
         // update accumulators
         self.referral_state.deposit_sol_amount += lamports;
         self.referral_state.deposit_sol_operations += 1;

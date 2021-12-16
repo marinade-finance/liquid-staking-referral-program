@@ -1,8 +1,10 @@
 use anchor_lang::prelude::*;
-// use marinade_finance::{
-//     instruction::LiquidUnstake as MarinadeLiquidUnstake, State as MarinadeSate,
-// };
-use crate::cpi_context_accounts::MarinadeLiquidUnstake;
+
+use marinade_onchain_helper::{
+    cpi_context_accounts::MarinadeLiquidUnstake, 
+    cpi_util::invoke_signed,
+};
+
 use crate::states::ReferralState;
 
 //-----------------------------------------------------
@@ -73,7 +75,7 @@ impl<'info> LiquidUnstake<'info> {
         let cpi_ctx = self.into_liquid_unstake_cpi_ctx();
         let instruction_data = marinade_finance::instruction::LiquidUnstake { msol_amount };
         // call Marinade
-        crate::cpi_util::invoke_signed(cpi_ctx, instruction_data)?;
+        invoke_signed(cpi_ctx, instruction_data)?;
 
         // update accumulators
         self.referral_state.liq_unstake_msol_fees += treasury_msol_cut;
