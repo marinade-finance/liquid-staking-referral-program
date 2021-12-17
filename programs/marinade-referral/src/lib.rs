@@ -69,10 +69,6 @@ pub mod marinade_referral {
         ctx.accounts.process()
     }
 
-    ///transfer shares, treasury holders can transfer shares manually
-    pub fn transfer_to_partner(ctx: Context<TransferToPartner>) -> ProgramResult {
-        ctx.accounts.process()
-    }
 
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
     // in order to load two programs with entry points into the simulator

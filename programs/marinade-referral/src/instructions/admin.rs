@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock;
-use anchor_spl::token::{TokenAccount, Transfer};
+use anchor_spl::token::{TokenAccount};
 use std::str::FromStr;
 
 use crate::constant::*;
@@ -180,82 +180,4 @@ impl<'info> UpdateReferral<'info> {
     }
 }
 
-//-----------------------------------------------------
-#[derive(Accounts)]
-pub struct TransferToPartner<'info> {
-
-    // global state
-    #[account(
-        has_one = admin_account,
-        has_one = treasury_msol_account,
-        address = Pubkey::from_str(GLOBAL_STATE_ADDRESS).unwrap(),
-    )]
-    pub global_state: ProgramAccount<'info, GlobalState>,
-
-    // admin
-    #[account(signer)]
-    pub admin_account: AccountInfo<'info>,
-
-    // mSOL treasury token account
-    #[account(mut)]
-    pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
-    // mSOL treasury auth PDA
-    #[account()]
-    pub treasury_msol_auth: AccountInfo<'info>,
-
-    // mSOL beneficiary account
-    #[account()]
-    pub token_partner_account: CpiAccount<'info, TokenAccount>,
-
-    // referral state
-    #[account(
-        mut,
-        constraint = !referral_state.pause,
-        constraint = referral_state.token_partner_account.key() == *token_partner_account.to_account_info().key,
-    )]
-    pub referral_state: ProgramAccount<'info, ReferralState>,
-
-    pub token_program: AccountInfo<'info>,
-}
-
-impl<'info> TransferToPartner<'info> {
-    pub fn process(&mut self) -> ProgramResult {
-        if self.treasury_msol_auth.key() != self.global_state.get_treasury_auth() {
-            return Err(ReferralError::TreasuryTokenAuthorityDoesNotMatch.into());
-        }
-        let current_time = clock::Clock::get().unwrap().unix_timestamp;
-        let elapsed_time = current_time - self.referral_state.last_transfer_time;
-        assert!(elapsed_time > 0 && elapsed_time < u32::MAX as i64);
-
-        if elapsed_time as u32 > self.referral_state.transfer_duration {
-            // mSOL treasury account seeds
-            let authority_seeds = &[
-                &MSOL_TREASURY_AUTH_SEED[..],
-                &[self.global_state.treasury_msol_auth_bump],
-            ];
-
-            let cpi_accounts = Transfer {
-                from: self.treasury_msol_account.to_account_info(),
-                to: self.token_partner_account.to_account_info(),
-                authority: self.treasury_msol_auth.to_account_info(),
-            };
-            let transfer_cpi = CpiContext::new(self.token_program.clone(), cpi_accounts);
-            // transfer shared mSOL to partner
-            anchor_spl::token::transfer(
-                transfer_cpi.with_signer(&[&authority_seeds[..]]),
-                self.referral_state.get_liq_unstake_share_amount()?,
-            )?;
-
-            // sets “Last transfer to partner timestamp“
-            self.referral_state.last_transfer_time = current_time;
-
-            // clears all accumulators
-            self.referral_state.reset_accumulators();
-        } else {
-            return Err(ReferralError::TransferNotAvailable.into());
-        }
-
-        Ok(())
-    }
-}
 
