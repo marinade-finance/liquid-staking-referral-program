@@ -230,7 +230,7 @@ impl<'info> TransferToPartner<'info> {
         if elapsed_time as u32 > self.referral_state.transfer_duration {
             // mSOL treasury account seeds
             let authority_seeds = &[
-                &MSOL_TREASURY_SEED[..],
+                &MSOL_TREASURY_AUTH_SEED[..],
                 &[self.global_state.treasury_msol_auth_bump],
             ];
 

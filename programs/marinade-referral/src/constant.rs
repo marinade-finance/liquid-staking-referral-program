@@ -3,11 +3,8 @@ use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 ///Global state ID
 pub const GLOBAL_STATE_ADDRESS: &str = "mRg6bDsAd5uwERAdNTynoUeRbqQsLa7yzuK2kkCUPGW";
 
-///mSOL treasury ID
-pub const MSOL_TREASURY_ADDRESS: &str = "vcEQrEgKVzeWJB6WAWcnkpfrcdT1KrYhKykHRwCLTdp";
-
 ///mSOL treasury PDA
-pub const MSOL_TREASURY_SEED: &[u8] = b"mr_treasury";
+pub const MSOL_TREASURY_AUTH_SEED: &[u8] = b"mr_treasury";
 
 ///30 days in seconds, 3600 * 24 * 30
 pub const DEFAULT_TRANSFER_DURATION: u32 = 2_592_000;

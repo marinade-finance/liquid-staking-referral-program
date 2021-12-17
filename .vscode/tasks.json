@@ -2,12 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "test",
+			"type": "shell",
+			"command": "anchor",
+			"args": [
+				"test"
+			],
 			"group": "test",
 			"problemMatcher": [],
-			"label": "npm: test",
-			"detail": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+			"label": "anchor test",
 		},
 		{
 			"type": "npm",
