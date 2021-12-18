@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 use marinade_finance::stake_wrapper::StakeWrapper;
-// use marinade_finance::{
-//     instruction::DepositStakeAccount as MarinadeDepositStakeAccount, stake_wrapper::StakeWrapper,
-// };
-use crate::cpi_context_accounts::*;
+
+use marinade_onchain_helper::{cpi_context_accounts::MarinadeDepositStakeAccount,cpi_util::invoke_signed};
+
 use crate::states::ReferralState;
 
 //-----------------------------------------------------
@@ -59,7 +58,7 @@ impl<'info> DepositStakeAccount<'info> {
         let instruction_data =
             marinade_finance::instruction::DepositStakeAccount { validator_index };
         // call Marinade
-        crate::cpi_util::invoke_signed(cpi_ctx, instruction_data)?;
+        invoke_signed(cpi_ctx, instruction_data)?;
         // accumulate
         self.referral_state.deposit_stake_account_amount += delegation.stake;
         self.referral_state.deposit_stake_account_operations += 1;

@@ -680,12 +680,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "marinade-onchain-helper"
+version = "0.1.0"
+source = "git+https://github.com/marinade-finance/marinade-onchain-helper#5f239d78288dfa397a064fec44fe3992ddbe6392"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "marinade-finance",
+ "solana-program",
+]
+
+[[package]]
 name = "marinade-referral"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
  "marinade-finance",
+ "marinade-onchain-helper",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
