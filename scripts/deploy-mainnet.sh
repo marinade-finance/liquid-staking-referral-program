@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 echo "deploy mainnet AFFECTING MAINNET USERS?"
 read -p "Press any key to continue..."
 echo "building VERIFIABLE .so"

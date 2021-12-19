@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 echo "deploy devnet AFFECTING DEVNET USERS?"
 read -p "Press any key to continue..."
 anchor build
