@@ -29,13 +29,14 @@ export async function delete_global_state() {
   console.log("globalAccountBalance", globalAccountBalance);
   if (globalAccountBalance !== 0) {
     // delete global state
+    console.log("DELETING GLOBAL STATE");
     program.rpc.deleteProgramAccount({
       accounts: {
         accountToDelete: GLOBAL_STATE_PUBKEY,
         beneficiary: provider.wallet.publicKey,
       },
     });
-    await sleep(5000);
+    await sleep(15000);
   }
 }
 
@@ -74,6 +75,7 @@ export async function setup_global_state() {
   console.log("globalAccountBalance", globalAccountBalance);
   if (globalAccountBalance === 0) {
     // need to create
+    console.log("CREATING GLOBAL STATE");
 
     const [referralMsolTreasuryAuth, treasuryMsolAuthBump] =
       await PublicKey.findProgramAddress(

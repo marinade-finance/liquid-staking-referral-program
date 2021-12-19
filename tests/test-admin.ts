@@ -94,6 +94,8 @@ describe("marinade-referral test-admin-instructions", () => {
       msolMint.publicKey,
       PARTNER_KEYPAIR.publicKey
     );
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore // createAssociatedTokenAccountInternal exists, it's just not in the d.ts file
     await msolMint.createAssociatedTokenAccountInternal(
       PARTNER_KEYPAIR.publicKey,
       partnerTokenAccount
@@ -110,6 +112,8 @@ describe("marinade-referral test-admin-instructions", () => {
       msolMint.publicKey,
       treasuryAuthPda
     );
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore // createAssociatedTokenAccountInternal exists, it's just not in the d.ts file
     await msolMint.createAssociatedTokenAccountInternal(
       treasuryAuthPda,
       treasuryAccount
