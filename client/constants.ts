@@ -1,5 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program, web3 } from "@project-serum/anchor";
+import { nodejsLocalWalletKeyPair } from "./util";
 const { Keypair, PublicKey } = web3;
 
 // Local cluster provider.
@@ -7,27 +8,21 @@ if (!process.env.ANCHOR_PROVIDER_URL) {
   process.env.ANCHOR_PROVIDER_URL = "https://api.devnet.solana.com";
   // process.env.ANCHOR_PROVIDER_URL = "http://127.0.0.1:8899";
 }
-export const provider = anchor.Provider.env();
 
+console.log("ANCHOR_PROVIDER_URL", process.env.ANCHOR_PROVIDER_URL);
+export const provider = anchor.Provider.env();
 // Configure the client to use the local cluster.
 anchor.setProvider(provider);
+
+// local id.json keys
+export const adminKeyPair = nodejsLocalWalletKeyPair();
+console.log("fee-payer/admin", adminKeyPair.publicKey.toBase58());
 
 // Instance to referral program
 export const program = anchor.workspace.MarinadeReferral as Program;
 
 // partner name - length should be 10
 export const PARTNER_NAME = "REF_TEST";
-
-// admin account
-export const ADMIN_KEYPAIR = Keypair.fromSecretKey(
-  new Uint8Array([
-    136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38,
-    100, 72, 135, 189, 121, 32, 38, 93, 10, 41, 104, 38, 158, 171, 38, 138, 239,
-    196, 48, 200, 45, 19, 235, 223, 73, 101, 62, 195, 45, 48, 246, 226, 240,
-    177, 172, 213, 0, 184, 113, 158, 176, 17, 177, 2, 215, 168, 135,
-  ])
-); // AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
-export const ADMIN_PUBKEY = ADMIN_KEYPAIR.publicKey;
 
 // partner address
 export const PARTNER_ID = new PublicKey(

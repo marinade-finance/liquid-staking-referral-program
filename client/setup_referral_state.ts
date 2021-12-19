@@ -9,8 +9,7 @@ import { MarinadeUtils } from "@marinade.finance/marinade-ts-sdk";
 import { exit } from "process";
 import { getMintClient } from "@marinade.finance/marinade-ts-sdk/dist/util";
 import {
-  ADMIN_KEYPAIR,
-  ADMIN_PUBKEY,
+  adminKeyPair,
   GLOBAL_STATE_PUBKEY,
   MSOL_MINT_PUBKEY,
   PARTNER_ID,
@@ -92,17 +91,17 @@ export async function setup_referral_state() {
       program.instruction.initReferralAccount(PARTNER_NAME, {
         accounts: {
           globalState: GLOBAL_STATE_PUBKEY,
-          adminAccount: ADMIN_PUBKEY,
+          adminAccount: adminKeyPair.publicKey,
           partnerAccount: PARTNER_ID,
           tokenPartnerAccount: beneficiaryATA,
           referralState: REFERRAL_TEST_PUBKEY,
         },
-        signers: [ADMIN_KEYPAIR],
+        signers: [adminKeyPair],
       })
     );
     // simulate the tx
-    provider.simulate(tx, [REFERRAL_TEST_KEYPAIR, ADMIN_KEYPAIR]);
+    provider.simulate(tx, [REFERRAL_TEST_KEYPAIR, adminKeyPair]);
     // send the tx
-    provider.send(tx, [REFERRAL_TEST_KEYPAIR, ADMIN_KEYPAIR]);
+    provider.send(tx, [REFERRAL_TEST_KEYPAIR, adminKeyPair]);
   }
 }

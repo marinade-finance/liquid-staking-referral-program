@@ -5,8 +5,7 @@ import { MarinadeUtils } from "@marinade.finance/marinade-ts-sdk";
 import { exit } from "process";
 
 import {
-  ADMIN_KEYPAIR,
-  ADMIN_PUBKEY,
+  adminKeyPair,
   GLOBAL_STATE_KEYPAIR,
   GLOBAL_STATE_PUBKEY,
   MSOL_MINT_PUBKEY,
@@ -14,9 +13,7 @@ import {
   program,
   provider,
 } from "./constants";
-import { sleep } from "./util";
-import { homedir } from "os";
-import { readFileSync } from "fs";
+import { nodejsLocalWalletKeyPair, sleep } from "./util";
 
 const { Keypair, PublicKey } = web3;
 
@@ -36,7 +33,8 @@ export async function delete_global_state() {
         beneficiary: provider.wallet.publicKey,
       },
     });
-    await sleep(15000);
+    // wait for the RDP server to catch-up
+    await sleep(5000);
   }
 }
 
@@ -121,17 +119,19 @@ export async function setup_global_state() {
     tx.add(
       program.instruction.initialize(treasuryMsolAuthBump, {
         accounts: {
-          adminAccount: ADMIN_PUBKEY,
+          adminAccount: adminKeyPair.publicKey,
           globalState: GLOBAL_STATE_PUBKEY,
           treasuryMsolAccount: newTreasuryAccount,
         },
-        signers: [ADMIN_KEYPAIR],
+        signers: [adminKeyPair.publicKey],
       })
     );
     // simulate the tx
-    provider.simulate(tx, [GLOBAL_STATE_KEYPAIR, ADMIN_KEYPAIR]);
+    provider.simulate(tx, [GLOBAL_STATE_KEYPAIR, adminKeyPair]);
     // send the tx
-    provider.send(tx, [GLOBAL_STATE_KEYPAIR, ADMIN_KEYPAIR]);
+    provider.send(tx, [GLOBAL_STATE_KEYPAIR, adminKeyPair]);
+    // wait for the RDP server to catch-up
+    await sleep(5000);
   }
 }
 
@@ -140,15 +140,7 @@ async function createNewTokenAccount(
   mintAddress: web3.PublicKey,
   ownerAddress: web3.PublicKey
 ): Promise<web3.PublicKey> {
-  const payer = Keypair.fromSecretKey(
-    Buffer.from(
-      JSON.parse(
-        readFileSync(homedir() + "/.config/solana/id.json", {
-          encoding: "utf-8",
-        })
-      )
-    )
-  );
+  const payer = nodejsLocalWalletKeyPair();
 
   const mintClient = new Token(
     anchorProvider.connection,
