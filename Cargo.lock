@@ -682,7 +682,7 @@ dependencies = [
 [[package]]
 name = "marinade-onchain-helper"
 version = "0.1.0"
-source = "git+https://github.com/marinade-finance/marinade-onchain-helper#5f239d78288dfa397a064fec44fe3992ddbe6392"
+source = "git+https://github.com/marinade-finance/marinade-onchain-helper#421e45c9f5d413c9b14b46f2be3d43f1e7075f2e"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -699,8 +699,6 @@ dependencies = [
  "marinade-finance",
  "marinade-onchain-helper",
  "solana-program",
- "spl-associated-token-account",
- "spl-token",
 ]
 
 [[package]]
@@ -1145,16 +1143,6 @@ dependencies = [
  "quote",
  "rustversion",
  "syn",
-]
-
-[[package]]
-name = "spl-associated-token-account"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "393e2240d521c3dd770806bff25c2c00d761ac962be106e14e22dd912007f428"
-dependencies = [
- "solana-program",
- "spl-token",
 ]
 
 [[package]]

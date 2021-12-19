@@ -24,6 +24,4 @@ pub enum ReferralError {
     TreasuryTokenAccountMustNotBeDelegated,
     #[msg("Treasury token account must not be closeable")]
     TreasuryTokenAccountMustNotBeCloseable,
-
-
 }

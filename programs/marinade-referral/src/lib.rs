@@ -4,8 +4,6 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 
 use instructions::{admin::*, deposit_sol::*, deposit_stake_account::*, liquid_unstake::*};
 
-
-
 ///constant
 pub mod constant;
 ///error
@@ -66,7 +64,6 @@ pub mod marinade_referral {
     pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
         ctx.accounts.process()
     }
-
 
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
     // in order to load two programs with entry points into the simulator

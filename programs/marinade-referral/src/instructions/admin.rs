@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock;
-use anchor_spl::token::{TokenAccount};
+use anchor_spl::token::TokenAccount;
 use std::str::FromStr;
 
 use crate::constant::*;
@@ -77,7 +77,6 @@ pub struct InitReferralAccount<'info> {
     // partner beneficiary mSOL ATA
     #[account()]
     pub token_partner_account: CpiAccount<'info, TokenAccount>,
-
 }
 
 impl<'info> InitReferralAccount<'info> {
@@ -179,5 +178,3 @@ impl<'info> UpdateReferral<'info> {
         Ok(())
     }
 }
-
-

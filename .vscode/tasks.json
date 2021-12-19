@@ -45,14 +45,5 @@
 			"label": "anchor build",
 			"detail": "anchor build"
 		},
-		{
-			"type": "cargo",
-			"subcommand": "build",
-			"problemMatcher": [
-				"$rustc"
-			],
-			"group": "build",
-			"label": "Rust: cargo build - liquid-staking-referral-program"
-		}
 	]
 }

@@ -17,7 +17,10 @@ pub struct GlobalState {
 impl GlobalState {
     pub fn get_treasury_auth(&self) -> Pubkey {
         Pubkey::create_program_address(
-            &[&MSOL_TREASURY_AUTH_SEED[..], &[self.treasury_msol_auth_bump]],
+            &[
+                &MSOL_TREASURY_AUTH_SEED[..],
+                &[self.treasury_msol_auth_bump],
+            ],
             &crate::ID,
         )
         .unwrap()
