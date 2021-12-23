@@ -1,7 +1,8 @@
 # liquid-staking-referral-program
-Wrapper functions over the liquid-staking-program main stake/unstake functions. Allows referrals from partners providing Marinade liquid-staking as a service to their users
+Wrapper functions over Marinade's liquid-staking-program main stake/unstake functions. Allows referrals from partners providing Marinade liquid-staking as a service to their users, getting a share fo rewards.
 
-Design doc: https://docs.google.com/document/d/1aXq3oEBF-cAXJpF_ubteaI-4oYV8wkk2E8hdTRjti2g/edit#heading=h.xaz348hsh3eq (Google doc, request access please)
+Documentation: 
+https://docs.marinade.finance/partnerships/referral-program
 
 ## Installation
 ```bash
@@ -11,21 +12,6 @@ yarn install
 ## Build program
 ```bash
 anchor build
-```
-
-## Integration Tests (separate project)
-```bash
-bash test.sh
-```
-
-## Test program
-```bash
-anchor test
-```
-
-## Deploy a new copy of the program on a random address
-```bash
-anchor deploy --provider.cluster devnet
 ```
 
 ## Re-Deploy on devnet address mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY
