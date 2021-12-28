@@ -1,7 +1,6 @@
 {
     "scripts": {
         "lint": "eslint '**/*.ts' --fix",
-        "cli:setup": "node -r ts-node/register client/index.ts",
         "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
         "build:tsc": "yarn tsc"
     },
