@@ -172,9 +172,18 @@ pub struct UpdateReferral<'info> {
     pub referral_state: ProgramAccount<'info, ReferralState>,
 }
 impl<'info> UpdateReferral<'info> {
-    pub fn process(&mut self, transfer_duration: u32, pause: bool) -> ProgramResult {
+    pub fn process(
+        &mut self,
+        transfer_duration: u32,
+        pause: bool,
+        optional_new_partner_account: Option<Pubkey>,
+    ) -> ProgramResult {
         self.referral_state.transfer_duration = transfer_duration;
         self.referral_state.pause = pause;
+        // change partner_account if sent
+        if let Some(new_partner_account) = optional_new_partner_account {
+            self.referral_state.partner_account = new_partner_account
+        }
         Ok(())
     }
 }

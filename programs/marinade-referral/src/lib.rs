@@ -56,8 +56,9 @@ pub mod marinade_referral {
         ctx: Context<UpdateReferral>,
         transfer_duration: u32,
         pause: bool,
+        optional_new_partner_account: Option<Pubkey>
     ) -> ProgramResult {
-        ctx.accounts.process(transfer_duration, pause)
+        ctx.accounts.process(transfer_duration, pause, optional_new_partner_account)
     }
 
     ///update partner, authority and beneficiary account based on the new partner

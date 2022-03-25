@@ -32,7 +32,7 @@ impl GlobalState {
 #[account]
 pub struct ReferralState {
     // Partner name
-    pub partner_name: String, //max-length 10 bytes
+    pub partner_name: String, //max-length 20 bytes
 
     // partner Beneficiary account (native account)
     pub partner_account: Pubkey,
