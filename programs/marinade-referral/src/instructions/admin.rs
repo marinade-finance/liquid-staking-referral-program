@@ -63,7 +63,7 @@ pub struct InitReferralAccount<'info> {
     #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
-    // mSOL treasury account for this referral program (added here to check partner totken mint)
+    // mSOL treasury account for this referral program (added here to check partner token mint)
     #[account()]
     pub treasury_msol_account: CpiAccount<'info, TokenAccount>,
 

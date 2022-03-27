@@ -19,9 +19,9 @@ anchor build
 bash scripts/deploy-testnet.sh
 ```
 
-## Upgrade program
+## Devnet Upgrade program
 ```bash
-anchor upgrade --program-id mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY --provider.cluster devnet ./target/deploy/marinade_referral.so --provider.wallet ~/.config/solana/mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY.json
+anchor upgrade --program-id mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY --provider.cluster devnet ./target/deploy/marinade_referral.so --provider.wallet ~/.config/solana/3Pb4Q6XcZCCgz7Gvd229YzFoU1DpQ4myUQFx8Z9AauQ6.json
 ```
 
 ## Autofix TypeScript lint errors
