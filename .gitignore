@@ -8,3 +8,5 @@ test-ledger
 node_modules
 dist
 temp
+
+.idea
