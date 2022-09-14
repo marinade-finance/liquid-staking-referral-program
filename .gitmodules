@@ -1,3 +1,0 @@
-[submodule "programs/marinade-referral/tests"]
-	path = programs/marinade-referral/tests
-	url = git@github.com:marinade-finance/marinade-referral-test.git

@@ -18,7 +18,8 @@ anchor-debug = []
 [dependencies]
 anchor-lang = "0.14.0"
 anchor-spl = "0.14.0"
-solana-program = "1.7.11"
+solana-program = {version = "1.7.11" }
+spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 marinade-finance = { git = "https://github.com/marinade-finance/liquid-staking-program", features = ["no-entrypoint"] }
 marinade-onchain-helper = { git = "https://github.com/marinade-finance/marinade-onchain-helper" }
 
@@ -26,3 +27,23 @@ marinade-onchain-helper = { git = "https://github.com/marinade-finance/marinade-
 # in case this project is moved and/or compiled on its own
 [profile.release]
 overflow-checks = true
+
+[dev-dependencies]
+marinade-finance-offchain-sdk = { path = "../../../marinade-anchor/sdk/offchain" }
+rand = "0.7.3" # to be sync with solana keypairs
+solana-sdk = {version = "1.7.11"}
+solana-program-test = {version = "1.7.11" }
+spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.0.3", features = ["no-entrypoint"] }
+tokio = { version = "1.5.0", features = ["macros"] }
+log = "0.4.14"
+env_logger = "0.8.3"
+test-log = "0.2.8"
+solana-vote-program = {version = "1.7.11" }
+anyhow = "1.0.40"
+bincode = "1.3.3"
+rand_chacha = "0.2.2"
+assert-json-diff = "2.0.1"
+serde_json = "1.0.64"
+lazy_static = "1.4.0"
+futures = "0.3"
