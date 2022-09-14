@@ -11,17 +11,15 @@ pub enum ReferralError {
     #[msg("Transfer is not available yet")]
     TransferNotAvailable, // 302
 
-    #[msg("Invalid beneficiary account owner")]
-    InvalidBeneficiaryAccountOwner, // 303
-    #[msg("Invalid beneficiary account mint")]
-    InvalidBeneficiaryAccountMint, // 304
+    #[msg("Invalid partner account owner")]
+    InvalidPartnerAccountOwner, // 303
+    #[msg("Invalid partner account mint")]
+    InvalidPartnerAccountMint, // 304
     #[msg("Partner name too long")]
     PartnerNameTooLong, // 305
+    #[msg("Mint account is not initialized")]
+    NotInitializedMintAccount, // 306
 
-    #[msg("Treasury token authority does not match")]
-    TreasuryTokenAuthorityDoesNotMatch,
-    #[msg("Treasury token account must not be delegated")]
-    TreasuryTokenAccountMustNotBeDelegated,
-    #[msg("Treasury token account must not be closeable")]
-    TreasuryTokenAccountMustNotBeCloseable,
+    #[msg("Referral operation fee was set over the maximum permitted amount")]
+    ReferralOperationFeeOverMax,
 }

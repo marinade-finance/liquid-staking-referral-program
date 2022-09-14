@@ -38,7 +38,7 @@ impl<'info> LiquidUnstake<'info> {
     pub fn process(&mut self, msol_amount: u64) -> ProgramResult {
         // accumulate treasury fees for the liquid-unstake
 
-        // We parse manually self.state to avoid making the IDL more complex by including marinade_finance::Sate
+        // We parse manually self.state to avoid making the IDL more complex by including marinade_finance::State
         let marinade_state: ProgramAccount<marinade_finance::State> =
             ProgramAccount::try_from(&self.marinade_finance_program.key(), &self.state)?;
         let max_lamports = self
