@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+use super::common::transfer_msol_fee;
 use marinade_onchain_helper::{cpi_context_accounts::MarinadeLiquidUnstake, cpi_util};
 
 use crate::states::ReferralState;
@@ -32,6 +33,8 @@ pub struct LiquidUnstake<'info> {
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]
     pub referral_state: ProgramAccount<'info, ReferralState>,
+    #[account(mut, address = referral_state.msol_token_partner_account)]
+    pub msol_token_partner_account: AccountInfo<'info>,
 }
 
 impl<'info> LiquidUnstake<'info> {
@@ -46,8 +49,20 @@ impl<'info> LiquidUnstake<'info> {
             .lamports()
             .saturating_sub(marinade_state.rent_exempt_for_token_acc);
 
+        // fee for liquid unstake operation
+        let operation_fee = transfer_msol_fee(
+            msol_amount,
+            &self.referral_state.operation_liquid_unstake_fee,
+            &self.token_program,
+            &self.get_msol_from,
+            &self.msol_token_partner_account,
+            &self.get_msol_from_authority,
+        )?;
+        let msol_amount_fee_deducted = msol_amount - operation_fee;
+
         // fee is computed based on the liquidity *after* the user takes the sol
-        let user_remove_lamports = marinade_state.calc_lamports_from_msol_amount(msol_amount)?;
+        let user_remove_lamports =
+            marinade_state.calc_lamports_from_msol_amount(msol_amount_fee_deducted)?;
         let liquid_unstake_fee = if user_remove_lamports >= max_lamports {
             // user is removing all liquidity
             marinade_state.liq_pool.lp_max_fee
@@ -57,7 +72,7 @@ impl<'info> LiquidUnstake<'info> {
         };
 
         // compute fee in msol
-        let msol_fee = liquid_unstake_fee.apply(msol_amount);
+        let msol_fee = liquid_unstake_fee.apply(msol_amount_fee_deducted);
         msg!("msol_fee {}", msol_fee);
         let is_treasury_msol_ready_for_transfer =
             marinade_state.check_treasury_msol_account(&self.treasury_msol_account)?;
@@ -68,15 +83,18 @@ impl<'info> LiquidUnstake<'info> {
             0
         };
         msg!("treasury_msol_cut {}", treasury_msol_cut);
+
         // prepare liquid-unstake cpi
         let cpi_ctx = self.into_liquid_unstake_cpi_ctx();
-        let instruction_data = marinade_finance::instruction::LiquidUnstake { msol_amount };
+        let instruction_data = marinade_finance::instruction::LiquidUnstake {
+            msol_amount: msol_amount_fee_deducted,
+        };
         // call Marinade
         cpi_util::invoke_signed(cpi_ctx, instruction_data)?;
 
         // update accumulators
         self.referral_state.liq_unstake_msol_fees += treasury_msol_cut;
-        self.referral_state.liq_unstake_msol_amount += msol_amount;
+        self.referral_state.liq_unstake_msol_amount += msol_amount_fee_deducted;
         self.referral_state.liq_unstake_sol_amount += user_remove_lamports;
         self.referral_state.liq_unstake_operations += 1;
 

@@ -1,4 +1,4 @@
-use anchor_lang::prelude::{msg, AccountInfo, CpiContext, ProgramError, ProgramResult};
+use anchor_lang::prelude::{msg, AccountInfo, CpiContext, ProgramError};
 use anchor_spl::token::{transfer, Transfer};
 use marinade_finance::Fee;
 use solana_program::program_pack::Pack;
@@ -9,15 +9,15 @@ pub fn msol_balance<'info>(mint_to: &AccountInfo<'info>) -> Result<u64, ProgramE
 }
 
 pub fn transfer_msol_fee<'info>(
-    minted_msol_amount: u64,
+    whole_msol_amount: u64,
     fee: &Fee,
     token_program: &AccountInfo<'info>,
     transfer_from: &AccountInfo<'info>,
     transfer_to: &AccountInfo<'info>,
     transfer_authority: &AccountInfo<'info>,
-) -> ProgramResult {
-    if minted_msol_amount > 0 {
-        let referral_msol_amount = fee.apply(minted_msol_amount);
+) -> Result<u64, ProgramError> {
+    if whole_msol_amount > 0 {
+        let referral_msol_amount = fee.apply(whole_msol_amount);
         if referral_msol_amount > 0 {
             transfer(
                 CpiContext::new(
@@ -36,11 +36,12 @@ pub fn transfer_msol_fee<'info>(
             referral_msol_amount,
             fee.basis_points
         );
+        Ok(referral_msol_amount)
     } else {
         msg!(
-            "No minted mSOL {}, no fee to be transferred",
-            minted_msol_amount
+            "No mSOL {} processed at operation, no fee to be transferred",
+            whole_msol_amount
         );
+        Ok(0)
     }
-    Ok(())
 }
