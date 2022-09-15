@@ -1102,7 +1102,7 @@ pub async fn init_marinade_referral_test_globals(
             instruction,
             vec![test.fee_payer_signer(), admin.keypair.clone()],
         )
-            .await;
+        .await;
     }
 
     // partner referral state (referral code)
@@ -1151,7 +1151,7 @@ pub async fn init_marinade_referral_test_globals(
             instruction,
             vec![test.fee_payer_signer(), admin.keypair.clone()],
         )
-            .await;
+        .await;
     }
 
     return MarinadeReferralTestGlobals {
@@ -1223,7 +1223,7 @@ pub async fn update_referral_execute(
         instruction,
         vec![test.fee_payer_signer(), admin_keypair.clone()],
     )
-        .await
+    .await
 }
 
 impl MarinadeReferralTestGlobals {
@@ -1240,6 +1240,8 @@ impl MarinadeReferralTestGlobals {
             Some(0),
             Some(0),
             Some(0),
-        ).await.unwrap()
+        )
+        .await
+        .unwrap()
     }
 }

@@ -4,8 +4,8 @@
 //
 // use marinade_referral;
 
-use crate::{initialize::InitializeInputWithSeeds, integration_test::*};
 use crate::integration_test::test_add_remove_liquidity::*;
+use crate::{initialize::InitializeInputWithSeeds, integration_test::*};
 
 use marinade_finance_offchain_sdk::{
     anchor_lang::InstructionData,
@@ -16,8 +16,8 @@ use marinade_finance_offchain_sdk::{
 
 pub use spl_associated_token_account::{get_associated_token_address, ID};
 
-use rand_chacha::ChaChaRng;
 use rand::{distributions::Uniform, prelude::Distribution, CryptoRng, RngCore, SeedableRng};
+use rand_chacha::ChaChaRng;
 
 use solana_program::native_token::{lamports_to_sol, LAMPORTS_PER_SOL};
 use solana_sdk::{
@@ -57,7 +57,6 @@ impl DepositSolParams {
     }
 }
 
-
 async fn deposit_execute(
     test: &mut IntegrationTest,
     user: &mut TestUser,
@@ -92,7 +91,11 @@ async fn deposit_execute(
         data: ix_data.data(),
     };
     //}
-    test.execute_instruction(deposit_instruction, vec![test.fee_payer_signer(), user.keypair.clone()]).await;
+    test.execute_instruction(
+        deposit_instruction,
+        vec![test.fee_payer_signer(), user.keypair.clone()],
+    )
+    .await;
 }
 
 pub async fn do_deposit_sol_no_fee(
@@ -106,7 +109,9 @@ pub async fn do_deposit_sol_no_fee(
     test.execute().await;
 
     // Set operation fees to zero to simplify balance calculations
-    marinade_referral_test_globals.set_no_operation_fees(test).await;
+    marinade_referral_test_globals
+        .set_no_operation_fees(test)
+        .await;
 
     let user_msol_balance_before = test
         .get_token_balance_or_zero(&user_msol_account.pubkey)
@@ -129,12 +134,13 @@ pub async fn do_deposit_sol_no_fee(
         test,
         user,
         test.state.key(),
-        user.keypair.clone().pubkey(),  // transfer_from
-        user_msol_account.pubkey,  // mint_to
+        user.keypair.clone().pubkey(), // transfer_from
+        user_msol_account.pubkey,      // mint_to
         marinade_referral_test_globals.partner_referral_state_pubkey,
         marinade_referral_test_globals.msol_partner_token_pubkey,
-        lamports
-    ).await;
+        lamports,
+    )
+    .await;
 
     // // marinade-finance builder deposit
     // commented: Direct call to marinade
@@ -287,8 +293,11 @@ pub async fn do_liquid_unstake(
     let treasury_msol_cut = test.state.liq_pool.treasury_cut.apply(msol_fee);
 
     // read MARINADE-FINANCE-REFERRAL-PROGRAM state
-    let referral_state: marinade_referral::states::ReferralState =
-        get_account(test, marinade_referral_test_globals.partner_referral_state_pubkey).await;
+    let referral_state: marinade_referral::states::ReferralState = get_account(
+        test,
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+    )
+    .await;
 
     // Check treasury_msol_cut == referral_state.liq_unstake_msol_fees
     assert_eq!(referral_state.liq_unstake_msol_fees, treasury_msol_cut);

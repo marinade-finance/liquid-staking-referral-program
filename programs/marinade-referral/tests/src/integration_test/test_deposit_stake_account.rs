@@ -1,7 +1,10 @@
 #![allow(unused_imports)]
 use crate::{
     initialize::InitializeInputWithSeeds,
-    integration_test::{init_marinade_referral_test_globals, IntegrationTest, TestUser},
+    integration_test::{
+        get_account, init_marinade_referral_test_globals, IntegrationTest,
+        MarinadeReferralTestGlobals, TestUser, update_referral_execute,
+    },
 };
 
 use marinade_finance_offchain_sdk::anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
@@ -39,22 +42,26 @@ use test_env_log::test;
 
 use log::*;
 
-#[test(tokio::test)]
-async fn test_deposit_stake_account() -> anyhow::Result<()> {
+async fn init_test() -> anyhow::Result<(IntegrationTest, MarinadeReferralTestGlobals, ChaChaRng)> {
     let mut rng = ChaChaRng::from_seed([
         251, 27, 213, 24, 63, 4, 35, 210, 233, 49, 94, 40, 61, 129, 65, 172, 150, 130, 12, 111, 5,
         240, 205, 45, 216, 97, 86, 180, 9, 102, 96, 212,
     ]);
+
     let input = InitializeInputWithSeeds::random(&mut rng);
     let mut test = IntegrationTest::start(&input).await?;
+    let marinade_referrals = init_marinade_referral_test_globals(&mut test).await;
+    Ok((test, marinade_referrals, rng))
+}
 
-    let validator = Arc::new(Keypair::generate(&mut rng));
-    let vote = Arc::new(Keypair::generate(&mut rng));
+async fn create_staked_validator(
+    test: &mut IntegrationTest,
+    rng: &mut ChaChaRng,
+) -> anyhow::Result<(Arc<Keypair>, Arc<Keypair>, Pubkey)> {
+    let validator = Arc::new(Keypair::generate(rng));
+    let vote = Arc::new(Keypair::generate(rng));
 
     test.add_validator(validator, vote.clone(), 0x100);
-
-    // init referral-program
-    let marinade_referral_test_globals = init_marinade_referral_test_globals(&mut test).await;
 
     let simple_stake = test
         .create_activated_stake_account(&vote.pubkey(), 10 * LAMPORTS_PER_SOL)
@@ -64,6 +71,85 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         &test.state.msol_mint,
         "mSOL",
     )?;
+    // (create stake accounts, etc)
+    test.execute().await;
+    Ok((vote, simple_stake, user_msol))
+}
+
+#[test(tokio::test)]
+async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
+    let (mut test, marinade_referral_test_globals, mut rng) = init_test().await?;
+
+    update_referral_execute(
+        &mut test,
+        marinade_referral_test_globals.global_state_pubkey,
+        &marinade_referral_test_globals.admin_key,
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.partner.keypair.pubkey(),
+        marinade_referral_test_globals.msol_partner_token_pubkey,
+        false,
+        Some(0),  // deposit sol
+        Some(22),  // deposit stake account
+        Some(0),  // unstake liquid
+        Some(0),  // unstake delayed
+    )
+    .await
+    .unwrap();
+    let referral_state: marinade_referral::states::ReferralState = get_account(
+        &mut test,
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+    )
+    .await;
+    assert!(
+        referral_state.operation_deposit_stake_account_fee.basis_points > 0,
+        "Expected fee for deposit stake account operation should be bigger than 0",
+    );
+    let partner_msol_balance_before = test
+        .get_token_balance(&marinade_referral_test_globals.msol_partner_token_pubkey)
+        .await;
+
+    let (vote, simple_stake, user_msol) = create_staked_validator(&mut test, &mut rng).await?;
+    let simple_stake_state: StakeWrapper = test.get_account_data(&simple_stake.pubkey()).await;
+
+    let tx = referral_deposit_stake_account_txn(
+        simple_stake.pubkey(),
+        test.fee_payer(),
+        user_msol,
+        0,
+        vote.pubkey(),
+        &mut test,
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.msol_partner_token_pubkey,
+    );
+
+    // marinade-referral execution
+    println!("marinade-referral deposit-stake-account");
+    test.execute_txn(tx, vec![test.fee_payer_signer()]).await;
+
+    let operation_fee_in_lamports = simple_stake_state.delegation().unwrap().stake
+        * referral_state.operation_deposit_stake_account_fee.basis_points as u64 / 10_000;
+    assert_eq!(
+        test.get_token_balance_or_zero(&user_msol).await,
+        simple_stake_state.delegation().unwrap().stake - operation_fee_in_lamports
+    );
+    assert_eq!(
+        test.get_token_balance(&marinade_referral_test_globals.msol_partner_token_pubkey)
+            .await,
+        partner_msol_balance_before + operation_fee_in_lamports
+    );
+
+    Ok(())
+}
+
+#[test(tokio::test)]
+async fn test_deposit_stake_account() -> anyhow::Result<()> {
+    let (mut test, marinade_referral_test_globals, mut rng) = init_test().await?;
+    // no fees for the referral operations
+    marinade_referral_test_globals
+        .set_no_operation_fees(&mut test)
+        .await;
+
+    let (vote, simple_stake, user_msol) = create_staked_validator(&mut test, &mut rng).await?;
     let simple_stake_state: StakeWrapper = test.get_account_data(&simple_stake.pubkey()).await;
 
     // -----------------------
@@ -80,10 +166,6 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
     // );
     //
 
-    // execute prepared transactions
-    // (create stake accounts, etc)
-    test.execute().await;
-
     // -----------------------
     // REFERRAL-call
     // -----------------------
@@ -95,6 +177,7 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         vote.pubkey(),
         &mut test,
         marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.msol_partner_token_pubkey,
     );
 
     // marinade-referral execution
@@ -142,6 +225,7 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         vote.pubkey(),
         &mut test,
         marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.msol_partner_token_pubkey,
     );
 
     // marinade-referral execution
@@ -200,6 +284,7 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         vote.pubkey(),
         &mut test,
         marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.msol_partner_token_pubkey,
     );
 
     // marinade-referral execution
@@ -235,6 +320,7 @@ async fn test_deposit_stake_account() -> anyhow::Result<()> {
         vote.pubkey(),
         &mut test,
         marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.msol_partner_token_pubkey,
     );
     // marinade-referral execution
     println!("marinade-referral deposit-stake-account");
@@ -254,6 +340,7 @@ pub fn referral_deposit_stake_account_txn(
     validator_vote: Pubkey,
     test: &mut IntegrationTest,
     referral_key: Pubkey,
+    msol_token_partner_account: Pubkey,
 ) -> Transaction {
     // -----------------------------------------
     // Create a referral DepositStakeAccount instruction.
@@ -279,6 +366,7 @@ pub fn referral_deposit_stake_account_txn(
         //----
         marinade_finance_program: marinade_finance::ID,
         referral_state: referral_key,
+        msol_token_partner_account,
     }
     .to_account_metas(None);
 

@@ -114,8 +114,8 @@ async fn test_change_authority() -> anyhow::Result<()> {
         marinade_referrals.admin_key.pubkey(),
         &marinade_referrals.admin_key,
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
     let global_state: marinade_referral::states::GlobalState =
         get_account(&mut test, marinade_referrals.global_state_pubkey).await;
     assert_eq!(
@@ -133,8 +133,8 @@ async fn test_change_authority() -> anyhow::Result<()> {
         new_admin.pubkey(),
         &marinade_referrals.admin_key,
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
     let global_state: marinade_referral::states::GlobalState =
         get_account(&mut test, marinade_referrals.global_state_pubkey).await;
     assert_eq!(
@@ -153,7 +153,7 @@ async fn test_change_authority() -> anyhow::Result<()> {
         marinade_referrals.admin_key.pubkey(),
         &another_new_admin,
     )
-        .await;
+    .await;
     match txn_result {
         // https://github.com/coral-xyz/anchor/blob/v0.14.0/lang/src/error.rs
         Err(error_number) => assert_eq!(141, error_number, "A constraint should be violated"),
@@ -189,8 +189,8 @@ async fn test_update_referral() -> anyhow::Result<()> {
         None,
         None,
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
     let referral_state: marinade_referral::states::ReferralState =
         get_account(&mut test, marinade_referrals.partner_referral_state_pubkey).await;
     assert!(
@@ -220,8 +220,8 @@ async fn test_update_referral() -> anyhow::Result<()> {
         Some(33),
         Some(MAX_OPERATION_FEE_POINTS as u8),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
     let referral_state: marinade_referral::states::ReferralState =
         get_account(&mut test, marinade_referrals.partner_referral_state_pubkey).await;
     assert!(
@@ -271,7 +271,7 @@ async fn test_update_referral() -> anyhow::Result<()> {
         None,
         None,
     )
-        .await;
+    .await;
     match txn_result {
         // https://github.com/coral-xyz/anchor/blob/v0.14.0/lang/src/error.rs
         Err(error_number) => assert_eq!(
