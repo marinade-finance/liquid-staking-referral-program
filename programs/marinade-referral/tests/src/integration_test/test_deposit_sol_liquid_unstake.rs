@@ -106,19 +106,7 @@ pub async fn do_deposit_sol_no_fee(
     test.execute().await;
 
     // Set operation fees to zero to simplify balance calculations
-    update_referral_execute(
-        test,
-        marinade_referral_test_globals.global_state_pubkey,
-        &marinade_referral_test_globals.admin_key,
-        marinade_referral_test_globals.partner_referral_state_pubkey,
-        marinade_referral_test_globals.partner.keypair.pubkey(),
-        marinade_referral_test_globals.msol_partner_token_pubkey,
-        false,
-        Some(0),
-        Some(0),
-        Some(0),
-        Some(0),
-    ).await.unwrap();
+    marinade_referral_test_globals.set_no_operation_fees(test).await;
 
     let user_msol_balance_before = test
         .get_token_balance_or_zero(&user_msol_account.pubkey)

@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Transfer};
-use solana_program::program_pack::Pack;
 
 use marinade_onchain_helper::{cpi_context_accounts::MarinadeDeposit, cpi_util};
 
+use super::common::{msol_balance, transfer_msol_fee};
 use crate::states::ReferralState;
 
 //-----------------------------------------------------
@@ -29,7 +28,7 @@ pub struct Deposit<'info> {
     pub system_program: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 
-    // accounts added are: Marinade main program ID & referral_state
+    // accounts added are: Marinade main program ID, referral_state, partner token account
     #[account(address = marinade_finance::ID)]
     pub marinade_finance_program: AccountInfo<'info>,
     #[account(mut, constraint = !referral_state.pause)]
@@ -44,38 +43,29 @@ impl<'info> Deposit<'info> {
         let cpi_ctx = self.into_marinade_deposit_cpi_ctx();
         let data = marinade_finance::instruction::Deposit { lamports };
 
-        let mint_to_data =
-            spl_token::state::Account::unpack_from_slice(&self.mint_to.try_borrow_data()?)?;
-        let msol_before = mint_to_data.amount;
+        // msol balance before deposit call
+        let msol_before = msol_balance(&self.mint_to)?;
 
         // call Marinade
         cpi_util::invoke_signed(cpi_ctx, data)?;
 
-        let mint_to_data =
-            spl_token::state::Account::unpack_from_slice(&self.mint_to.try_borrow_data()?)?;
-        let msol_after = mint_to_data.amount;
-
+        // msol balance after deposit call
+        let msol_after = msol_balance(&self.mint_to)?;
+        // deposit fee is transferred to referral token account
         let minted_msol = msol_after - msol_before;
-        msg!("minted msol {}", minted_msol);
-        if minted_msol > 0 {
-            let referral_msol_amount = self
-                .referral_state
-                .operation_deposit_sol_fee
-                .apply(minted_msol);
-            if referral_msol_amount > 0 {
-                transfer(
-                    CpiContext::new(
-                        self.token_program.clone(),
-                        Transfer {
-                            from: self.mint_to.clone(),
-                            to: self.msol_token_partner_account.clone(),
-                            authority: self.transfer_from.clone(),
-                        },
-                    ),
-                    referral_msol_amount,
-                )?;
-            }
-        }
+        msg!(
+            "minted msol {} after depositing {} lamports",
+            minted_msol,
+            lamports
+        );
+        transfer_msol_fee(
+            minted_msol,
+            &self.referral_state.operation_deposit_sol_fee,
+            &self.token_program,
+            &self.mint_to,
+            &self.msol_token_partner_account,
+            &self.transfer_from,
+        )?;
 
         // update accumulators
         self.referral_state.deposit_sol_amount += lamports;

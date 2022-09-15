@@ -1218,10 +1218,28 @@ pub async fn update_referral_execute(
         accounts: accounts.to_account_metas(None),
         data: ix_data.data(),
     };
-    println!("Changing referral state {}", referral_state);
+    println!("Calling ix to change the referral state {}", referral_state);
     test.try_execute_instruction(
         instruction,
         vec![test.fee_payer_signer(), admin_keypair.clone()],
     )
         .await
+}
+
+impl MarinadeReferralTestGlobals {
+    async fn set_no_operation_fees(&self, test: &mut IntegrationTest) {
+        update_referral_execute(
+            test,
+            self.global_state_pubkey,
+            &self.admin_key,
+            self.partner_referral_state_pubkey,
+            self.partner.keypair.pubkey(),
+            self.msol_partner_token_pubkey,
+            false,
+            Some(0),
+            Some(0),
+            Some(0),
+            Some(0),
+        ).await.unwrap()
+    }
 }
