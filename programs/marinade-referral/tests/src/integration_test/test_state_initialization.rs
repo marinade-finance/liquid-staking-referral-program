@@ -19,21 +19,9 @@ use solana_sdk::{
 };
 use test_env_log::test;
 
-async fn init_test() -> anyhow::Result<(IntegrationTest, MarinadeReferralTestGlobals)> {
-    let mut random = ChaChaRng::from_seed([
-        248, 3, 94, 241, 228, 239, 32, 168, 219, 67, 27, 194, 26, 155, 140, 136, 154, 4, 40, 175,
-        132, 80, 60, 31, 135, 250, 230, 19, 172, 106, 254, 120,
-    ]);
-
-    let input = InitializeInputWithSeeds::random(&mut random);
-    let mut test = IntegrationTest::start(&input).await?;
-    let marinade_referrals = init_marinade_referral_test_globals(&mut test).await;
-    Ok((test, marinade_referrals))
-}
-
 #[test(tokio::test)]
 async fn test_init_global_state() -> anyhow::Result<()> {
-    let (mut test, marinade_referrals) = init_test().await?;
+    let (mut test, marinade_referrals, _) = IntegrationTest::init_test().await?;
 
     let global_state: marinade_referral::states::GlobalState =
         get_account(&mut test, marinade_referrals.global_state_pubkey).await;
@@ -104,7 +92,7 @@ async fn test_init_global_state() -> anyhow::Result<()> {
 
 #[test(tokio::test)]
 async fn test_change_authority() -> anyhow::Result<()> {
-    let (mut test, marinade_referrals) = init_test().await?;
+    let (mut test, marinade_referrals, _) = IntegrationTest::init_test().await?;
 
     // changing authority to the same as it was before
     change_authority_execute(
@@ -173,7 +161,7 @@ async fn test_change_authority() -> anyhow::Result<()> {
 
 #[test(tokio::test)]
 async fn test_update_referral() -> anyhow::Result<()> {
-    let (mut test, marinade_referrals) = init_test().await?;
+    let (mut test, marinade_referrals, _) = IntegrationTest::init_test().await?;
 
     // updating only with the required values
     update_referral_execute(

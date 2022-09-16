@@ -1,14 +1,15 @@
 #![allow(dead_code)]
-//use assert_json_diff::assert_json_eq;
 use marinade_finance_offchain_sdk::anchor_lang::InstructionData;
 use marinade_finance_offchain_sdk::marinade_finance;
 use marinade_finance_offchain_sdk::spl_token::solana_program;
-// use marinade_reflection::accounts_builder::AccountsBuilder;
-// use marinade_reflection::marinade::Marinade;
+use rand::SeedableRng;
 use rand::{distributions::Uniform, prelude::Distribution, RngCore};
+use rand_chacha::ChaChaRng;
 use std::collections::{HashMap, HashSet};
 use std::io::{self};
 use std::sync::Arc;
+
+use crate::initialize::InitializeInputWithSeeds;
 
 use futures::{Future, FutureExt};
 use marinade_finance_offchain_sdk::anchor_lang::solana_program::{
@@ -53,6 +54,9 @@ pub mod test_deposit_sol_liquid_unstake;
 pub mod test_deposit_stake_account;
 pub mod test_state_initialization;
 
+const MSOL_SYMBOL: &str = "mSOL";
+const MSOL_SOL_LP_SYMBOL: &str = "mSOL-SOL-LP";
+
 pub struct StakeInfo {
     pub index: u32,
     pub state: Stake,
@@ -94,7 +98,7 @@ impl TestValidator {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TestTokenAccount {
     pub symbol: String,
     pub pubkey: Pubkey,
@@ -112,8 +116,7 @@ impl TestUser {
     }
 
     pub fn msol_account_pubkey(&mut self, test: &mut IntegrationTest) -> Pubkey {
-        const SYMBOL: &str = "mSOL";
-        let mint = test.mint_from_symbol(SYMBOL);
+        let mint = test.mint_from_symbol(MSOL_SYMBOL);
         get_associated_token_address(&self.keypair.pubkey(), mint)
     }
 
@@ -121,19 +124,17 @@ impl TestUser {
         &self,
         test: &mut IntegrationTest,
     ) -> TestTokenAccount {
-        const SYMBOL: &str = "mSOL";
-        return TestTokenAccount {
-            symbol: String::from(SYMBOL),
+        TestTokenAccount {
+            symbol: String::from(MSOL_SYMBOL),
             pubkey: test
-                .get_or_create_associated_token_account(&self, SYMBOL)
+                .get_or_create_associated_token_account(&self, MSOL_SYMBOL)
                 .await,
             user_name: self.name.clone(),
-        };
+        }
     }
 
     pub fn lp_token_account_pubkey(&mut self, test: &mut IntegrationTest) -> Pubkey {
-        const SYMBOL: &str = "mSOL-SOL-LP";
-        let mint = test.mint_from_symbol(SYMBOL);
+        let mint = test.mint_from_symbol(MSOL_SOL_LP_SYMBOL);
         get_associated_token_address(&self.keypair.pubkey(), mint)
     }
 
@@ -141,11 +142,10 @@ impl TestUser {
         &self,
         test: &mut IntegrationTest,
     ) -> TestTokenAccount {
-        const SYMBOL: &str = "mSOL-SOL-LP";
         return TestTokenAccount {
-            symbol: String::from(SYMBOL),
+            symbol: String::from(MSOL_SOL_LP_SYMBOL),
             pubkey: test
-                .get_or_create_associated_token_account(&self, SYMBOL)
+                .get_or_create_associated_token_account(&self, MSOL_SOL_LP_SYMBOL)
                 .await,
             user_name: self.name.clone(),
         };
@@ -735,8 +735,8 @@ impl IntegrationTest {
 
     pub fn mint_from_symbol(&mut self, symbol: &str) -> &Pubkey {
         match symbol {
-            "mSOL" => &self.state.msol_mint,
-            "mSOL-SOL-LP" => &self.state.liq_pool.lp_mint,
+            MSOL_SYMBOL => &self.state.msol_mint,
+            MSOL_SOL_LP_SYMBOL => &self.state.liq_pool.lp_mint,
             _ => panic!("unknown symbol {}", symbol),
         }
     }
@@ -784,8 +784,8 @@ impl IntegrationTest {
         symbol: &str,
     ) -> Pubkey {
         let mint = match symbol {
-            "mSOL" => &self.state.msol_mint,
-            "mSOL-SOL-LP" => &self.state.liq_pool.lp_mint,
+            MSOL_SYMBOL => &self.state.msol_mint,
+            MSOL_SOL_LP_SYMBOL => &self.state.liq_pool.lp_mint,
             _ => panic!("unknown symbol {}", symbol),
         };
         self.builder
@@ -963,6 +963,16 @@ impl IntegrationTest {
             .increment_vote_account_credits(vote_pubkey, 2000);
         self.move_to_next_epoch().await;
         return stake_keypair;
+    }
+
+    pub async fn init_test() -> anyhow::Result<(Self, MarinadeReferralTestGlobals, ChaChaRng)> {
+        let rnd_arr: [u8; 32] = rand::random();
+        let mut rng = ChaChaRng::from_seed(rnd_arr);
+
+        let input = InitializeInputWithSeeds::random(&mut rng);
+        let mut test = IntegrationTest::start(&input).await?;
+        let marinade_referrals = init_marinade_referral_test_globals(&mut test).await;
+        Ok((test, marinade_referrals, rng))
     }
 }
 
