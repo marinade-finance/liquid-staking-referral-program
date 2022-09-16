@@ -7,8 +7,6 @@ use crate::error::ReferralError::ReferralOperationFeeOverMax;
 use crate::error::*;
 use crate::states::{GlobalState, ReferralState};
 
-use marinade_finance::Fee;
-
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -99,14 +97,10 @@ impl<'info> InitReferralAccount<'info> {
 
         self.referral_state.pause = false;
 
-        self.referral_state.operation_deposit_sol_fee =
-            Fee::from_basis_points(DEFAULT_OPERATION_FEE_POINTS);
-        self.referral_state.operation_deposit_stake_account_fee =
-            Fee::from_basis_points(DEFAULT_OPERATION_FEE_POINTS);
-        self.referral_state.operation_liquid_unstake_fee =
-            Fee::from_basis_points(DEFAULT_OPERATION_FEE_POINTS);
-        self.referral_state.operation_delayed_unstake_fee =
-            Fee::from_basis_points(DEFAULT_OPERATION_FEE_POINTS);
+        self.referral_state.operation_deposit_sol_fee = DEFAULT_OPERATION_FEE_POINTS;
+        self.referral_state.operation_deposit_stake_account_fee = DEFAULT_OPERATION_FEE_POINTS;
+        self.referral_state.operation_liquid_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
+        self.referral_state.operation_delayed_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
 
         Ok(())
     }
@@ -208,43 +202,42 @@ impl<'info> UpdateReferral<'info> {
             )?;
         }
 
-        self.referral_state.operation_deposit_sol_fee = self.checked_operation_fee(
+        set_fee_checked(
+            &mut self.referral_state.operation_deposit_sol_fee,
             operation_deposit_sol_fee,
-            self.referral_state.operation_deposit_sol_fee,
         )?;
-        self.referral_state.operation_deposit_stake_account_fee = self.checked_operation_fee(
+        set_fee_checked(
+            &mut self.referral_state.operation_deposit_stake_account_fee,
             operation_deposit_stake_account_fee,
-            self.referral_state.operation_deposit_stake_account_fee,
         )?;
-        self.referral_state.operation_liquid_unstake_fee = self.checked_operation_fee(
+        set_fee_checked(
+            &mut self.referral_state.operation_liquid_unstake_fee,
             operation_liquid_unstake_fee,
-            self.referral_state.operation_liquid_unstake_fee,
         )?;
-        self.referral_state.operation_delayed_unstake_fee = self.checked_operation_fee(
+        set_fee_checked(
+            &mut self.referral_state.operation_delayed_unstake_fee,
             operation_delayed_unstake_fee,
-            self.referral_state.operation_delayed_unstake_fee,
         )?;
 
         Ok(())
     }
+}
 
-    fn checked_operation_fee(
-        &self,
-        new_fee: Option<u8>,
-        default_value: Fee,
-    ) -> std::result::Result<Fee, ReferralError> {
-        if let Some(new_fee) = new_fee {
-            // the fee is calculated as basis points
-            if new_fee as u32 > MAX_OPERATION_FEE_POINTS {
-                msg!(
-                    "Operation fee value {} is over maximal permitted {}; in basis points",
-                    new_fee,
-                    MAX_OPERATION_FEE_POINTS
-                );
-                return Err(ReferralOperationFeeOverMax);
-            }
-            return Ok(Fee::from_basis_points(new_fee as u32));
+fn set_fee_checked(
+    current_value: &mut u8,
+    new_value: Option<u8>,
+) -> std::result::Result<(), ReferralError> {
+    if let Some(new_fee) = new_value {
+        // the fee is calculated as basis points
+        if new_fee > MAX_OPERATION_FEE_POINTS {
+            msg!(
+                "Operation fee value {}bp is over maximal permitted {}bp",
+                new_fee,
+                MAX_OPERATION_FEE_POINTS
+            );
+            return Err(ReferralOperationFeeOverMax);
         }
-        Ok(default_value)
+        *current_value = new_fee;
     }
+    Ok(())
 }

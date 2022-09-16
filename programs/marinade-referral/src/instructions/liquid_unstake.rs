@@ -52,7 +52,7 @@ impl<'info> LiquidUnstake<'info> {
         // fee for liquid unstake operation
         let operation_fee = transfer_msol_fee(
             msol_amount,
-            &self.referral_state.operation_liquid_unstake_fee,
+            self.referral_state.operation_liquid_unstake_fee,
             &self.token_program,
             &self.get_msol_from,
             &self.msol_token_partner_account,

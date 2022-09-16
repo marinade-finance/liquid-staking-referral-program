@@ -68,22 +68,21 @@ async fn test_init_global_state() -> anyhow::Result<()> {
         "Referral state 'max fee points' init value does not correspond to default value",
     );
     assert_eq!(
-        DEFAULT_OPERATION_FEE_POINTS, referral_state.operation_deposit_sol_fee.basis_points,
+        DEFAULT_OPERATION_FEE_POINTS, referral_state.operation_deposit_sol_fee,
         "Operation 'deposit sol fee' should be init at init value",
     );
     assert_eq!(
         DEFAULT_OPERATION_FEE_POINTS,
         referral_state
-            .operation_deposit_stake_account_fee
-            .basis_points,
+            .operation_deposit_stake_account_fee,
         "Operation 'deposit stake account fee' should be init value",
     );
     assert_eq!(
-        DEFAULT_OPERATION_FEE_POINTS, referral_state.operation_liquid_unstake_fee.basis_points,
+        DEFAULT_OPERATION_FEE_POINTS, referral_state.operation_liquid_unstake_fee,
         "Operation 'liquid unstake fee' should be init value",
     );
     assert_eq!(
-        DEFAULT_OPERATION_FEE_POINTS, referral_state.operation_delayed_unstake_fee.basis_points,
+        DEFAULT_OPERATION_FEE_POINTS, referral_state.operation_delayed_unstake_fee,
         "Operation 'delayed unstake fee' should be init value",
     );
 
@@ -226,22 +225,21 @@ async fn test_update_referral() -> anyhow::Result<()> {
         "Referral state update 'msol token partner account' should be changed",
     );
     assert_eq!(
-        31, referral_state.operation_deposit_sol_fee.basis_points,
+        31, referral_state.operation_deposit_sol_fee,
         "Referral state update 'partner account' should be changed",
     );
     assert_eq!(
         32,
         referral_state
-            .operation_deposit_stake_account_fee
-            .basis_points,
+            .operation_deposit_stake_account_fee,
         "Referral state update 'partner account' should be changed",
     );
     assert_eq!(
-        33, referral_state.operation_liquid_unstake_fee.basis_points,
+        33, referral_state.operation_liquid_unstake_fee,
         "Referral state update 'partner account' should be changed",
     );
     assert_eq!(
-        MAX_OPERATION_FEE_POINTS, referral_state.operation_delayed_unstake_fee.basis_points,
+        MAX_OPERATION_FEE_POINTS, referral_state.operation_delayed_unstake_fee,
         "Referral state update 'partner account' should be changed",
     );
 
@@ -271,7 +269,7 @@ async fn test_update_referral() -> anyhow::Result<()> {
     let referral_state: marinade_referral::states::ReferralState =
         get_account(&mut test, marinade_referrals.partner_referral_state_pubkey).await;
     assert_eq!(
-        31, referral_state.operation_deposit_sol_fee.basis_points,
+        31, referral_state.operation_deposit_sol_fee,
         "Referral state update 'partner account' should be changed",
     );
 

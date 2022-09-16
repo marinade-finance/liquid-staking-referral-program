@@ -77,11 +77,12 @@ impl<'info> DepositStakeAccount<'info> {
         );
         transfer_msol_fee(
             minted_msol,
-            &self.referral_state.operation_deposit_stake_account_fee,
+            self.referral_state.operation_deposit_stake_account_fee,
             &self.token_program,
             &self.mint_to,
             &self.msol_token_partner_account,
-            // TODO: is stake authority good authority for token stransfer?
+            // Note: self.stake_authority is in reality withdraw_auth (Stake account owner) 
+            // we're assuming it's the same owner of the destination mSOL token account
             &self.stake_authority,
         )?;
 

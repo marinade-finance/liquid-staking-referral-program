@@ -88,7 +88,6 @@ async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
     assert!(
         referral_state
             .operation_deposit_stake_account_fee
-            .basis_points
             > 0,
         "Expected fee for deposit stake account operation should be bigger than 0",
     );
@@ -114,8 +113,7 @@ async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
 
     let operation_fee_in_lamports = simple_stake_state.delegation().unwrap().stake
         * referral_state
-            .operation_deposit_stake_account_fee
-            .basis_points as u64
+            .operation_deposit_stake_account_fee as u64
         / 10_000;
     assert_eq!(
         test.get_token_balance_or_zero(&user_msol).await,
@@ -150,7 +148,7 @@ async fn test_deposit_stake_account_wrong_referral() -> anyhow::Result<()> {
         .try_execute_txn(tx, vec![test.fee_payer_signer()])
         .await;
     match deposit_stake_account_result {
-        Ok(_) => panic!("Expected error happens when user want to be a refferal"),
+        Ok(_) => panic!("Expected error happens when user want to be a referral"),
         Err(number) => {
             // anchor 0.14.0 : error 152 : ConstraintAddress
             assert_eq!(

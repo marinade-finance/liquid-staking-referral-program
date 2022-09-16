@@ -328,7 +328,7 @@ pub async fn do_liquid_unstake(
     )
     .await;
     let operation_fee =
-        msol_lamports * referral_state.operation_liquid_unstake_fee.basis_points as u64 / 10_000;
+        msol_lamports * referral_state.operation_liquid_unstake_fee as u64 / 10_000;
     let msol_lamports_fee_deducted = msol_lamports - operation_fee;
 
     // compute liq unstake fee
@@ -395,16 +395,16 @@ pub async fn do_liquid_unstake(
             - proportional(msol_lamports_fee_deducted, fee_basis_points as u64, 10_000).unwrap()
     );
     let user_msol_balance_after = test.show_token_balance(&user_msol_account, "after").await;
-    // user reduced number token account for all mSOLs but fee was deduced from native lamports transfered
+    // user reduced number token account for all mSOLs but fee was deduced from native lamports transferred
     assert_eq!(
         user_msol_balance_after,
         user_msol_balance_before - msol_lamports
     );
     // Check post-conditions of operation fees
     assert!(
-        referral_state.operation_liquid_unstake_fee.basis_points > 0,
-        "Expected to test with some fees for the operation but operation_liquid_unstake_fee={}",
-        referral_state.operation_liquid_unstake_fee.basis_points
+        referral_state.operation_liquid_unstake_fee > 0,
+        "Expected to test with some fees for the operation but operation_liquid_unstake_fee={}bp",
+        referral_state.operation_liquid_unstake_fee
     );
     let partner_msol_balance_after = test
         .get_token_balance(&marinade_referral_test_globals.msol_partner_token_pubkey)
@@ -412,7 +412,7 @@ pub async fn do_liquid_unstake(
     assert_eq!(
         partner_msol_balance_after - partner_msol_balance_before,
         operation_fee,
-        "Partner is expected to recieve mSOL in the amount of the operation fee"
+        "Partner is expected to receive mSOL in the amount of the operation fee"
     );
 
     Ok(())
@@ -572,7 +572,7 @@ async fn test_liquid_unstake() -> anyhow::Result<()> {
 }
 
 #[test(tokio::test)]
-async fn test_liquid_unstake_wrong_refferal() -> anyhow::Result<()> {
+async fn test_liquid_unstake_wrong_referral() -> anyhow::Result<()> {
     let (mut test, marinade_referral_test_globals, _) = IntegrationTest::init_test().await?;
 
     let mut user = test
@@ -590,7 +590,7 @@ async fn test_liquid_unstake_wrong_refferal() -> anyhow::Result<()> {
     )
     .await;
     match unstake_result {
-        Ok(_) => panic!("Expected error happens when user want to be a refferal"),
+        Ok(_) => panic!("Expected error happens when user want to be a referral"),
         Err(number) => {
             // anchor 0.14.0 : error 152 : ConstraintAddress
             assert_eq!(

@@ -59,10 +59,10 @@ pub struct ReferralState {
     pub pause: bool,
 
     // fees that will be assigned to referrals per operation, calculated in basis points
-    pub operation_deposit_sol_fee: Fee,
-    pub operation_deposit_stake_account_fee: Fee,
-    pub operation_liquid_unstake_fee: Fee,
-    pub operation_delayed_unstake_fee: Fee,
+    pub operation_deposit_sol_fee: u8,
+    pub operation_deposit_stake_account_fee: u8,
+    pub operation_liquid_unstake_fee: u8,
+    pub operation_delayed_unstake_fee: u8,
 }
 
 impl ReferralState {

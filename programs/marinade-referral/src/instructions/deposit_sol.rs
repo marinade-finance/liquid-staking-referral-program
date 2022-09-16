@@ -60,7 +60,7 @@ impl<'info> Deposit<'info> {
         );
         transfer_msol_fee(
             minted_msol,
-            &self.referral_state.operation_deposit_sol_fee,
+            self.referral_state.operation_deposit_sol_fee,
             &self.token_program,
             &self.mint_to,
             &self.msol_token_partner_account,
