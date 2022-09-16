@@ -3,33 +3,13 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "anchor",
-			"args": [
-				"test"
-			],
-			"group": "test",
-			"problemMatcher": [],
-			"label": "anchor test",
-		},
-		{
-			"type": "npm",
-			"script": "build:tsc",
-			"group": "build",
-			"problemMatcher": [
-				"$tsc"
-			],
-			"label": "npm build:tsc",
-			"detail": ""
-		},
-		{
-			"type": "shell",
 			"command": "bash",
 			"args": [
-				"test.sh"
+				"scripts/test.sh"
 			],
 			"group": "test",
 			"problemMatcher": [],
-			"label": "bash test",
+			"label": "bash scripts/test.sh",
 			"detail": "integration tests with solana-program-test"
 		},
 		{

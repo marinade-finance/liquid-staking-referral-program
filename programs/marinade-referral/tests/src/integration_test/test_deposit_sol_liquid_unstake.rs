@@ -182,7 +182,7 @@ async fn try_liquid_unstake(
     .await
 }
 
-async fn do_deposit_sol(
+async fn do_deposit_sol_with_referral_fee(
     user: &mut TestUser,
     lamports: u64,
     test: &mut IntegrationTest,
@@ -425,7 +425,7 @@ async fn test_deposit_sol_no_fees() -> anyhow::Result<()> {
         .create_test_user("test_dep_sol_user", 200 * LAMPORTS_PER_SOL)
         .await;
 
-    do_deposit_sol(
+    do_deposit_sol_with_referral_fee(
         &mut user,
         random_amount(1, 100, &mut rng),
         &mut test,
@@ -444,7 +444,7 @@ async fn test_deposit_sol_operation_fee() -> anyhow::Result<()> {
         .create_test_user("test_dep_sol_user", 200 * LAMPORTS_PER_SOL)
         .await;
 
-    do_deposit_sol(
+    do_deposit_sol_with_referral_fee(
         &mut user,
         random_amount(1, 100, &mut rng),
         &mut test,
@@ -479,7 +479,7 @@ async fn test_deposit_sol_wrong_referral() -> anyhow::Result<()> {
     )
     .await;
     match deposit_result {
-        Ok(_) => panic!("Expected error happens when user want to be a refferal"),
+        Ok(_) => panic!("Expected error happens when user want to be a referral"),
         Err(number) => {
             // anchor 0.14.0 : error 152 : ConstraintAddress
             assert_eq!(
@@ -500,7 +500,7 @@ async fn test_liquid_unstake() -> anyhow::Result<()> {
         .await;
 
     let alice_deposit_amount = 26 * LAMPORTS_PER_SOL;
-    do_deposit_sol(
+    do_deposit_sol_with_referral_fee(
         &mut alice,
         alice_deposit_amount,
         &mut test,
@@ -534,7 +534,7 @@ async fn test_liquid_unstake() -> anyhow::Result<()> {
         ),
     }
 
-    // liquidity unstake operation to be charded for referral mSOL fee
+    // set referral fees, so liquidity unstake operation is charged with referral mSOL fee 30bp
     update_referral_execute(
         &mut test,
         marinade_referral_test_globals.global_state_pubkey,
