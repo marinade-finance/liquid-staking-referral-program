@@ -17,7 +17,7 @@ pub mod states;
 pub mod marinade_referral {
     use super::*;
 
-    declare_id!("mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY");
+    declare_id!("MR2LqxoSbw831bNy68utpu5n4YqBH3AzDmddkgk9LQv");
 
     ///deposit SOL
     pub fn deposit(ctx: Context<Deposit>, lamports: u64) -> ProgramResult {
@@ -51,7 +51,7 @@ pub mod marinade_referral {
         ctx.accounts.process(partner_name)
     }
 
-    ///update referral state
+    /// update referral state
     pub fn update_referral(
         ctx: Context<UpdateReferral>,
         pause: bool,
@@ -69,7 +69,7 @@ pub mod marinade_referral {
         )
     }
 
-    ///update partner, authority and beneficiary account based on the new partner
+    /// update partner, authority and beneficiary account based on the new partner
     pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
         ctx.accounts.process()
     }
