@@ -8,4 +8,4 @@ export RUST_LOG=solana_runtime::system_instruction_processor=trace,solana_runtim
 #export RUST_LOG=solana_metrics=info,debug
 
 # +nightly does not work in current
-RUSTFLAGS=-Awarnings cargo test --manifest-path $CURRENT_DIR/../programs/marinade-referral/tests/Cargo.toml
+RUSTFLAGS=-Awarnings cargo test $@ --manifest-path $CURRENT_DIR/../programs/marinade-referral/tests/Cargo.toml

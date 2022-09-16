@@ -10,8 +10,8 @@ use marinade_finance_offchain_sdk::{
     instruction_helpers::InstructionHelpers, marinade_finance::State,
 };
 
-use rand_chacha::ChaChaRng;
 use rand::{distributions::Uniform, prelude::Distribution, CryptoRng, RngCore, SeedableRng};
+use rand_chacha::ChaChaRng;
 
 use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::{
