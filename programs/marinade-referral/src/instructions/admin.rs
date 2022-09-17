@@ -85,6 +85,7 @@ impl<'info> InitReferralAccount<'info> {
         self.referral_state.deposit_stake_account_operations = 0;
 
         self.referral_state.liq_unstake_msol_amount = 0;
+        self.referral_state.liq_unstake_sol_amount = 0;
         self.referral_state.liq_unstake_operations = 0;
         self.referral_state.liq_unstake_msol_fees = 0;
 
