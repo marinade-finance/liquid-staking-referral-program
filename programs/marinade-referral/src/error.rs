@@ -21,5 +21,9 @@ pub enum ReferralError {
     NotInitializedMintAccount, // 306
 
     #[msg("Referral operation fee was set over the maximum permitted amount")]
-    ReferralOperationFeeOverMax,
+    ReferralOperationFeeOverMax, // 307
+    #[msg("Provided signer account is not permitted to do changes at referral account")]
+    NeitherAdminNorForemanReferralState, // 308
+    #[msg("Provided number of foremen keys exceeded their permitted number")]
+    ExceededNumberForemenSignerKeys, // 309
 }

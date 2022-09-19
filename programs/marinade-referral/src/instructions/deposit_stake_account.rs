@@ -81,7 +81,7 @@ impl<'info> DepositStakeAccount<'info> {
             &self.token_program,
             &self.mint_to,
             &self.msol_token_partner_account,
-            // Note: self.stake_authority is in reality withdraw_auth (Stake account owner) 
+            // Note: self.stake_authority is in reality withdraw_auth (Stake account owner)
             // we're assuming it's the same owner of the destination mSOL token account
             &self.stake_authority,
         )?;

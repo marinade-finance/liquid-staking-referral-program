@@ -40,7 +40,8 @@ pub mod marinade_referral {
     ///Admin
     ///create global state
     pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
-        ctx.accounts.process()
+        let foremen_pubkeys = get_foremen_pubkeys(ctx.remaining_accounts);
+        ctx.accounts.process(foremen_pubkeys)
     }
 
     ///create referral state
@@ -69,9 +70,15 @@ pub mod marinade_referral {
         )
     }
 
-    /// update partner, authority and beneficiary account based on the new partner
+    /// change admin authority
     pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
         ctx.accounts.process()
+    }
+
+    /// change foremen authorities
+    pub fn change_foremen(ctx: Context<ChangeForemen>) -> ProgramResult {
+        let foremen_pubkeys = get_foremen_pubkeys(ctx.remaining_accounts);
+        ctx.accounts.process(foremen_pubkeys)
     }
 
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
@@ -85,4 +92,8 @@ pub mod marinade_referral {
             e
         })
     }
+}
+
+fn get_foremen_pubkeys<'info, 'c>(remaining_accounts: &'c [AccountInfo<'info>]) -> Vec<Pubkey> {
+    remaining_accounts.iter().map(|ai| *ai.key).collect()
 }

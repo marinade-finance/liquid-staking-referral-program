@@ -3,6 +3,8 @@ use marinade_finance::{calc::proportional, error::CommonError, Fee};
 
 //-----------------------------------------------------
 ///marinade-referral-program PDA
+pub const MAX_FOREMEN_NUMBER: usize = 2;
+
 #[account]
 pub struct GlobalState {
     // Authority (admin address)
@@ -10,6 +12,9 @@ pub struct GlobalState {
 
     // msol mint account to verify the mint of partner msol account (must be fed externally)
     pub msol_mint_account: Pubkey,
+
+    // cannot use const here: https://github.com/coral-xyz/anchor/issues/335
+    pub foremen: [Pubkey; 2],
 }
 
 //-----------------------------------------------------
