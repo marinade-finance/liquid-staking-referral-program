@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 use crate::integration_test::{
-    get_account, init_marinade_referral_test_globals, update_referral_execute, IntegrationTest,
+    get_account, init_marinade_referral_test_globals, update_operation_fees, IntegrationTest,
     MarinadeReferralTestGlobals, TestUser,
 };
 
@@ -65,14 +65,11 @@ async fn create_staked_validator(
 async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
     let (mut test, marinade_referral_test_globals, mut rng) = IntegrationTest::init_test().await?;
 
-    update_referral_execute(
+    update_operation_fees(
         &mut test,
         marinade_referral_test_globals.global_state_pubkey,
         &marinade_referral_test_globals.admin_key,
         marinade_referral_test_globals.partner_referral_state_pubkey,
-        marinade_referral_test_globals.partner.keypair.pubkey(),
-        marinade_referral_test_globals.msol_partner_token_pubkey,
-        false,
         Some(0),  // deposit sol
         Some(22), // deposit stake account
         Some(0),  // unstake liquid
@@ -80,17 +77,6 @@ async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
     )
     .await
     .unwrap();
-    let referral_state: marinade_referral::states::ReferralState = get_account(
-        &mut test,
-        marinade_referral_test_globals.partner_referral_state_pubkey,
-    )
-    .await;
-    assert!(
-        referral_state
-            .operation_deposit_stake_account_fee
-            > 0,
-        "Expected fee for deposit stake account operation should be bigger than 0",
-    );
     let partner_msol_balance_before = test
         .get_token_balance(&marinade_referral_test_globals.msol_partner_token_pubkey)
         .await;
@@ -111,20 +97,33 @@ async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
     println!("marinade-referral deposit-stake-account execution");
     test.execute_txn(tx, vec![test.fee_payer_signer()]).await;
 
-    let operation_fee_in_lamports = simple_stake_state.delegation().unwrap().stake
-        * referral_state
-            .operation_deposit_stake_account_fee as u64
+    let referral_state_after: marinade_referral::states::ReferralState = get_account(
+        &mut test,
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+    )
+    .await;
+    assert_eq!(
+        referral_state_after.operation_deposit_stake_account_fee, 22,
+        "Deposit stake account operation fee does not match to defined value",
+    );
+
+    let operation_fee_lamports = simple_stake_state.delegation().unwrap().stake
+        * referral_state_after.operation_deposit_stake_account_fee as u64
         / 10_000;
     assert_eq!(
         test.get_token_balance_or_zero(&user_msol).await,
-        simple_stake_state.delegation().unwrap().stake - operation_fee_in_lamports
+        simple_stake_state.delegation().unwrap().stake - operation_fee_lamports
     );
     assert_eq!(
         test.get_token_balance(&marinade_referral_test_globals.msol_partner_token_pubkey)
             .await,
-        partner_msol_balance_before + operation_fee_in_lamports
+        partner_msol_balance_before + operation_fee_lamports
     );
-
+    assert_eq!(
+        referral_state_after.accum_deposit_stake_account_fee - operation_fee_lamports,
+        0,
+        "Deposit stake account operation accumulator fee does not increased by exepected amount"
+    );
     Ok(())
 }
 

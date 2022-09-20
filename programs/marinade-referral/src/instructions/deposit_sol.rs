@@ -58,7 +58,7 @@ impl<'info> Deposit<'info> {
             minted_msol,
             lamports
         );
-        transfer_msol_fee(
+        let operation_fee = transfer_msol_fee(
             minted_msol,
             self.referral_state.operation_deposit_sol_fee,
             &self.token_program,
@@ -70,6 +70,7 @@ impl<'info> Deposit<'info> {
         // update accumulators
         self.referral_state.deposit_sol_amount += lamports;
         self.referral_state.deposit_sol_operations += 1;
+        self.referral_state.accum_deposit_sol_fees += operation_fee;
         Ok(())
     }
 

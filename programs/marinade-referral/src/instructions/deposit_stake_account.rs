@@ -75,13 +75,13 @@ impl<'info> DepositStakeAccount<'info> {
             minted_msol,
             stake_account.key()
         );
-        transfer_msol_fee(
+        let operation_fee = transfer_msol_fee(
             minted_msol,
             self.referral_state.operation_deposit_stake_account_fee,
             &self.token_program,
             &self.mint_to,
             &self.msol_token_partner_account,
-            // Note: self.stake_authority is in reality withdraw_auth (Stake account owner) 
+            // Note: self.stake_authority is in reality withdraw_auth (Stake account owner)
             // we're assuming it's the same owner of the destination mSOL token account
             &self.stake_authority,
         )?;
@@ -89,6 +89,7 @@ impl<'info> DepositStakeAccount<'info> {
         // accumulate
         self.referral_state.deposit_stake_account_amount += delegation.stake;
         self.referral_state.deposit_stake_account_operations += 1;
+        self.referral_state.accum_deposit_stake_account_fee += operation_fee;
         Ok(())
     }
 

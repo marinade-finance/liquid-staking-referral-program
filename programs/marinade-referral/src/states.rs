@@ -10,6 +10,10 @@ pub struct GlobalState {
 
     // msol mint account to verify the mint of partner msol account (must be fed externally)
     pub msol_mint_account: Pubkey,
+
+    // admin-like accounts to create referral state account and change operation fees
+    pub foreman_1: Pubkey,
+    pub foreman_2: Pubkey,
 }
 
 //-----------------------------------------------------
@@ -63,6 +67,12 @@ pub struct ReferralState {
     pub operation_deposit_stake_account_fee: u8,
     pub operation_liquid_unstake_fee: u8,
     pub operation_delayed_unstake_fee: u8,
+
+    // accumulators for operation fees paid
+    pub accum_deposit_sol_fees: u64,
+    pub accum_deposit_stake_account_fee: u64,
+    pub accum_liquid_unstake_fee: u64,
+    pub accum_delayed_unstake_fee: u64,
 }
 
 impl ReferralState {
@@ -77,6 +87,16 @@ impl ReferralState {
         self.liq_unstake_msol_amount = 0;
         self.liq_unstake_sol_amount = 0;
         self.liq_unstake_operations = 0;
+
+        self.accum_deposit_sol_fees = 0;
+        self.accum_deposit_stake_account_fee = 0;
+        self.accum_liquid_unstake_fee = 0;
+        self.accum_delayed_unstake_fee = 0;
+
+        self.accum_deposit_sol_fees = 0;
+        self.accum_deposit_stake_account_fee = 0;
+        self.accum_liquid_unstake_fee = 0;
+        self.accum_delayed_unstake_fee = 0;
     }
 
     pub fn get_liq_unstake_share_amount(&self) -> Result<u64, CommonError> {

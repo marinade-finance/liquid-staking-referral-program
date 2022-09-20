@@ -21,5 +21,5 @@ pub enum ReferralError {
     NotInitializedMintAccount, // 306
 
     #[msg("Referral operation fee was set over the maximum permitted amount")]
-    ReferralOperationFeeOverMax,
+    ReferralOperationFeeOverMax, // 307
 }
