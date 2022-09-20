@@ -52,7 +52,7 @@ pub mod test_add_remove_liquidity;
 pub mod test_delayed_unstake;
 pub mod test_deposit_sol_liquid_unstake;
 pub mod test_deposit_stake_account;
-pub mod test_state_initialization;
+pub mod test_admin;
 
 const MSOL_SYMBOL: &str = "mSOL";
 const MSOL_SOL_LP_SYMBOL: &str = "mSOL-SOL-LP";
@@ -1046,6 +1046,39 @@ pub struct MarinadeReferralTestGlobals {
 pub async fn init_marinade_referral_test_globals(
     test: &mut IntegrationTest,
 ) -> MarinadeReferralTestGlobals {
+    let (global_state, admin) = create_global_state_account(test, None, None).await;
+
+    let partner = test
+        .create_test_user("test_referral_partner", 200 * LAMPORTS_PER_SOL)
+        .await;
+    // partner token account
+    let token_partner_account = partner.get_or_create_msol_account_instruction(test).await;
+    test.execute().await; // execute if the ATA needed to be created
+
+    let referral_state = create_referral_state_account(
+        test,
+        &partner,
+        global_state,
+        &admin.keypair,
+        token_partner_account.pubkey,
+    )
+    .await
+    .unwrap();
+
+    return MarinadeReferralTestGlobals {
+        admin_key: admin.keypair,
+        global_state_pubkey: global_state,
+        partner_referral_state_pubkey: referral_state,
+        msol_partner_token_pubkey: token_partner_account.pubkey,
+        partner,
+    };
+}
+
+pub async fn create_global_state_account(
+    test: &mut IntegrationTest,
+    foreman_1: Option<Pubkey>,
+    foreman_2: Option<Pubkey>,
+) -> (Pubkey, TestUser) {
     // admin: AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
     let admin_key_bytes: [u8; 64] = [
         136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38, 100, 72, 135,
@@ -1061,13 +1094,6 @@ pub async fn init_marinade_referral_test_globals(
             admin_key,
         )
         .await;
-
-    let partner = test
-        .create_test_user("test_referral_partner", 200 * LAMPORTS_PER_SOL)
-        .await;
-    // partner token account
-    let token_partner_account = partner.get_or_create_msol_account_instruction(test).await;
-    test.execute().await; // execute if the ATA needed to be created
 
     // global state: mRg6bDsAd5uwERAdNTynoUeRbqQsLa7yzuK2kkCUPGW
     let global_state_key_bytes: [u8; 64] = [
@@ -1095,11 +1121,23 @@ pub async fn init_marinade_referral_test_globals(
     println!("create global state account {}", global_state_pubkey);
     test.execute().await;
 
+    let foreman_1 = if foreman_1.is_some() {
+        foreman_1.unwrap()
+    } else {
+        system_program::ID
+    };
+    let foreman_2 = if foreman_2.is_some() {
+        foreman_2.unwrap()
+    } else {
+        system_program::ID
+    };
     {
         let accounts = marinade_referral::accounts::Initialize {
             admin_account: admin.keypair.pubkey(),
             msol_mint_account: test.state.msol_mint,
             global_state: global_state_pubkey,
+            foreman_1,
+            foreman_2,
         };
         let ix_data = marinade_referral::instruction::Initialize {};
         let instruction = Instruction {
@@ -1114,7 +1152,16 @@ pub async fn init_marinade_referral_test_globals(
         )
         .await;
     }
+    (global_state_pubkey, admin)
+}
 
+pub async fn create_referral_state_account(
+    test: &mut IntegrationTest,
+    partner: &TestUser,
+    global_state: Pubkey,
+    admin_pk: &Arc<Keypair>,
+    referral_msol_account: Pubkey,
+) -> std::result::Result<Pubkey, u32> {
     // partner referral state (referral code)
     let referral_state_key = Keypair::new();
     let referral_state_pubkey = referral_state_key.pubkey();
@@ -1142,11 +1189,11 @@ pub async fn init_marinade_referral_test_globals(
 
     {
         let accounts = marinade_referral::accounts::InitReferralAccount {
-            global_state: global_state_pubkey,
-            admin_account: admin.keypair.pubkey(),
+            global_state,
+            signer: admin_pk.pubkey(),
             referral_state: referral_state_pubkey,
             partner_account: partner.keypair.pubkey(),
-            msol_token_partner_account: token_partner_account.pubkey,
+            msol_token_partner_account: referral_msol_account,
         };
         let ix_data = marinade_referral::instruction::InitReferralAccount {
             partner_name: "TEST_PART".into(),
@@ -1157,20 +1204,10 @@ pub async fn init_marinade_referral_test_globals(
             data: ix_data.data(),
         };
         println!("Init referral-state {}", referral_state_pubkey);
-        test.execute_instruction(
-            instruction,
-            vec![test.fee_payer_signer(), admin.keypair.clone()],
-        )
-        .await;
+        test.try_execute_instruction(instruction, vec![test.fee_payer_signer(), admin_pk.clone()])
+            .await?;
     }
-
-    return MarinadeReferralTestGlobals {
-        admin_key: admin.keypair,
-        global_state_pubkey,
-        partner_referral_state_pubkey: referral_state_pubkey,
-        msol_partner_token_pubkey: token_partner_account.pubkey,
-        partner,
-    };
+    Ok(referral_state_pubkey)
 }
 
 pub async fn change_authority_execute(
@@ -1178,12 +1215,16 @@ pub async fn change_authority_execute(
     global_state: Pubkey,
     old_admin: Pubkey,
     new_admin: Pubkey,
-    signer: &Arc<Keypair>,
+    new_foreman_1: Pubkey,
+    new_foreman_2: Pubkey,
+    signer: &Arc<Keypair>, // usually old_admin but for the failure testing we can differ
 ) -> Result<(), u32> {
     let accounts = marinade_referral::accounts::ChangeAuthority {
         global_state,
         admin_account: old_admin,
         new_admin_account: new_admin,
+        new_foreman_1,
+        new_foreman_2,
     };
     let ix_data = marinade_referral::instruction::ChangeAuthority {};
     let instruction = Instruction {
@@ -1204,10 +1245,6 @@ pub async fn update_referral_execute(
     new_partner_account: Pubkey,
     new_msol_token_partner_account: Pubkey,
     pause: bool,
-    operation_deposit_sol_fee: Option<u8>,
-    operation_deposit_stake_account_fee: Option<u8>,
-    operation_liquid_unstake_fee: Option<u8>,
-    operation_delayed_unstake_fee: Option<u8>,
 ) -> Result<(), u32> {
     let accounts = marinade_referral::accounts::UpdateReferral {
         global_state,
@@ -1218,6 +1255,36 @@ pub async fn update_referral_execute(
     };
     let ix_data = marinade_referral::instruction::UpdateReferral {
         pause,
+    };
+    let instruction = Instruction {
+        program_id: marinade_referral::marinade_referral::ID,
+        accounts: accounts.to_account_metas(None),
+        data: ix_data.data(),
+    };
+    println!("Calling ix to change the configuraiton of the referral state {}", referral_state);
+    test.try_execute_instruction(
+        instruction,
+        vec![test.fee_payer_signer(), admin_keypair.clone()],
+    )
+    .await
+}
+
+pub async fn update_operation_fees(
+    test: &mut IntegrationTest,
+    global_state: Pubkey,
+    signer_keypair: &Arc<Keypair>,
+    referral_state: Pubkey,
+    operation_deposit_sol_fee: Option<u8>,
+    operation_deposit_stake_account_fee: Option<u8>,
+    operation_liquid_unstake_fee: Option<u8>,
+    operation_delayed_unstake_fee: Option<u8>,
+) -> Result<(), u32> {
+    let accounts = marinade_referral::accounts::UpdateOperationFees {
+        global_state,
+        signer: signer_keypair.pubkey(),
+        referral_state,
+    };
+    let ix_data = marinade_referral::instruction::UpdateOperationFees {
         operation_deposit_sol_fee,
         operation_deposit_stake_account_fee,
         operation_liquid_unstake_fee,
@@ -1228,30 +1295,34 @@ pub async fn update_referral_execute(
         accounts: accounts.to_account_metas(None),
         data: ix_data.data(),
     };
-    println!("Calling ix to change the referral state {}", referral_state);
+    println!("Calling ix to change fees at the referral state {}", referral_state);
     test.try_execute_instruction(
         instruction,
-        vec![test.fee_payer_signer(), admin_keypair.clone()],
+        vec![test.fee_payer_signer(), signer_keypair.clone()],
     )
     .await
 }
 
 impl MarinadeReferralTestGlobals {
     async fn set_no_operation_fees(&self, test: &mut IntegrationTest) {
-        update_referral_execute(
+        update_operation_fees(
             test,
             self.global_state_pubkey,
             &self.admin_key,
             self.partner_referral_state_pubkey,
-            self.partner.keypair.pubkey(),
-            self.msol_partner_token_pubkey,
-            false,
             Some(0),
             Some(0),
             Some(0),
             Some(0),
         )
         .await
-        .unwrap()
+        .unwrap();
+
+        let referral_state: marinade_referral::states::ReferralState =
+            get_account(test, self.partner_referral_state_pubkey).await;
+        assert_eq!(referral_state.accum_delayed_unstake_fee, 0);
+        assert_eq!(referral_state.accum_deposit_sol_fees, 0);
+        assert_eq!(referral_state.accum_deposit_stake_account_fee, 0);
+        assert_eq!(referral_state.accum_liquid_unstake_fee, 0);
     }
 }

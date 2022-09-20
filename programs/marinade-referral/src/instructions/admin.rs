@@ -10,7 +10,6 @@ use crate::states::{GlobalState, ReferralState};
 //-----------------------------------------------------
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    // admin account
     #[account(signer)]
     pub admin_account: AccountInfo<'info>,
 
@@ -19,11 +18,18 @@ pub struct Initialize<'info> {
 
     #[account()]
     pub msol_mint_account: CpiAccount<'info, Mint>,
+
+    #[account()]
+    pub foreman_1: AccountInfo<'info>,
+    #[account()]
+    pub foreman_2: AccountInfo<'info>,
 }
 impl<'info> Initialize<'info> {
     pub fn process(&mut self) -> ProgramResult {
         self.global_state.admin_account = self.admin_account.key();
         self.global_state.msol_mint_account = self.msol_mint_account.key();
+        self.global_state.foreman_1 = self.foreman_1.key();
+        self.global_state.foreman_2 = self.foreman_2.key();
 
         // verify if the account that should be considered as MSOL mint is an active mint account
         if !self.msol_mint_account.is_initialized() {
@@ -38,13 +44,13 @@ impl<'info> Initialize<'info> {
 pub struct InitReferralAccount<'info> {
     // global state
     #[account(
-        has_one = admin_account,
+        constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
     )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
-    // admin account, signer
+    // admin account or foreman account
     #[account(signer)]
-    pub admin_account: AccountInfo<'info>,
+    pub signer: AccountInfo<'info>,
 
     #[account(zero)] // must be created but empty, ready to be initialized
     pub referral_state: ProgramAccount<'info, ReferralState>,
@@ -103,6 +109,11 @@ impl<'info> InitReferralAccount<'info> {
         self.referral_state.operation_liquid_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
         self.referral_state.operation_delayed_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
 
+        self.referral_state.accum_deposit_sol_fees = 0;
+        self.referral_state.accum_deposit_stake_account_fee = 0;
+        self.referral_state.accum_liquid_unstake_fee = 0;
+        self.referral_state.accum_delayed_unstake_fee = 0;
+
         Ok(())
     }
 }
@@ -145,10 +156,16 @@ pub struct ChangeAuthority<'info> {
 
     // new admin account
     pub new_admin_account: AccountInfo<'info>,
+
+    // new foremen accounts
+    pub new_foreman_1: AccountInfo<'info>,
+    pub new_foreman_2: AccountInfo<'info>,
 }
 impl<'info> ChangeAuthority<'info> {
     pub fn process(&mut self) -> ProgramResult {
         self.global_state.admin_account = *self.new_admin_account.key;
+        self.global_state.foreman_1 = *self.new_foreman_1.key;
+        self.global_state.foreman_2 = *self.new_foreman_2.key;
         Ok(())
     }
 }
@@ -157,9 +174,7 @@ impl<'info> ChangeAuthority<'info> {
 #[derive(Accounts)]
 pub struct UpdateReferral<'info> {
     // global state
-    #[account(
-        has_one = admin_account,
-    )]
+    #[account(has_one = admin_account)]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin account
@@ -182,10 +197,6 @@ impl<'info> UpdateReferral<'info> {
     pub fn process(
         &mut self,
         pause: bool,
-        operation_deposit_sol_fee: Option<u8>,
-        operation_deposit_stake_account_fee: Option<u8>,
-        operation_liquid_unstake_fee: Option<u8>,
-        operation_delayed_unstake_fee: Option<u8>,
     ) -> ProgramResult {
         self.referral_state.pause = pause;
 
@@ -203,6 +214,35 @@ impl<'info> UpdateReferral<'info> {
             )?;
         }
 
+        Ok(())
+    }
+}
+
+//-----------------------------------------------------
+#[derive(Accounts)]
+pub struct UpdateOperationFees<'info> {
+    // global state
+    #[account(
+        constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
+    )]
+    pub global_state: ProgramAccount<'info, GlobalState>,
+
+    // admin or foreman account
+    #[account(signer)]
+    pub signer: AccountInfo<'info>,
+
+    // referral state
+    #[account(mut)]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
+}
+impl<'info> UpdateOperationFees<'info> {
+    pub fn process(
+        &mut self,
+        operation_deposit_sol_fee: Option<u8>,
+        operation_deposit_stake_account_fee: Option<u8>,
+        operation_liquid_unstake_fee: Option<u8>,
+        operation_delayed_unstake_fee: Option<u8>,
+    ) -> ProgramResult {
         set_fee_checked(
             &mut self.referral_state.operation_deposit_sol_fee,
             operation_deposit_sol_fee,
