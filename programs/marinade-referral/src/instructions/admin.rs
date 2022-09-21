@@ -137,7 +137,7 @@ impl<'info> InitReferralAccount<'info> {
         self.referral_state.operation_liquid_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
         self.referral_state.operation_delayed_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
 
-        self.referral_state.accum_deposit_sol_fees = 0;
+        self.referral_state.accum_deposit_sol_fee = 0;
         self.referral_state.accum_deposit_stake_account_fee = 0;
         self.referral_state.accum_liquid_unstake_fee = 0;
         self.referral_state.accum_delayed_unstake_fee = 0;
