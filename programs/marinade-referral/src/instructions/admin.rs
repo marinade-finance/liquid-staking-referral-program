@@ -261,6 +261,12 @@ impl<'info> UpdateOperationFees<'info> {
         operation_liquid_unstake_fee: Option<u8>,
         operation_delayed_unstake_fee: Option<u8>,
     ) -> ProgramResult {
+
+        // disallow for stake-as-collateral mode, fees must be zero in that mode
+        if self.referral_state.validator_vote_key.is_some() {
+            return Err(NotAllowedForStakeAsCollateralPartner.into());
+        };
+
         set_fee_checked(
             &mut self.referral_state.operation_deposit_sol_fee,
             operation_deposit_sol_fee,
