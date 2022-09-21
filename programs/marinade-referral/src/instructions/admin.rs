@@ -29,8 +29,8 @@ impl<'info> Initialize<'info> {
         self.global_state.foreman_1 = self.foreman_1.key();
         self.global_state.foreman_2 = self.foreman_2.key();
 
-        self.global_state.max_keep_pct = 80;
-        self.global_state.min_keep_pct = 20;
+        self.global_state.max_keep_pct = 90;
+        self.global_state.min_keep_pct = 10;
 
         // verify if the account that should be considered as MSOL mint is an active mint account
         if !self.msol_mint_account.is_initialized() {

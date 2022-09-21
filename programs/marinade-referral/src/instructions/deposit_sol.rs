@@ -42,7 +42,7 @@ impl<'info> Deposit<'info> {
     pub fn process(&mut self, lamports: u64) -> ProgramResult {
         msg!("enter Deposit::process {}", lamports);
 
-        // disallow for stake-account-as-collateral mode
+        // disallow for stake-as-collateral mode
         if self.referral_state.validator_vote_key.is_some() {
             return Err(NotAllowedForStakeAsCollateralPartner.into());
         };

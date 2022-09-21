@@ -9,6 +9,17 @@ https://docs.marinade.finance/partnerships/referral-program
 Example application that uses the referral program instructions can be checked at
 https://github.com/marinade-finance/liquid-staking-referral-example-app
 
+## Extension: stake-as-collateral Marinade program
+
+This referral program also works as data register for the stake-as-collateral Marinade program. 
+By staking a stake-account using a referral code configured for the stake-as-collateral Marinade program,
+a partner automatically register the deposited stake-account amount as part of the program, 
+and the partner account as the monitored account.
+
+By setting the field "validator_vote_key" the referral code restricts operations to only deposits of stake-accounts
+already delegated to that specific validator.
+
+
 ## To develop
 
 * To build the program `anchor build`

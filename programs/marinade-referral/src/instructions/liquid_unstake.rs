@@ -42,7 +42,7 @@ impl<'info> LiquidUnstake<'info> {
     pub fn process(&mut self, msol_amount: u64) -> ProgramResult {
         // accumulate treasury fees for the liquid-unstake
 
-        // disallow for stake-account-as-collateral mode
+        // disallow for stake-as-collateral mode
         if self.referral_state.validator_vote_key.is_some() {
             return Err(NotAllowedForStakeAsCollateralPartner.into());
         };
