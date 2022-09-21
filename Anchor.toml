@@ -1,10 +1,10 @@
 anchor_version = "0.14.0"
 
 [programs.localnet]
-marinade_referral = "mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY"
+marinade_referral = "MR2LqxoSbw831bNy68utpu5n4YqBH3AzDmddkgk9LQv"
 
 [programs.devnet]
-marinade_referral = "mRefx8ypXNxE59NhoBqwqb3vTvjgf8MYECp4kgJWiDY"
+marinade_referral = "MR2LqxoSbw831bNy68utpu5n4YqBH3AzDmddkgk9LQv"
 
 [registry]
 url = "https://anchor.projectserum.com"

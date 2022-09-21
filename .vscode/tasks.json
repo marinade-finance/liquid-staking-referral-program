@@ -14,8 +14,9 @@
 		},
 		{
 			"type": "shell",
-			"command": "anchor",
+			"command": "npx",
 			"args": [
+				"@project-serum/anchor-cli@0.14.0",
 				"build"
 			],
 			"group": "build",
@@ -24,6 +25,20 @@
 			],
 			"label": "anchor build",
 			"detail": "anchor build"
+		},
+		{
+			"type": "shell",
+			"command": "cargo",
+			"args": [
+				"build-bpf",
+				"--features","anchor-debug"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"label": "build with anchor-debug",
+			"detail": "cargo build-bpf --features anchor-debug"
 		},
 	]
 }

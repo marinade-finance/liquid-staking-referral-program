@@ -1139,7 +1139,7 @@ pub async fn create_global_state_account(
             foreman_1,
             foreman_2,
         };
-        let ix_data = marinade_referral::instruction::Initialize {};
+        let ix_data = marinade_referral::instruction::Initialize {min_keep_pct:10, max_keep_pct:90};
         let instruction = Instruction {
             program_id: marinade_referral::marinade_referral::ID,
             accounts: accounts.to_account_metas(None),

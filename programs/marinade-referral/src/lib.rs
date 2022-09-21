@@ -39,8 +39,12 @@ pub mod marinade_referral {
 
     ///Admin
     ///create global state
-    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
-        ctx.accounts.process()
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        min_keep_pct: u8,
+        max_keep_pct: u8,
+    ) -> ProgramResult {
+        ctx.accounts.process(min_keep_pct, max_keep_pct)
     }
 
     ///create referral state

@@ -23,14 +23,15 @@ pub struct Initialize<'info> {
     pub foreman_2: AccountInfo<'info>,
 }
 impl<'info> Initialize<'info> {
-    pub fn process(&mut self) -> ProgramResult {
+    pub fn process(&mut self, min_keep_pct: u8, max_keep_pct: u8) -> ProgramResult {
         self.global_state.admin_account = self.admin_account.key();
         self.global_state.msol_mint_account = self.msol_mint_account.key();
         self.global_state.foreman_1 = self.foreman_1.key();
         self.global_state.foreman_2 = self.foreman_2.key();
 
-        self.global_state.max_keep_pct = 90;
-        self.global_state.min_keep_pct = 10;
+        self.global_state.min_keep_pct = min_keep_pct;
+        assert!(max_keep_pct <= 100);
+        self.global_state.max_keep_pct = max_keep_pct;
 
         // verify if the account that should be considered as MSOL mint is an active mint account
         if !self.msol_mint_account.is_initialized() {
@@ -261,7 +262,6 @@ impl<'info> UpdateOperationFees<'info> {
         operation_liquid_unstake_fee: Option<u8>,
         operation_delayed_unstake_fee: Option<u8>,
     ) -> ProgramResult {
-
         // disallow for stake-as-collateral mode, fees must be zero in that mode
         if self.referral_state.validator_vote_key.is_some() {
             return Err(NotAllowedForStakeAsCollateralPartner.into());
