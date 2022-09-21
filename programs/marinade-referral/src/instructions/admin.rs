@@ -29,8 +29,13 @@ impl<'info> Initialize<'info> {
         self.global_state.foreman_1 = self.foreman_1.key();
         self.global_state.foreman_2 = self.foreman_2.key();
 
+        if min_keep_pct > max_keep_pct {
+            return Err(MinMaxKeepPctOutOfRange.into());
+        }
         self.global_state.min_keep_pct = min_keep_pct;
-        assert!(max_keep_pct <= 100);
+        if max_keep_pct > 100 {
+            return Err(MaxKeepPctOutOfRange.into());
+        }
         self.global_state.max_keep_pct = max_keep_pct;
 
         // verify if the account that should be considered as MSOL mint is an active mint account
