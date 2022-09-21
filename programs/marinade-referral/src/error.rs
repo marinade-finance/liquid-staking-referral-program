@@ -22,4 +22,13 @@ pub enum ReferralError {
 
     #[msg("Referral operation fee was set over the maximum permitted amount")]
     ReferralOperationFeeOverMax, // 307
+
+    #[msg("Not allowed for stake-as-collateral-partners")]
+    NotAllowedForStakeAsCollateralPartner,
+    #[msg("Keep_pct out of valid range")]
+    KeepPctOutOfRange,
+    #[msg("Stake-account must be delegated to partner validator")]
+    StakeAccountMustBeDelegatedToPartnerValidator,
+    #[msg("Stake-account authority must be partner account")]
+    StakeAccountAuthMustBePartnerAccount,
 }

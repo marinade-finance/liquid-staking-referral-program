@@ -3,7 +3,7 @@ use anchor_spl::token::{Mint, TokenAccount};
 use solana_program::program_pack::IsInitialized;
 
 use crate::constant::*;
-use crate::error::ReferralError::ReferralOperationFeeOverMax;
+use crate::error::ReferralError::*;
 use crate::error::*;
 use crate::states::{GlobalState, ReferralState};
 
@@ -19,9 +19,7 @@ pub struct Initialize<'info> {
     #[account()]
     pub msol_mint_account: CpiAccount<'info, Mint>,
 
-    #[account()]
     pub foreman_1: AccountInfo<'info>,
-    #[account()]
     pub foreman_2: AccountInfo<'info>,
 }
 impl<'info> Initialize<'info> {
@@ -30,6 +28,9 @@ impl<'info> Initialize<'info> {
         self.global_state.msol_mint_account = self.msol_mint_account.key();
         self.global_state.foreman_1 = self.foreman_1.key();
         self.global_state.foreman_2 = self.foreman_2.key();
+
+        self.global_state.max_keep_pct = 80;
+        self.global_state.min_keep_pct = 20;
 
         // verify if the account that should be considered as MSOL mint is an active mint account
         if !self.msol_mint_account.is_initialized() {
@@ -56,7 +57,6 @@ pub struct InitReferralAccount<'info> {
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
     // partner main account
-    #[account()]
     pub partner_account: AccountInfo<'info>,
 
     // partner mSOL beneficiary token account
@@ -65,7 +65,12 @@ pub struct InitReferralAccount<'info> {
 }
 
 impl<'info> InitReferralAccount<'info> {
-    pub fn process(&mut self, partner_name: String) -> ProgramResult {
+    pub fn process(
+        &mut self,
+        partner_name: String,
+        validator_vote_key: Option<Pubkey>,
+        keep_self_stake_pct: u8,
+    ) -> ProgramResult {
         msg!("process_init_referral_account");
         if partner_name.len() > 20 {
             msg!("max partner_name.len() is 20");
@@ -80,6 +85,23 @@ impl<'info> InitReferralAccount<'info> {
         )?;
 
         self.referral_state.partner_name = partner_name.clone();
+
+        self.referral_state.validator_vote_key = validator_vote_key;
+        // if stake-as-collateral mode
+        if validator_vote_key.is_some() {
+            if !(keep_self_stake_pct >= self.global_state.min_keep_pct
+                && keep_self_stake_pct <= self.global_state.max_keep_pct)
+            {
+                msg!(
+                    "keep_pct {} must be >= {} and <= {}",
+                    keep_self_stake_pct,
+                    self.global_state.min_keep_pct,
+                    self.global_state.max_keep_pct
+                );
+                return Err(KeepPctOutOfRange.into());
+            };
+            self.referral_state.keep_self_stake_pct = keep_self_stake_pct
+        };
 
         self.referral_state.partner_account = self.partner_account.key();
         self.referral_state.msol_token_partner_account = self.msol_token_partner_account.key();
@@ -186,7 +208,6 @@ pub struct UpdateReferral<'info> {
     pub referral_state: ProgramAccount<'info, ReferralState>,
 
     // partner main account
-    #[account()]
     pub new_partner_account: AccountInfo<'info>,
 
     // partner mSOL beneficiary token account
@@ -194,10 +215,7 @@ pub struct UpdateReferral<'info> {
     pub new_msol_token_partner_account: CpiAccount<'info, TokenAccount>,
 }
 impl<'info> UpdateReferral<'info> {
-    pub fn process(
-        &mut self,
-        pause: bool,
-    ) -> ProgramResult {
+    pub fn process(&mut self, pause: bool) -> ProgramResult {
         self.referral_state.pause = pause;
 
         if *self.new_partner_account.key != self.referral_state.partner_account

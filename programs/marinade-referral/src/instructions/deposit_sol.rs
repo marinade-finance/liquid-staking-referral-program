@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use marinade_onchain_helper::{cpi_context_accounts::MarinadeDeposit, cpi_util};
 
 use super::common::{msol_balance, transfer_msol_fee};
+use crate::error::ReferralError::*;
 use crate::states::ReferralState;
 
 //-----------------------------------------------------
@@ -40,6 +41,12 @@ pub struct Deposit<'info> {
 impl<'info> Deposit<'info> {
     pub fn process(&mut self, lamports: u64) -> ProgramResult {
         msg!("enter Deposit::process {}", lamports);
+
+        // disallow for stake-account-as-collateral mode
+        if self.referral_state.validator_vote_key.is_some() {
+            return Err(NotAllowedForStakeAsCollateralPartner.into());
+        };
+
         let cpi_ctx = self.into_marinade_deposit_cpi_ctx();
         let data = marinade_finance::instruction::Deposit { lamports };
 

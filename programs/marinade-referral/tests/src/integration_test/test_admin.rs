@@ -167,6 +167,8 @@ async fn test_double_referral_state_initialization() -> anyhow::Result<()> {
     };
     let ix_data = marinade_referral::instruction::InitReferralAccount {
         partner_name: "FAILING".into(),
+        validator_vote_key: None,
+        keep_self_stake_pct: 0,
     };
     let instruction = Instruction {
         program_id: marinade_referral::marinade_referral::ID,

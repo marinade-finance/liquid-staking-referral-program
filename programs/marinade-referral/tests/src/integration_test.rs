@@ -1197,6 +1197,8 @@ pub async fn create_referral_state_account(
         };
         let ix_data = marinade_referral::instruction::InitReferralAccount {
             partner_name: "TEST_PART".into(),
+            validator_vote_key: None,
+            keep_self_stake_pct: 0
         };
         let instruction = Instruction {
             program_id: marinade_referral::marinade_referral::ID,

@@ -14,6 +14,10 @@ pub struct GlobalState {
     // admin-like accounts to create referral state account and change operation fees
     pub foreman_1: Pubkey,
     pub foreman_2: Pubkey,
+
+    // max & min accepted keep_pct for stake_as_collateral partner mode
+    pub min_keep_pct: u8,
+    pub max_keep_pct: u8,
 }
 
 //-----------------------------------------------------
@@ -22,6 +26,10 @@ pub struct GlobalState {
 pub struct ReferralState {
     // Partner name
     pub partner_name: String, //max-length 20 bytes
+
+    /// set value if this referral-account is a stake-account-as-collateral partner record
+    pub validator_vote_key: Option<Pubkey>,
+    pub keep_self_stake_pct: u8, // if stake-account-as-collateral partner record, how much % of deposit_stake_account_amount to keep in the validator
 
     // partner Beneficiary account (native account)
     pub partner_account: Pubkey,

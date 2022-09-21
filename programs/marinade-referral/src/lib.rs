@@ -47,18 +47,16 @@ pub mod marinade_referral {
     pub fn init_referral_account(
         ctx: Context<InitReferralAccount>,
         partner_name: String,
+        validator_vote_key: Option<Pubkey>,
+        keep_self_stake_pct: u8,
     ) -> ProgramResult {
-        ctx.accounts.process(partner_name)
+        ctx.accounts
+            .process(partner_name, validator_vote_key, keep_self_stake_pct)
     }
 
     ///update referral state
-    pub fn update_referral(
-        ctx: Context<UpdateReferral>,
-        pause: bool,
-    ) -> ProgramResult {
-        ctx.accounts.process(
-            pause
-        )
+    pub fn update_referral(ctx: Context<UpdateReferral>, pause: bool) -> ProgramResult {
+        ctx.accounts.process(pause)
     }
 
     ///update referral operation fees

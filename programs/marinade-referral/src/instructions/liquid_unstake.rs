@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use super::common::transfer_msol_fee;
 use marinade_onchain_helper::{cpi_context_accounts::MarinadeLiquidUnstake, cpi_util};
 
+use crate::error::ReferralError::*;
 use crate::states::ReferralState;
 
 //-----------------------------------------------------
@@ -40,6 +41,11 @@ pub struct LiquidUnstake<'info> {
 impl<'info> LiquidUnstake<'info> {
     pub fn process(&mut self, msol_amount: u64) -> ProgramResult {
         // accumulate treasury fees for the liquid-unstake
+
+        // disallow for stake-account-as-collateral mode
+        if self.referral_state.validator_vote_key.is_some() {
+            return Err(NotAllowedForStakeAsCollateralPartner.into());
+        };
 
         // We parse manually self.state to avoid making the IDL more complex by including marinade_finance::State
         let marinade_state: ProgramAccount<marinade_finance::State> =

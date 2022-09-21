@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use marinade_finance::stake_wrapper::StakeWrapper;
 
 use super::common::{msol_balance, transfer_msol_fee};
+use crate::error::ReferralError::*;
 use crate::states::ReferralState;
 use marinade_onchain_helper::{cpi_context_accounts::MarinadeDepositStakeAccount, cpi_util};
 
@@ -55,6 +56,17 @@ impl<'info> DepositStakeAccount<'info> {
             );
             ProgramError::InvalidAccountData
         })?;
+
+        // if stake-as-collateral mode, the stake-account should be delegated to partner validator
+        // and partner_account should be the stake_authority
+        if let Some(validator_vote_key) = self.referral_state.validator_vote_key {
+            if validator_vote_key != delegation.voter_pubkey {
+                return Err(StakeAccountMustBeDelegatedToPartnerValidator.into());
+            }
+            if *self.stake_authority.key != self.referral_state.partner_account {
+                return Err(StakeAccountAuthMustBePartnerAccount.into());
+            }
+        }
 
         // msol balance before call
         let msol_before = msol_balance(&self.mint_to)?;
