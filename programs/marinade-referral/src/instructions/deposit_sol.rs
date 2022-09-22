@@ -77,7 +77,7 @@ impl<'info> Deposit<'info> {
         // update accumulators
         self.referral_state.deposit_sol_amount += lamports;
         self.referral_state.deposit_sol_operations += 1;
-        self.referral_state.accum_deposit_sol_fee += operation_fee;
+        self.referral_state.accum_deposit_sol_fees += operation_fee;
         Ok(())
     }
 

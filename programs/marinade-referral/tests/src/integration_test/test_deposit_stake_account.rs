@@ -120,7 +120,7 @@ async fn test_deposit_stake_account_with_fees() -> anyhow::Result<()> {
         partner_msol_balance_before + operation_fee_lamports
     );
     assert_eq!(
-        referral_state_after.accum_deposit_stake_account_fee - operation_fee_lamports,
+        referral_state_after.accum_deposit_stake_account_fees - operation_fee_lamports,
         0,
         "Deposit stake account operation accumulator fee does not increased by exepected amount"
     );

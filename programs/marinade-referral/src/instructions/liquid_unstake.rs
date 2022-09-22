@@ -103,7 +103,7 @@ impl<'info> LiquidUnstake<'info> {
         self.referral_state.liq_unstake_msol_amount += msol_amount_fee_deducted;
         self.referral_state.liq_unstake_sol_amount += user_remove_lamports;
         self.referral_state.liq_unstake_operations += 1;
-        self.referral_state.accum_liquid_unstake_fee += operation_fee;
+        self.referral_state.accum_liquid_unstake_fees += operation_fee;
 
         Ok(())
     }

@@ -101,7 +101,7 @@ impl<'info> DepositStakeAccount<'info> {
         // accumulate
         self.referral_state.deposit_stake_account_amount += delegation.stake;
         self.referral_state.deposit_stake_account_operations += 1;
-        self.referral_state.accum_deposit_stake_account_fee += operation_fee;
+        self.referral_state.accum_deposit_stake_account_fees += operation_fee;
         Ok(())
     }
 

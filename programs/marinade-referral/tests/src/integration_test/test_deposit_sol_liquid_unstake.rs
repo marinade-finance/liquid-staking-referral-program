@@ -267,8 +267,8 @@ async fn do_deposit_sol(
         data_before.partner_msol + operation_fee_lamports
     );
     assert_eq!(
-        data_before.referral_state.accum_deposit_sol_fee + operation_fee_lamports,
-        data_after.referral_state.accum_deposit_sol_fee,
+        data_before.referral_state.accum_deposit_sol_fees + operation_fee_lamports,
+        data_after.referral_state.accum_deposit_sol_fees,
         "Deposit sol operation accumulator fee does not increased by exepected amount"
     );
     Ok(())
@@ -418,8 +418,8 @@ pub async fn do_liquid_unstake(
         "Partner is expected to receive mSOL in the amount of the operation fee"
     );
     assert_eq!(
-        data_before.referral_state.accum_liquid_unstake_fee + operation_fee_lamports,
-        data_after.referral_state.accum_liquid_unstake_fee,
+        data_before.referral_state.accum_liquid_unstake_fees + operation_fee_lamports,
+        data_after.referral_state.accum_liquid_unstake_fees,
         "Liquid unstake operation accumulator fee does not increased by exepected amount"
     );
 
