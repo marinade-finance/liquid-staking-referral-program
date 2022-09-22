@@ -96,7 +96,7 @@ async fn test_init_global_state() -> anyhow::Result<()> {
         "Operation 'delayed unstake fee' should be init value",
     );
     assert_eq!(
-        0, referral_state.accum_deposit_sol_fees,
+        0, referral_state.accum_deposit_sol_fee,
         "Accumulator 'deposit sol fee' should be init at 0",
     );
     assert_eq!(

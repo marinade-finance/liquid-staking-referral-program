@@ -27,6 +27,10 @@ pub enum ReferralError {
     NotAllowedForStakeAsCollateralPartner,
     #[msg("Keep_pct out of valid range")]
     KeepPctOutOfRange,
+    #[msg("Max Keep_pct out of valid range, cannot go over 100%")]
+    MaxKeepPctOutOfRange,
+    #[msg("Min Keep-pct is bounded by value of Max Keep_pct")]
+    MinMaxKeepPctOutOfRange,
     #[msg("Stake-account must be delegated to partner validator")]
     StakeAccountMustBeDelegatedToPartnerValidator,
     #[msg("Stake-account authority must be partner account")]
