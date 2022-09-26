@@ -45,6 +45,8 @@ impl<'info> Initialize<'info> {
 #[derive(Accounts)]
 pub struct InitReferralAccount<'info> {
     // global state
+    // note if this constraint is not satisfied the err is: 0x8f/143: A raw constraint was violated
+    // TODO: can we provide a better message? as "signer is authority to create a referral-account"
     #[account(
         constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
     )]
