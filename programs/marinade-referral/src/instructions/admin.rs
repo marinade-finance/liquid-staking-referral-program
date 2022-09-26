@@ -29,8 +29,13 @@ impl<'info> Initialize<'info> {
         self.global_state.foreman_1 = self.foreman_1.key();
         self.global_state.foreman_2 = self.foreman_2.key();
 
+        if min_keep_pct > max_keep_pct {
+            return Err(MinMaxKeepPctOutOfRange.into());
+        }
         self.global_state.min_keep_pct = min_keep_pct;
-        assert!(max_keep_pct <= 100);
+        if max_keep_pct > 100 {
+            return Err(MaxKeepPctOutOfRange.into());
+        }
         self.global_state.max_keep_pct = max_keep_pct;
 
         // verify if the account that should be considered as MSOL mint is an active mint account
@@ -134,7 +139,7 @@ impl<'info> InitReferralAccount<'info> {
         self.referral_state.operation_liquid_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
         self.referral_state.operation_delayed_unstake_fee = DEFAULT_OPERATION_FEE_POINTS;
 
-        self.referral_state.accum_deposit_sol_fees = 0;
+        self.referral_state.accum_deposit_sol_fee = 0;
         self.referral_state.accum_deposit_stake_account_fee = 0;
         self.referral_state.accum_liquid_unstake_fee = 0;
         self.referral_state.accum_delayed_unstake_fee = 0;

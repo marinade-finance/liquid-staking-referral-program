@@ -267,8 +267,8 @@ async fn do_deposit_sol(
         data_before.partner_msol + operation_fee_lamports
     );
     assert_eq!(
-        data_before.referral_state.accum_deposit_sol_fees + operation_fee_lamports,
-        data_after.referral_state.accum_deposit_sol_fees,
+        data_before.referral_state.accum_deposit_sol_fee + operation_fee_lamports,
+        data_after.referral_state.accum_deposit_sol_fee,
         "Deposit sol operation accumulator fee does not increased by exepected amount"
     );
     Ok(())

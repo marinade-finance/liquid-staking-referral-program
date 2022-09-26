@@ -77,7 +77,7 @@ pub struct ReferralState {
     pub operation_delayed_unstake_fee: u8,
 
     // accumulators for operation fees paid
-    pub accum_deposit_sol_fees: u64,
+    pub accum_deposit_sol_fee: u64,
     pub accum_deposit_stake_account_fee: u64,
     pub accum_liquid_unstake_fee: u64,
     pub accum_delayed_unstake_fee: u64,
@@ -96,12 +96,7 @@ impl ReferralState {
         self.liq_unstake_sol_amount = 0;
         self.liq_unstake_operations = 0;
 
-        self.accum_deposit_sol_fees = 0;
-        self.accum_deposit_stake_account_fee = 0;
-        self.accum_liquid_unstake_fee = 0;
-        self.accum_delayed_unstake_fee = 0;
-
-        self.accum_deposit_sol_fees = 0;
+        self.accum_deposit_sol_fee = 0;
         self.accum_deposit_stake_account_fee = 0;
         self.accum_liquid_unstake_fee = 0;
         self.accum_delayed_unstake_fee = 0;

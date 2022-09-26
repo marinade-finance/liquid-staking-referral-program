@@ -1323,7 +1323,7 @@ impl MarinadeReferralTestGlobals {
         let referral_state: marinade_referral::states::ReferralState =
             get_account(test, self.partner_referral_state_pubkey).await;
         assert_eq!(referral_state.accum_delayed_unstake_fee, 0);
-        assert_eq!(referral_state.accum_deposit_sol_fees, 0);
+        assert_eq!(referral_state.accum_deposit_sol_fee, 0);
         assert_eq!(referral_state.accum_deposit_stake_account_fee, 0);
         assert_eq!(referral_state.accum_liquid_unstake_fee, 0);
     }
