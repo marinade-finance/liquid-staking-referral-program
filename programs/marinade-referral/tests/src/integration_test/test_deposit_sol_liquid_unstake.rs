@@ -466,6 +466,32 @@ async fn test_deposit_sol_operation_fee() -> anyhow::Result<()> {
 }
 
 #[test(tokio::test)]
+async fn test_deposit_sol_operation_fail_when_paused() {
+    let (mut test, marinade_referral_test_globals, mut rng) = IntegrationTest::init_test().await.unwrap();
+    marinade_referral_test_globals.pause_referral_account(&mut test).await;
+
+    let mut user = test.create_test_user("test_dep_sol_user", 1).await;
+    let deposit_result = do_deposit_sol(
+        &mut user,
+        random_amount(1, 100, &mut rng),
+        &mut test,
+        &marinade_referral_test_globals,
+        0,
+    )
+    .await;
+    match deposit_result {
+        Ok(_) => panic!("Expected error happens when referral account is paused"),
+        Err(number) => {
+            // https://github.com/coral-xyz/anchor/blob/v0.14.0/lang/src/error.rs
+            assert_eq!(
+                143, number,
+                "Expected anchor error 'A raw constraint was violated'"
+            );
+        }
+    }
+}
+
+#[test(tokio::test)]
 async fn test_deposit_sol_wrong_referral() -> anyhow::Result<()> {
     let (mut test, marinade_referral_test_globals, _) = IntegrationTest::init_test().await?;
     let mut user = test
@@ -608,4 +634,32 @@ async fn test_liquid_unstake_wrong_referral() -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+#[test(tokio::test)]
+async fn test_liquid_unstake_fail_when_paused() {
+    let (mut test, marinade_referral_test_globals, _) = IntegrationTest::init_test().await.unwrap();
+    marinade_referral_test_globals.pause_referral_account(&mut test).await;
+
+    let mut user = test.create_test_user("test_dep_sol_user", 1).await;
+    let user_msol_account = user.get_or_create_msol_account_instruction(&mut test).await;
+    let unstake_result = try_liquid_unstake(
+        &mut test,
+        &mut user,
+        &user_msol_account, // msol unstaked from here
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+        user_msol_account.pubkey,
+        0,
+    )
+    .await;
+    match unstake_result {
+        Ok(_) => panic!("Expected error happens when referral account is paused"),
+        Err(number) => {
+            // https://github.com/coral-xyz/anchor/blob/v0.14.0/lang/src/error.rs
+            assert_eq!(
+                143, number,
+                "Expected anchor error 'A raw constraint was violated'"
+            );
+        }
+    }
 }
