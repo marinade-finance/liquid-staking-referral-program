@@ -45,6 +45,8 @@ use solana_vote_program::{
     vote_instruction,
     vote_state::{VoteInit, VoteState},
 };
+extern crate shellexpand;
+use std::fs::File;
 
 use crate::initialize::InitializeInput;
 
@@ -1079,14 +1081,32 @@ pub async fn create_global_state_account(
     foreman_1: Option<Pubkey>,
     foreman_2: Option<Pubkey>,
 ) -> (Pubkey, TestUser) {
-    // admin: AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
-    let admin_key_bytes: [u8; 64] = [
-        136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38, 100, 72, 135,
-        189, 121, 32, 38, 93, 10, 41, 104, 38, 158, 171, 38, 138, 239, 196, 48, 200, 45, 19, 235,
-        223, 73, 101, 62, 195, 45, 48, 246, 226, 240, 177, 172, 213, 0, 184, 113, 158, 176, 17,
-        177, 2, 215, 168, 135,
-    ];
-    let admin_key: Keypair = Keypair::from_bytes(&admin_key_bytes).unwrap();
+
+    // // admin: AMMK9YLj8PRRG4K9DUsTNPZAZXeVbHiQJxakuVuvSKrn
+    // let admin_key_bytes: [u8; 64] = [
+    //     136, 60, 191, 232, 11, 20, 1, 82, 147, 185, 119, 92, 226, 212, 217, 227, 38, 100, 72, 135,
+    //     189, 121, 32, 38, 93, 10, 41, 104, 38, 158, 171, 38, 138, 239, 196, 48, 200, 45, 19, 235,
+    //     223, 73, 101, 62, 195, 45, 48, 246, 226, 240, 177, 172, 213, 0, 184, 113, 158, 176, 17,
+    //     177, 2, 215, 168, 135,
+    // ];
+    // let admin_key: Keypair = Keypair::from_bytes(&admin_key_bytes).unwrap();
+
+    // global state: MRSh4rUNrpn7mjAq9ENHV4rvwwPKMij113ScZq3twp2
+    // let global_state_key_bytes: [u8; 64] = [
+    //     134, 187, 164, 119, 110, 122, 23, 81, 124, 160, 171, 39, 43, 21, 99, 70, 76, 134, 197, 224,
+    //     143, 215, 219, 77, 113, 249, 46, 150, 129, 186, 236, 4, 11, 97, 116, 100, 244, 31, 228,
+    //     117, 219, 46, 34, 185, 59, 70, 45, 64, 93, 139, 190, 44, 110, 167, 44, 91, 202, 253, 222,
+    //     122, 43, 255, 45, 163,
+    // ];
+    // let global_state_key = Keypair::from_bytes(&global_state_key_bytes).unwrap();
+
+    // Note: global_state_key is now a fixed value to avoid a simple attack:
+    // what if I create a new global state where I am the admin, and then call the admin instructions 
+    // with my new global state and some existing referral-account. Then I can bypass admin check.
+    let global_state_key: Keypair = load_key_pair("~/.config/solana/MRSh4rUNrpn7mjAq9ENHV4rvwwPKMij113ScZq3twp2.json".into());
+
+    let admin_key = Keypair::new(); // = load_key_pair("~/.config/solana/MRSh4rUNrpn7mjAq9ENHV4rvwwPKMij113ScZq3twp2.json".into());
+
     let admin = test
         .create_test_user_from_keypair(
             "test_referral_admin_user",
@@ -1095,14 +1115,7 @@ pub async fn create_global_state_account(
         )
         .await;
 
-    // global state: mRg6bDsAd5uwERAdNTynoUeRbqQsLa7yzuK2kkCUPGW
-    let global_state_key_bytes: [u8; 64] = [
-        134, 187, 164, 119, 110, 122, 23, 81, 124, 160, 171, 39, 43, 21, 99, 70, 76, 134, 197, 224,
-        143, 215, 219, 77, 113, 249, 46, 150, 129, 186, 236, 4, 11, 97, 116, 100, 244, 31, 228,
-        117, 219, 46, 34, 185, 59, 70, 45, 64, 93, 139, 190, 44, 110, 167, 44, 91, 202, 253, 222,
-        122, 43, 255, 45, 163,
-    ];
-    let global_state_key = Keypair::from_bytes(&global_state_key_bytes).unwrap();
+    
     let global_state_pubkey = global_state_key.pubkey();
     let global_state_space = 8 + std::mem::size_of::<marinade_referral::states::GlobalState>();
     test.builder.add_signer(Arc::new(global_state_key)); // need to sign with private key to create account
@@ -1327,4 +1340,17 @@ impl MarinadeReferralTestGlobals {
         assert_eq!(referral_state.accum_deposit_stake_account_fee, 0);
         assert_eq!(referral_state.accum_liquid_unstake_fee, 0);
     }
+}
+
+/// Reads a `Keypair` from a json file, path can include ~ shortcut
+pub fn load_key_pair(path:String)->Keypair {
+    let full_path = shellexpand::tilde(&path).to_string();
+    let file = File::open(full_path).unwrap();
+    read_keypair(file)
+}
+
+/// Reads a JSON-encoded `Keypair` from a File struct
+fn read_keypair(file: File) -> Keypair {
+    let bytes: Vec<u8> = serde_json::from_reader(file).unwrap();
+    Keypair::from_bytes(&bytes).unwrap()
 }
