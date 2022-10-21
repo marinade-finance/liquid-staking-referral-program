@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
 use solana_program::program_pack::IsInitialized;
@@ -24,6 +26,8 @@ pub struct Initialize<'info> {
 }
 impl<'info> Initialize<'info> {
     pub fn process(&mut self, min_keep_pct: u8, max_keep_pct: u8) -> ProgramResult {
+        check_global_state_address(self.global_state.key())?;
+
         self.global_state.admin_account = self.admin_account.key();
         self.global_state.msol_mint_account = self.msol_mint_account.key();
         self.global_state.foreman_1 = self.foreman_1.key();
@@ -79,6 +83,7 @@ impl<'info> InitReferralAccount<'info> {
         validator_vote_key: Option<Pubkey>,
         keep_self_stake_pct: u8,
     ) -> ProgramResult {
+        check_global_state_address(self.global_state.key())?; // double-check
         msg!("process_init_referral_account");
         if partner_name.len() > 20 {
             msg!("max partner_name.len() is 20");
@@ -193,6 +198,7 @@ pub struct ChangeAuthority<'info> {
 }
 impl<'info> ChangeAuthority<'info> {
     pub fn process(&mut self) -> ProgramResult {
+        check_global_state_address(self.global_state.key())?; // double-check
         self.global_state.admin_account = *self.new_admin_account.key;
         self.global_state.foreman_1 = *self.new_foreman_1.key;
         self.global_state.foreman_2 = *self.new_foreman_2.key;
@@ -225,6 +231,7 @@ pub struct UpdateReferral<'info> {
 impl<'info> UpdateReferral<'info> {
     pub fn process(&mut self, pause: bool) -> ProgramResult {
         self.referral_state.pause = pause;
+        check_global_state_address(self.global_state.key())?; // double-check
 
         if *self.new_partner_account.key != self.referral_state.partner_account
             || self.new_msol_token_partner_account.key()
@@ -273,6 +280,7 @@ impl<'info> UpdateOperationFees<'info> {
         if self.referral_state.validator_vote_key.is_some() {
             return Err(NotAllowedForStakeAsCollateralPartner.into());
         };
+        check_global_state_address(self.global_state.key())?; // double-check
 
         set_fee_checked(
             &mut self.referral_state.operation_deposit_sol_fee,
@@ -312,4 +320,47 @@ fn set_fee_checked(
         *current_value = new_fee;
     }
     Ok(())
+}
+
+fn check_global_state_address(key: Pubkey) -> ProgramResult {
+    // Note: the referral accounts are not linked explicitly to the global account
+    // so we need to allow only and only one specific global account to avoid the simple attack
+    // of creating *a fake* global account in another address where the attacker is admin and use it as authorization
+    // to alter data from real referral accounts
+    if key != Pubkey::from_str("MRSh4rUNrpn7mjAq9ENHV4rvwwPKMij113ScZq3twp2").unwrap() {
+        Err(ReferralError::InvalidGlobalAccount.into())
+    } else {
+        Ok(())
+    }
+}
+
+//-----------------------------------------------------
+// recognizes a deposit for a stake-as-collateral partner
+// made previously to the existence of the referral account
+#[derive(Accounts)]
+pub struct AdminRecognizeDeposit<'info> {
+    // admin account
+    #[account(signer)]
+    pub signer: AccountInfo<'info>,
+
+    // global state, signer must be admin
+    #[account(constraint = *signer.key == global_state.admin_account)]
+    pub global_state: ProgramAccount<'info, GlobalState>,
+
+    // referral state
+    #[account(mut)]
+    pub referral_state: ProgramAccount<'info, ReferralState>,
+}
+
+impl<'info> AdminRecognizeDeposit<'info> {
+    pub fn process(&mut self, lamports: u64) -> ProgramResult {
+        // only allow for stake-as-collateral mode
+        check_global_state_address(self.global_state.key())?; // double-check
+        if self.referral_state.validator_vote_key.is_none() {
+            return Err(OnlyAllowedForStakeAsCollateralPartner.into());
+        };
+        self.referral_state.deposit_sol_amount += lamports;
+        self.referral_state.deposit_sol_operations += 1;
+        Ok(())
+    }
 }

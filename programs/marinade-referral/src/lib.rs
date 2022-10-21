@@ -84,6 +84,14 @@ pub mod marinade_referral {
         ctx.accounts.process()
     }
 
+    ///deposit SOL
+    pub fn admin_recognize_deposit(
+        ctx: Context<AdminRecognizeDeposit>,
+        lamports: u64,
+    ) -> ProgramResult {
+        ctx.accounts.process(lamports)
+    }
+
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
     // in order to load two programs with entry points into the simulator
     pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

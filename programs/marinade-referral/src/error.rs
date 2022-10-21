@@ -35,4 +35,8 @@ pub enum ReferralError {
     StakeAccountMustBeDelegatedToPartnerValidator,
     #[msg("Stake-account authority must be partner account")]
     StakeAccountAuthMustBePartnerAccount,
+    #[msg("Only allowed for stake-as-collateral-partners")]
+    OnlyAllowedForStakeAsCollateralPartner,
+    #[msg("Invalid Global Account")]
+    InvalidGlobalAccount,
 }
