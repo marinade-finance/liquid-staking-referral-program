@@ -160,6 +160,37 @@ async fn test_deposit_stake_account_wrong_referral() -> anyhow::Result<()> {
 }
 
 #[test(tokio::test)]
+async fn test_deposit_stake_account_fail_when_paused() -> anyhow::Result<()> {
+    let (mut test, marinade_referral_test_globals, mut rng) = IntegrationTest::init_test().await?;
+    marinade_referral_test_globals.pause_referral_account(&mut test).await;
+
+    let (vote, simple_stake, user_msol) = create_staked_validator(&mut test, &mut rng).await?;
+    let tx = referral_deposit_stake_account_txn(
+        simple_stake.pubkey(),
+        test.fee_payer(),
+        user_msol,
+        0,
+        vote.pubkey(),
+        &mut test,
+        marinade_referral_test_globals.partner_referral_state_pubkey,
+        marinade_referral_test_globals.msol_partner_token_pubkey,
+    );
+    let deposit_stake_account_result = test
+        .try_execute_txn(tx, vec![test.fee_payer_signer()]).await;
+    match deposit_stake_account_result {
+        Ok(_) => panic!("Expected error happens when referral account is paused"),
+        Err(number) => {
+            // https://github.com/coral-xyz/anchor/blob/v0.14.0/lang/src/error.rs
+            assert_eq!(
+                143, number,
+                "Expected anchor error 'A raw constraint was violated'"
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test(tokio::test)]
 async fn test_deposit_stake_account() -> anyhow::Result<()> {
     let (mut test, marinade_referral_test_globals, mut rng) = IntegrationTest::init_test().await?;
     // no fees for the referral operations

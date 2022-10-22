@@ -1340,6 +1340,24 @@ impl MarinadeReferralTestGlobals {
         assert_eq!(referral_state.accum_deposit_stake_account_fee, 0);
         assert_eq!(referral_state.accum_liquid_unstake_fee, 0);
     }
+
+    async fn pause_referral_account(&self, test: &mut IntegrationTest) {
+        update_referral_execute(
+            test,
+            self.global_state_pubkey,
+            &self.admin_key,
+            self.partner_referral_state_pubkey,
+            self.partner.keypair.pubkey(),
+            self.msol_partner_token_pubkey,
+            true,
+        )
+        .await
+        .unwrap();
+
+        let referral_state: marinade_referral::states::ReferralState =
+            get_account(test, self.partner_referral_state_pubkey).await;
+        assert_eq!(referral_state.pause, true);
+    }
 }
 
 /// Reads a `Keypair` from a json file, path can include ~ shortcut
