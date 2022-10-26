@@ -12,8 +12,8 @@ pub struct GlobalState {
     pub msol_mint_account: Pubkey,
 
     // admin-like accounts to create referral state account and change operation fees
-    pub foreman_1: Pubkey,
-    pub foreman_2: Pubkey,
+    pub merkle_root: [u8; 32],
+    pub unused_pubkey: Pubkey,
 
     // max & min accepted keep_pct for stake_as_collateral partner mode
     pub min_keep_pct: u8,

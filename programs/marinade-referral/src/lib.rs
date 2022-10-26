@@ -13,6 +13,8 @@ pub mod instructions;
 ///states
 pub mod states;
 
+pub mod merkle_proof;
+
 #[program]
 pub mod marinade_referral {
     use super::*;
@@ -25,10 +27,7 @@ pub mod marinade_referral {
     }
 
     ///deposit stake account
-    pub fn deposit_stake_account(
-        ctx: Context<DepositStakeAccount>,
-        validator_index: u32,
-    ) -> ProgramResult {
+    pub fn deposit_stake_account(ctx: Context<DepositStakeAccount>, validator_index: u32) -> ProgramResult {
         ctx.accounts.process(validator_index)
     }
 
@@ -41,10 +40,11 @@ pub mod marinade_referral {
     ///create global state
     pub fn initialize(
         ctx: Context<Initialize>,
+        merkle_root: [u8; 32],
         min_keep_pct: u8,
         max_keep_pct: u8,
     ) -> ProgramResult {
-        ctx.accounts.process(min_keep_pct, max_keep_pct)
+        ctx.accounts.process(merkle_root, min_keep_pct, max_keep_pct)
     }
 
     ///create referral state
@@ -53,9 +53,16 @@ pub mod marinade_referral {
         partner_name: String,
         validator_vote_key: Option<Pubkey>,
         keep_self_stake_pct: u8,
+        foreman_proof: Option<Vec<[u8; 32]>>,
+        foreman_index: Option<u8>,
     ) -> ProgramResult {
-        ctx.accounts
-            .process(partner_name, validator_vote_key, keep_self_stake_pct)
+        ctx.accounts.process(
+            partner_name,
+            validator_vote_key,
+            keep_self_stake_pct,
+            foreman_proof,
+            foreman_index,
+        )
     }
 
     ///update referral state
@@ -70,25 +77,26 @@ pub mod marinade_referral {
         operation_deposit_stake_account_fee: Option<u8>,
         operation_liquid_unstake_fee: Option<u8>,
         operation_delayed_unstake_fee: Option<u8>,
+        foreman_proof: Option<Vec<[u8; 32]>>,
+        foreman_index: Option<u8>,
     ) -> ProgramResult {
         ctx.accounts.process(
             operation_deposit_sol_fee,
             operation_deposit_stake_account_fee,
             operation_liquid_unstake_fee,
             operation_delayed_unstake_fee,
+            foreman_proof,
+            foreman_index,
         )
     }
 
     /// update partner, authority and beneficiary account based on the new partner
-    pub fn change_authority(ctx: Context<ChangeAuthority>) -> ProgramResult {
-        ctx.accounts.process()
+    pub fn change_authority(ctx: Context<ChangeAuthority>, new_merkle_root: Option<[u8; 32]>) -> ProgramResult {
+        ctx.accounts.process(new_merkle_root)
     }
 
     ///deposit SOL
-    pub fn admin_recognize_deposit(
-        ctx: Context<AdminRecognizeDeposit>,
-        lamports: u64,
-    ) -> ProgramResult {
+    pub fn admin_recognize_deposit(ctx: Context<AdminRecognizeDeposit>, lamports: u64) -> ProgramResult {
         ctx.accounts.process(lamports)
     }
 

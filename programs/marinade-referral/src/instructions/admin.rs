@@ -7,6 +7,7 @@ use solana_program::program_pack::IsInitialized;
 use crate::constant::*;
 use crate::error::ReferralError::*;
 use crate::error::*;
+use crate::merkle_proof;
 use crate::states::{GlobalState, ReferralState};
 
 //-----------------------------------------------------
@@ -25,13 +26,13 @@ pub struct Initialize<'info> {
     pub foreman_2: AccountInfo<'info>,
 }
 impl<'info> Initialize<'info> {
-    pub fn process(&mut self, min_keep_pct: u8, max_keep_pct: u8) -> ProgramResult {
+    pub fn process(&mut self, merkle_root: [u8; 32], min_keep_pct: u8, max_keep_pct: u8) -> ProgramResult {
         check_global_state_address(self.global_state.key())?;
 
         self.global_state.admin_account = self.admin_account.key();
         self.global_state.msol_mint_account = self.msol_mint_account.key();
-        self.global_state.foreman_1 = self.foreman_1.key();
-        self.global_state.foreman_2 = self.foreman_2.key();
+        self.global_state.merkle_root = merkle_root;
+        self.global_state.unused_pubkey = Pubkey::default(); // not used
 
         if min_keep_pct > max_keep_pct {
             return Err(MinMaxKeepPctOutOfRange.into());
@@ -56,9 +57,9 @@ pub struct InitReferralAccount<'info> {
     // global state
     // note if this constraint is not satisfied the err is: 0x8f/143: A raw constraint was violated
     // TODO: can we provide a better message? as "signer is authority to create a referral-account"
-    #[account(
-        constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
-    )]
+    // #[account(
+    //     constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
+    // )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin account or foreman account
@@ -82,7 +83,21 @@ impl<'info> InitReferralAccount<'info> {
         partner_name: String,
         validator_vote_key: Option<Pubkey>,
         keep_self_stake_pct: u8,
+        foreman_proof: Option<Vec<[u8; 32]>>,
+        foreman_index: Option<u8>,
     ) -> ProgramResult {
+        if foreman_proof.is_some() {
+            let node =
+                anchor_lang::solana_program::keccak::hashv(&[&[foreman_index.unwrap()], &self.signer.key().to_bytes()]);
+            assert!(merkle_proof::verify(
+                foreman_proof.unwrap().clone(),
+                self.global_state.merkle_root,
+                node.0
+            ));
+        } else {
+            assert!(*self.signer.key == self.global_state.admin_account);
+        }
+
         check_global_state_address(self.global_state.key())?; // double-check
         msg!("process_init_referral_account");
         if partner_name.len() > 20 {
@@ -191,17 +206,14 @@ pub struct ChangeAuthority<'info> {
 
     // new admin account
     pub new_admin_account: AccountInfo<'info>,
-
-    // new foremen accounts
-    pub new_foreman_1: AccountInfo<'info>,
-    pub new_foreman_2: AccountInfo<'info>,
 }
 impl<'info> ChangeAuthority<'info> {
-    pub fn process(&mut self) -> ProgramResult {
+    pub fn process(&mut self, new_merkle_root: Option<[u8; 32]>) -> ProgramResult {
         check_global_state_address(self.global_state.key())?; // double-check
         self.global_state.admin_account = *self.new_admin_account.key;
-        self.global_state.foreman_1 = *self.new_foreman_1.key;
-        self.global_state.foreman_2 = *self.new_foreman_2.key;
+        if new_merkle_root.is_some() {
+            self.global_state.merkle_root = new_merkle_root.unwrap();
+        }
         Ok(())
     }
 }
@@ -234,12 +246,10 @@ impl<'info> UpdateReferral<'info> {
         check_global_state_address(self.global_state.key())?; // double-check
 
         if *self.new_partner_account.key != self.referral_state.partner_account
-            || self.new_msol_token_partner_account.key()
-                != self.referral_state.msol_token_partner_account
+            || self.new_msol_token_partner_account.key() != self.referral_state.msol_token_partner_account
         {
             self.referral_state.partner_account = *self.new_partner_account.key;
-            self.referral_state.msol_token_partner_account =
-                self.new_msol_token_partner_account.key();
+            self.referral_state.msol_token_partner_account = self.new_msol_token_partner_account.key();
             check_partner_accounts(
                 &self.new_partner_account,
                 &self.new_msol_token_partner_account,
@@ -255,9 +265,9 @@ impl<'info> UpdateReferral<'info> {
 #[derive(Accounts)]
 pub struct UpdateOperationFees<'info> {
     // global state
-    #[account(
-        constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
-    )]
+    // #[account(
+    //     constraint = *signer.key == global_state.admin_account || *signer.key == global_state.foreman_1 || *signer.key == global_state.foreman_2
+    // )]
     pub global_state: ProgramAccount<'info, GlobalState>,
 
     // admin or foreman account
@@ -275,7 +285,21 @@ impl<'info> UpdateOperationFees<'info> {
         operation_deposit_stake_account_fee: Option<u8>,
         operation_liquid_unstake_fee: Option<u8>,
         operation_delayed_unstake_fee: Option<u8>,
+        foreman_proof: Option<Vec<[u8; 32]>>,
+        foreman_index: Option<u8>,
     ) -> ProgramResult {
+        if foreman_proof.is_some() {
+            let node =
+                anchor_lang::solana_program::keccak::hashv(&[&[foreman_index.unwrap()], &self.signer.key().to_bytes()]);
+            assert!(merkle_proof::verify(
+                foreman_proof.unwrap().clone(),
+                self.global_state.merkle_root,
+                node.0
+            ));
+        } else {
+            assert!(*self.signer.key == self.global_state.admin_account);
+        }
+
         // disallow for stake-as-collateral mode, fees must be zero in that mode
         if self.referral_state.validator_vote_key.is_some() {
             return Err(NotAllowedForStakeAsCollateralPartner.into());
@@ -303,10 +327,7 @@ impl<'info> UpdateOperationFees<'info> {
     }
 }
 
-fn set_fee_checked(
-    current_value: &mut u8,
-    new_value: Option<u8>,
-) -> std::result::Result<(), ReferralError> {
+fn set_fee_checked(current_value: &mut u8, new_value: Option<u8>) -> std::result::Result<(), ReferralError> {
     if let Some(new_fee) = new_value {
         // the fee is calculated as basis points
         if new_fee > MAX_OPERATION_FEE_POINTS {
