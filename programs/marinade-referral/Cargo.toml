@@ -3,6 +3,7 @@ name = "marinade-referral"
 version = "0.2.0"
 description = "Created with Anchor"
 edition = "2018"
+publish = false
 
 [lib]
 crate-type = ["cdylib", "lib"]
