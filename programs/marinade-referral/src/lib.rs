@@ -94,12 +94,15 @@ pub mod marinade_referral {
 
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
     // in order to load two programs with entry points into the simulator
+    // inspect_err needs rustc 1.76; the solana 1.7 BPF toolchain that builds this program predates it
+    #[allow(clippy::manual_inspect)]
     pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         if data.len() < 8 {
             return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
         }
-        dispatch(program_id, accounts, data).inspect_err(|e| {
+        dispatch(program_id, accounts, data).map_err(|e| {
             ::solana_program::log::sol_log(&e.to_string());
+            e
         })
     }
 }
