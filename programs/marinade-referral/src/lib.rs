@@ -98,9 +98,8 @@ pub mod marinade_referral {
         if data.len() < 8 {
             return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
         }
-        dispatch(program_id, accounts, data).map_err(|e| {
+        dispatch(program_id, accounts, data).inspect_err(|e| {
             ::solana_program::log::sol_log(&e.to_string());
-            e
         })
     }
 }
