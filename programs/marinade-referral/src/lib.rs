@@ -94,6 +94,7 @@ pub mod marinade_referral {
 
     // required for https://docs.rs/solana-program-test/1.7.11/solana_program_test/index.html
     // in order to load two programs with entry points into the simulator
+    #[allow(clippy::manual_inspect)]
     pub fn test_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         if data.len() < 8 {
             return Err(anchor_lang::__private::ErrorCode::InstructionMissing.into());
