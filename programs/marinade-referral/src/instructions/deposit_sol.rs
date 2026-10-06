@@ -60,11 +60,7 @@ impl<'info> Deposit<'info> {
         let msol_after = msol_balance(&self.mint_to)?;
         // deposit fee is transferred to referral token account
         let minted_msol = msol_after - msol_before;
-        msg!(
-            "minted msol {} after depositing {} lamports",
-            minted_msol,
-            lamports
-        );
+        msg!("minted msol {} after depositing {} lamports", minted_msol, lamports);
         let operation_fee = transfer_msol_fee(
             minted_msol,
             self.referral_state.operation_deposit_sol_fee,
@@ -81,9 +77,7 @@ impl<'info> Deposit<'info> {
         Ok(())
     }
 
-    pub fn into_marinade_deposit_cpi_ctx(
-        &self,
-    ) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
+    pub fn into_marinade_deposit_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, MarinadeDeposit<'info>> {
         let cpi_accounts = MarinadeDeposit {
             state: self.state.clone(),
             msol_mint: self.msol_mint.clone(),

@@ -67,8 +67,7 @@ impl<'info> LiquidUnstake<'info> {
         let msol_amount_fee_deducted = msol_amount - operation_fee;
 
         // fee is computed based on the liquidity *after* the user takes the sol
-        let user_remove_lamports =
-            marinade_state.calc_lamports_from_msol_amount(msol_amount_fee_deducted)?;
+        let user_remove_lamports = marinade_state.calc_lamports_from_msol_amount(msol_amount_fee_deducted)?;
         let liquid_unstake_fee = if user_remove_lamports >= max_lamports {
             // user is removing all liquidity
             marinade_state.liq_pool.lp_max_fee
@@ -107,9 +106,7 @@ impl<'info> LiquidUnstake<'info> {
 
         Ok(())
     }
-    pub fn into_liquid_unstake_cpi_ctx(
-        &self,
-    ) -> CpiContext<'_, '_, '_, 'info, MarinadeLiquidUnstake<'info>> {
+    pub fn into_liquid_unstake_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, MarinadeLiquidUnstake<'info>> {
         let cpi_ctx = MarinadeLiquidUnstake {
             state: self.state.clone(),
             msol_mint: self.msol_mint.clone(),

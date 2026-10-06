@@ -73,8 +73,7 @@ impl<'info> DepositStakeAccount<'info> {
 
         // prepare deposit-stake-account cpi
         let cpi_ctx = self.into_deposit_stake_account_cpi_ctx();
-        let instruction_data =
-            marinade_finance::instruction::DepositStakeAccount { validator_index };
+        let instruction_data = marinade_finance::instruction::DepositStakeAccount { validator_index };
         // call Marinade
         cpi_util::invoke_signed(cpi_ctx, instruction_data)?;
 
